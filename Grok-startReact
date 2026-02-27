@@ -1,0 +1,169 @@
+Here’s a **clean, modern setup** (compatible with Rails 7–8 in 2026) using **pure JavaScript + JSX** (**.js** files with JSX syntax, **no TypeScript** at all).
+
+### 1. Create the Rails app (skip default JS)
+
+```bash
+rails new my_awesome_app --database=postgresql --skip-javascript
+cd my_awesome_app
+```
+
+### 2. Add jsbundling-rails + esbuild
+
+```bash
+bundle add jsbundling-rails
+bin/rails javascript:install:esbuild
+```
+
+This creates `package.json`, `.gitignore` updates, `bin/dev` support, etc.
+
+### 3. Install React (JSX works out of the box with esbuild)
+
+```bash
+yarn add react react-dom
+#               or npm install react react-dom
+```
+
+**No** `@types/*`, **no** `typescript`, **no** `.tsx` files — keep everything `.js`
+
+### 4. Important: tell esbuild to treat .js files as JSX
+
+Edit the `"build"` script in `package.json`:
+
+```json
+"scripts": {
+  "build": "esbuild app/javascript/application.js --bundle --sourcemap --outdir=app/assets/builds --public-path=/assets --loader:.js=jsx",
+  "build:watch": "esbuild app/javascript/application.js --bundle --sourcemap --outdir=app/assets/builds --public-path=/assets --loader:.js=jsx --watch"
+}
+```
+
+The key part is `--loader:.js=jsx` — this is what enables JSX syntax inside `.js` files.
+
+### 5. Create basic React entry point
+
+`app/javascript/application.js`
+
+```jsx
+import React from "react";
+import { createRoot } from "react-dom/client";
+
+import App from "./components/App";
+
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(<App />);
+}
+```
+
+### 6. Create your first component
+
+`app/javascript/components/App.js`
+
+```jsx
+import React from "react";
+
+export default function App() {
+  return (
+    <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
+      <h1 style={{ color: "#0066cc" }}>Rails + React (JSX only) 🚀</h1>
+      
+      <p>Created on {new Date().toLocaleDateString()}</p>
+
+      <button
+        onClick={() => alert("It works!")}
+        style={{
+          padding: "0.8rem 1.6rem",
+          fontSize: "1.1rem",
+          backgroundColor: "#0066cc",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        Click me
+      </button>
+    </div>
+  );
+}
+```
+
+### 7. Mount point in layout
+
+`app/views/layouts/application.html.erb`
+
+Make sure it contains:
+
+```erb
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Awesome App</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
+  </head>
+
+  <body>
+    <%= yield %>
+
+    <!-- React root mount point -->
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+### 8. Development workflow (recommended)
+
+Create or use `Procfile.dev`:
+
+```yaml
+web: bin/rails server -p 3000
+js:  yarn build:watch
+```
+
+Then start everything with one command:
+
+```bash
+bin/dev
+# or   foreman start -f Procfile.dev   (if you prefer foreman)
+```
+
+Now visit http://localhost:3000 — you should see the React component.
+
+### Folder structure suggestion (future-friendly, JSX-only)
+
+```
+app/
+├── javascript/
+│   ├── application.js                # entry point
+│   ├── components/
+│   │   ├── App.js
+│   │   ├── Button.js
+│   │   ├── Header.js
+│   │   └── shared/
+│   ├── contexts/          (optional later)
+│   ├── hooks/             (custom hooks)
+│   └── utils/
+└── views/
+    └── layouts/
+        └── application.html.erb
+```
+
+### Quick checklist — common next steps
+
+| Want to add              | Command / note                                 |
+|--------------------------|------------------------------------------------|
+| Tailwind CSS             | `bundle add tailwindcss-rails`<br>`bin/rails tailwindcss:install` |
+| Axios / fetch wrapper    | `yarn add axios`                               |
+| React state (light)      | `yarn add zustand`                             |
+| Data fetching            | `yarn add @tanstack/react-query`               |
+| Routing (full SPA)       | `yarn add react-router-dom`                    |
+| ESLint + Prettier        | `yarn add -D eslint prettier eslint-plugin-react eslint-plugin-react-hooks` |
+
+This setup is **very lightweight**, fast to build (thanks to esbuild), and avoids all TypeScript complexity while still letting you write modern JSX.
+
+Let me know if you want to add routing, API calls to Rails, authentication, Tailwind, component library, etc. — happy to extend this exact style. Good luck!
