@@ -1,5 +1,5 @@
 # for template
-module Api
+module api
   module V1
     class UsersController < ApplicationController
     def index

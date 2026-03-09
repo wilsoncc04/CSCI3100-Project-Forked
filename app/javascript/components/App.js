@@ -1,26 +1,31 @@
 import React from "react";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import AboutPage from "./pages/AboutPage";
 
 export default function App() {
   return (
-    <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ color: "#0066cc" }}>Rails + React (JSX only) 🚀</h1>
-      
-      <p>Created on {new Date().toLocaleDateString()}</p>
+    <BrowserRouter>
+      <div style={{ padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
+        <header style={{ marginBottom: "1rem" }}>
+          <h1 style={{ color: "#0066cc" }}>Rails + React (Router) 🚀</h1>
+          <nav style={{ display: "flex", gap: "1rem" }}>
+            <Link to="/" style={{ color: "#0066cc", textDecoration: "none" }}>
+              Home
+            </Link>
+            <Link to="/about" style={{ color: "#0066cc", textDecoration: "none" }}>
+              About
+            </Link>
+          </nav>
+        </header>
 
-      <button
-        onClick={() => alert("It works!")}
-        style={{
-          padding: "0.8rem 1.6rem",
-          fontSize: "1.1rem",
-          backgroundColor: "#0066cc",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-        }}
-      >
-        Click me
-      </button>
-    </div>
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
