@@ -50,6 +50,10 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # RSpec (https://github.com/rspec/rspec-rails)
+  gem 'rspec-rails', '~> 8.0.0'
+
 end
 
 group :development do
@@ -61,6 +65,10 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # cucumber (https://cucumber.io/docs/installation/ruby)
+  gem 'cucumber-rails', require: false
+  gem 'database_cleaner'
 end
 
 gem "jsbundling-rails", "~> 1.3"
