@@ -53,6 +53,12 @@ group :development, :test do
 
   # RSpec (https://github.com/rspec/rspec-rails)
   gem 'rspec-rails', '~> 8.0.0'
+  # FactoryBot for fixtures
+  gem 'factory_bot_rails'
+  # shoulda-matchers for concise model specs
+  gem 'shoulda-matchers'
+  # SimpleCov for coverage metrics
+  gem 'simplecov', require: false
 
 end
 
@@ -65,10 +71,14 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  gem 'webdrivers'
 
   # cucumber (https://cucumber.io/docs/installation/ruby)
   gem 'cucumber-rails', require: false
-  gem 'database_cleaner'
+  # Use the ActiveRecord-specific DatabaseCleaner adapter
+  gem 'database_cleaner-active_record'
 end
 
 gem "jsbundling-rails", "~> 1.3"
+
+
