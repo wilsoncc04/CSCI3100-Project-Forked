@@ -4,14 +4,25 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  namespace :api do
-    namespace :v1 do
+    # API routes for core resources
+    resources :users, only: [:index, :show, :create, :update, :destroy]
 
-      resources :users, only: [:index]
-      # resources :posts, only: [:index, :show, :create]
+    resources :products do
+      # Begins a member block inside products to add routes that act on a single product (member routes include the product :id).
+      member do
+        get :price_history
+      end
     end
-  end
 
+    resources :chats, only: [:index, :show, :create] do
+      resources :messages, only: [:index, :create, :show, :destroy]
+    end
+
+    resources :messages, only: [:index, :show, :create, :destroy]
+
+    resources :sessions, only: [:create, :destroy]
+
+    # catch-all route to handle client-side routing in a single-page application (SPA).
   get '*path', to: 'pages#index', via: :all
 
 end

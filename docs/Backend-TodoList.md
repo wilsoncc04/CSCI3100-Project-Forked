@@ -2,6 +2,8 @@
 
 Purpose: concise backend development checklist and priorities. See [Proposal.md](Proposal.md) for higher-level decisions.
 
+***!!!Do not build the model and controllers by ruby on rails scaffolding !!!***
+
 ## Table of contents
 - Models
 - Controllers
@@ -70,6 +72,7 @@ Notes:
     - Purchase history
     - Sell records
     - Seller product list
+    - Privacy (password)
 
 ---
 
