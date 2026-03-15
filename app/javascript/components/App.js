@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
+import IndexPage from "./pages/IndexPage";
 
 export default function App() {
   return (
@@ -16,6 +17,9 @@ export default function App() {
             <Link to="/about" style={{ color: "#0066cc", textDecoration: "none" }}>
               About
             </Link>
+            <Link to="/index" style={{ color: "#0066cc", textDecoration: "none" }}>
+              Index
+            </Link>
           </nav>
         </header>
 
@@ -23,6 +27,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/index" element={<IndexPage />} />
           </Routes>
         </main>
       </div>
