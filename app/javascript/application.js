@@ -1,6 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 
+// Bootstrap imports
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap';
+
 import App from "./components/App";
 
 const rootElement = document.getElementById("root");

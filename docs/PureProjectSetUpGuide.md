@@ -1,7 +1,7 @@
-This document records a practical, Ubuntu-focused "pure JS + JSX" setup for a Rails app that uses React (JSX in .js files), esbuild, and a local PostgreSQL database (no Docker). It assumes Linux Ubuntu (20.04/22.04/24.04), Node/NPM or Yarn, and that you prefer keeping all front-end files as `.js` with JSX (no TypeScript).
+This document records a practical, Ubuntu-focused "pure JS + JSX" setup for a Rails app that uses React (JSX in .js files), esbuild, and a local PostgreSQL database (no Docker). It assumes Linux Ubuntu (20.04/22.04/24.04), Node/NPM , and that you prefer keeping all front-end files as `.js` with JSX (no TypeScript).
 
 Overview
-- Goal: Rails (Ruby 3.4.x) + React (JSX in .js) using esbuild, local PostgreSQL, and npm/yarn for package management.
+- Goal: Rails (Ruby 3.4.x) + React (JSX in .js) using esbuild, local PostgreSQL, and npm for package management.
 - Target OS: Ubuntu / Debian-based distributions.
 
 1) System prerequisites (Ubuntu)
@@ -18,12 +18,6 @@ sudo apt install -y build-essential curl git ca-certificates \
 - `libpq-dev`: required to build the `pg` gem.
 - `postgresql`: installs a local PostgreSQL server (we use this, not Docker).
 - `nodejs` + `npm`: JavaScript runtime and package manager. You can install a newer Node via NodeSource if desired.
-
-Optional: install Yarn instead of npm:
-
-```bash
-npm install -g yarn
-```
 
 2) Install and configure PostgreSQL (local)
 
@@ -90,7 +84,7 @@ bundle add jsbundling-rails
 bin/rails javascript:install:esbuild
 ```
 
-Install React and React DOM with npm or yarn:
+Install React and React DOM with npm :
 
 ```bash
 # with npm
@@ -206,11 +200,11 @@ Visit http://localhost:3000 to confirm the React app is mounted and Rails is ser
 - State & data fetching: consider `zustand` and `@tanstack/react-query` for client-side state and caching.
 - Linting & formatting: add `eslint` + `prettier` if desired.
 
-This guide records the Ubuntu-local variant of the "pure JSX-in-.js" setup: Rails (Ruby 3.4.x), PostgreSQL (local), esbuild with `--loader:.js=jsx`, and npm/yarn-managed React packages. For repository-specific notes or automation (e.g. `bin/setup`), I can add concrete scripts that run `rbenv` install, `bundle install`, `npm install`, DB creation, and seed steps—tell me if you want that next.
+This guide records the Ubuntu-local variant of the "pure JSX-in-.js" setup: Rails (Ruby 3.4.x), PostgreSQL (local), esbuild with `--loader:.js=jsx`, and npm-managed React packages. For repository-specific notes or automation (e.g. `bin/setup`), I can add concrete scripts that run `rbenv` install, `bundle install`, `npm install`, DB creation, and seed steps—tell me if you want that next.
 
 11) Axios (lightweight HTTP client)
 
-Install with npm/yarn:
+Install with npm:
 
 ```bash
 # npm

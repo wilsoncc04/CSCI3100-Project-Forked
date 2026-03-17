@@ -42,7 +42,7 @@ Docker" for a containerized production image.
 - Ruby 3.4.8 (use rbenv / rvm / asdf). `.ruby-version` contains the required
 	version.
 - Bundler (gem install bundler)
-- Node.js (16+ recommended) and either npm or yarn
+- Node.js (16+ recommended) and either npm
 - SQLite development headers (on Debian/Ubuntu: `libsqlite3-dev`)
 - A C compiler/build tools (build-essential on Debian/Ubuntu)
 
@@ -51,8 +51,6 @@ On Debian/Ubuntu you can install the common packages quickly:
 ```bash
 sudo apt update
 sudo apt install -y build-essential libsqlite3-dev nodejs npm curl
-# Optional (if you use yarn):
-sudo npm install -g yarn
 ```
 
 ## Development (quick)
@@ -90,10 +88,49 @@ npm run build
 
 5. Set up the database (development uses SQLite by default):
 
+- Typical setup (create, migrate, seed):
+
 ```bash
 # create, migrate, seed
 bin/rails db:create db:migrate db:seed
 ```
+
+- If you encounter errors about missing tables or foreign keys (for example a migration
+	references `users` but the `users` table doesn't exist), avoid editing committed
+	migration files. Use one of these safe options instead:
+
+- Apply the specific migration that creates the referenced table first:
+
+```bash
+# run the migration that creates `users` (example VERSION)
+bin/rails db:migrate:up VERSION=20260316135214
+bin/rails db:migrate
+```
+
+- Or apply migrations explicitly (no file changes):
+
+```bash
+bin/rails db:migrate:up VERSION=20260316135214
+bin/rails db:migrate:up VERSION=20260316135156
+bin/rails db:migrate:up VERSION=20260316141307
+```
+
+- For a fresh local environment you can load the schema in one step (drops and recreates DB):
+
+```bash
+bin/rails db:drop db:create db:schema:load db:seed
+# or
+bin/rails db:reset
+```
+
+- Warnings:
+	- Do NOT rename migration files that are already committed and shared — changing
+		filenames changes migration versions and will cause problems for other clones/CI.
+	- Prefer adding foreign keys in a separate migration (using `add_foreign_key`) if
+		you expect merges or uncertain ordering across branches.
+
+These options let you avoid modifying existing migration files while resolving
+ordering problems safely.
 
 6. Start the app for local development. There are a few options:
 
@@ -172,8 +209,7 @@ General checklist:
 
 - Missing native headers / gems fail to install: install `build-essential`,
 	`libsqlite3-dev` (or other DB client headers) and retry `bundle install`.
-- If JS build fails, ensure Node.js version is supported and `npm install` or
-	`yarn install` completed without errors.
+- If JS build fails, ensure Node.js version is supported and `npm install` completed without errors.
 - If you see errors about `RAILS_MASTER_KEY` or `Missing encrypted credentials`:
 	set `RAILS_MASTER_KEY` from the `config/master.key` file or create new
 	credentials with `bin/rails credentials:edit`.
