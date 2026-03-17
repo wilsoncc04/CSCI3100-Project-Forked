@@ -5,11 +5,18 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
     # API routes for core resources
-    resources :users, only: [:index, :show, :create, :update, :destroy]
+    resources :users, only: [:index, :show, :create, :update, :destroy] do
+      collection do
+        get :sellers
+        post :register
+        get :verify
+      end
+    end
 
     resources :products do
-      # Begins a member block inside products to add routes that act on a single product (member routes include the product :id).
-      member do
+      # Add a collection route for price_history. This will be reachable at
+      # GET /products/price_history and should accept a `product_id` query param.
+      collection do
         get :price_history
       end
     end

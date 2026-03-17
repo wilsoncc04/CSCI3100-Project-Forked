@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_024721) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,12 +53,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_024721) do
   create_table "users", force: :cascade do |t|
     t.string "college"
     t.datetime "created_at", null: false
+    t.string "cuhk_id"
     t.string "email", null: false
     t.string "hostel"
+    t.boolean "is_seller", default: false, null: false
     t.string "name", null: false
-    t.string "password", null: false
+    t.string "password_digest", null: false
     t.string "profile_picture"
+    t.float "seller_rating", default: 0.0, null: false
+    t.integer "seller_review_count", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.string "verification_token"
+    t.datetime "verified_at"
+    t.index ["cuhk_id"], name: "index_users_on_cuhk_id", unique: true
+    t.index ["verification_token"], name: "index_users_on_verification_token", unique: true
   end
 
   add_foreign_key "chats", "products", column: "item_id"
