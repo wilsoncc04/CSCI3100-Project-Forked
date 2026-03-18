@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_18_022013) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_18_110140) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,10 +47,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_022013) do
   end
 
   create_table "price_histories", force: :cascade do |t|
-    t.bigint "category_id", null: false
     t.datetime "date"
     t.decimal "price"
-    t.index ["category_id"], name: "index_price_histories_on_category_id"
+    t.bigint "product_id"
+    t.index ["product_id"], name: "index_price_histories_on_product_id"
   end
 
   create_table "products", force: :cascade do |t|
@@ -96,7 +96,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_022013) do
   add_foreign_key "interests", "products", column: "item_id"
   add_foreign_key "interests", "users", column: "interested_id"
   add_foreign_key "messages", "chats"
-  add_foreign_key "price_histories", "categories"
+  add_foreign_key "price_histories", "products"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "users", column: "buyer_id"
   add_foreign_key "products", "users", column: "seller_id"
