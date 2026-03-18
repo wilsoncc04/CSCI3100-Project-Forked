@@ -10,9 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_18_022013) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "categories", force: :cascade do |t|
+    t.string "category_name"
+  end
 
   create_table "chats", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -25,6 +29,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
     t.index ["seller_id"], name: "index_chats_on_seller_id"
   end
 
+  create_table "interests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "interested_id", null: false
+    t.bigint "item_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["interested_id"], name: "index_interests_on_interested_id"
+    t.index ["item_id"], name: "index_interests_on_item_id"
+  end
+
   create_table "messages", force: :cascade do |t|
     t.bigint "chat_id", null: false
     t.datetime "created_at", null: false
@@ -33,8 +46,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
     t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
 
+  create_table "price_histories", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.datetime "date"
+    t.decimal "price"
+    t.index ["category_id"], name: "index_price_histories_on_category_id"
+  end
+
   create_table "products", force: :cascade do |t|
     t.bigint "buyer_id", null: false
+    t.bigint "category_id"
     t.string "contact"
     t.datetime "created_at", null: false
     t.text "description"
@@ -44,9 +65,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
     t.decimal "price", null: false
     t.bigint "seller_id", null: false
     t.string "status", null: false
-    t.string "type"
     t.datetime "updated_at", null: false
     t.index ["buyer_id"], name: "index_products_on_buyer_id"
+    t.index ["category_id"], name: "index_products_on_category_id"
     t.index ["seller_id"], name: "index_products_on_seller_id"
   end
 
@@ -72,7 +93,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
   add_foreign_key "chats", "products", column: "item_id"
   add_foreign_key "chats", "users", column: "interested_id"
   add_foreign_key "chats", "users", column: "seller_id"
+  add_foreign_key "interests", "products", column: "item_id"
+  add_foreign_key "interests", "users", column: "interested_id"
   add_foreign_key "messages", "chats"
+  add_foreign_key "price_histories", "categories"
+  add_foreign_key "products", "categories"
   add_foreign_key "products", "users", column: "buyer_id"
   add_foreign_key "products", "users", column: "seller_id"
 end

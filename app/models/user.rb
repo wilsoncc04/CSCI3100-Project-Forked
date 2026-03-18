@@ -6,6 +6,7 @@ class User < ApplicationRecord
     has_many :sales, class_name: 'Chat', foreign_key: 'seller_id'
     has_many :interested, class_name: 'Chat', foreign_key: 'interested_id'
 
+    has_many :interested, class_name: 'Interest', foreign_key: 'interested_id'
     # Authentication
     has_secure_password validations: false
 
