@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import IndexPage from "./pages/IndexPage";
-import ProfilePage from "./pages/ProfilePage"; // 來自 main
-import ProductInfoPage from "./pages/ProductInfoPage"; // 來自 patrick
-import SellPage from "./pages/SellPage"; // 來自 patrick
+import ProfilePage from "./pages/ProfilePage";
+import ProductInfoPage from "./pages/ProductInfoPage";
+import SellPage from "./pages/SellPage";
 import MarketplaceFilters from "./common/MarketplaceFilters";
 
 export default function App() {
