@@ -1,27 +1,32 @@
-Feature: Marketplace Dropdown Filters
+Feature: Marketplace Hover Navigation Menu
   As a CUHK student
   So that I can accurately find items relevant to me
-  I want the filtering dropdowns to provide all the correct categories and colleges
-  
-  @javascript
-  Scenario: View available College options
-    Given I am on the marketplace index page
-    Then the "College" dropdown should contain the following options:
-      | Chung Chi      |
-      | New Asia       |
-      | United         |
-      | Shaw           |
-      | Morningside    |
-      | S.H. Ho        |
-      | C.W. Chu       |
-      | Wu Yee Sun     |
-      | Lee Woo Sing   |
+  I want the hover navigation menu to display all the correct colleges and goods categories
 
   @javascript
-  Scenario: View available Goods Type options
+  Scenario: View available College filtering links
     Given I am on the marketplace index page
-    Then the "Goods Type" dropdown should contain the following options:
-      | Textbooks  |
-      | Furniture  |
-      | Stationery |
-      | Snacks     |
+    When I hover over the "Browse Categories" menu
+    Then I should see the following category links:
+      | Chung Chi College |
+      | New Asia College  |
+      | United College    |
+      | Shaw College      |
+      | Morningside       |
+      | S.H. Ho           |
+      | C.W. Chu          |
+      | Wu Yee Sun        |
+      | Lee Woo Sing      |
+
+  @javascript
+  Scenario: View available Goods Type filtering links
+    Given I am on the marketplace index page
+    When I hover over the "Browse Categories" menu
+    Then I should see the following category links:
+      | Textbooks & Notes      |
+      | Electronics & Gadgets  |
+      | Furniture & Home       |
+      | Clothing & Accessories |
+      | Stationery & Supplies  |
+      | Snacks & Food          |
+      | Others                 |
