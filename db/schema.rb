@@ -42,6 +42,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_110140) do
     t.bigint "chat_id", null: false
     t.datetime "created_at", null: false
     t.text "message"
+    t.bigint "sender_id"
     t.datetime "updated_at", null: false
     t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
@@ -99,6 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_110140) do
   add_foreign_key "interests", "products", column: "item_id"
   add_foreign_key "interests", "users", column: "interested_id"
   add_foreign_key "messages", "chats"
+  add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "price_histories", "products"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "users", column: "buyer_id"
