@@ -1,5 +1,9 @@
 class Chat < ApplicationRecord
-    belongs_to :item_id, class_name: 'Product'
-    belongs_to :interested_id, class_name: 'User'
-    belongs_to :seller_id, class_name: 'User'
+  belongs_to :product, foreign_key: 'item_id'
+  belongs_to :interested_user, foreign_key: 'interested_id', class_name: 'User'
+  belongs_to :seller, foreign_key: 'seller_id', class_name: 'User'
+  
+  has_many :messages, foreign_key: 'chat_id', dependent: :destroy
+  
+  validates :product_id, :interested_id, :seller_id, presence: true
 end

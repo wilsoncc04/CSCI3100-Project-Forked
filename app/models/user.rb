@@ -1,12 +1,12 @@
 class User < ApplicationRecord
-    # Associations (existing simplified ones preserved)
-    has_many :buyer, class_name: 'Product', foreign_key: 'buyer_id'
-    has_many :seller, class_name: 'Product', foreign_key: 'seller_id'
+    # Associations
+    has_many :bought_products, class_name: 'Product', foreign_key: 'buyer_id', dependent: :nullify
+    has_many :selling_products, class_name: 'Product', foreign_key: 'seller_id', dependent: :nullify
 
-    has_many :sales, class_name: 'Chat', foreign_key: 'seller_id'
-    has_many :interested, class_name: 'Chat', foreign_key: 'interested_id'
+    has_many :seller_chats, class_name: 'Chat', foreign_key: 'seller_id', dependent: :destroy
+    has_many :buyer_chats, class_name: 'Chat', foreign_key: 'interested_id', dependent: :destroy
 
-    has_many :interested, class_name: 'Interest', foreign_key: 'interested_id'
+    has_many :interests, class_name: 'Interest', foreign_key: 'interested_id', dependent: :destroy
     # Authentication, turn on after test
     has_secure_password validations: false
 
@@ -22,7 +22,7 @@ class User < ApplicationRecord
 
     def generate_verification_otp!
         # 6-digit numeric OTP (zero-padded)
-        self.verification_otp = rand(0..999_999).to_s.rjust(6, '0')
+        self.verification_otp = rand(0..999999).to_s.rjust(6, '0')
         self.verification_sent_at = Time.current
     end
 

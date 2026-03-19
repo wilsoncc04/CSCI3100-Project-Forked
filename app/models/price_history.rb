@@ -1,5 +1,5 @@
 class PriceHistory < ApplicationRecord
-    belongs_to :product, class_name: 'Product'
+    belongs_to :product
 
-    validates :category_id, :price, presence: true
+    validates :product_id, :price, presence: true
 end

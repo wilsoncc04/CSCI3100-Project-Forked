@@ -7,14 +7,12 @@ class ApplicationController < ActionController::Base
   private
 
   def current_user
-    # Placeholder for current user retrieval logic, e.g., from session or token
-    # For now, we'll just return nil to indicate no user is logged in
-    nil
+    # find the user name in cookies or session
+    @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
   end
 
   def authenticate_user!
-    # Placeholder for authentication logic, e.g., checking session or token
-    # For now, we'll just allow all requests to pass through
+    redirect_to root_path, alert: 'Please log in' unless current_user
   end
 
   def require_admin!
