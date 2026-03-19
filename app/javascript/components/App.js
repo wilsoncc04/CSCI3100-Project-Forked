@@ -2,15 +2,15 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
-import IndexPage from "./pages/IndexPage"
-import ProfilePage from "./pages/ProfilePage"
+import IndexPage from "./pages/IndexPage";
+import ProfilePage from "./pages/ProfilePage";
 import ProductInfoPage from "./pages/ProductInfoPage";
 import SellPage from "./pages/SellPage";
 import MarketplaceFilters from "./common/MarketplaceFilters";
-;
 
 export default function App() {
   const [isSellHovered, setIsSellHovered] = React.useState(false);
+
   return (
     <BrowserRouter>
       <div style={{ padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
@@ -23,13 +23,16 @@ export default function App() {
             <Link to="/Profile" style={{ color: "#0066cc", textDecoration: "none" }}>Profile</Link>
           </nav>
 
-          <nav >
+          <nav>
             <h2>CUHK Second-hand Marketplace</h2>
             <p>Welcome to the centralized trading platform for students.</p>
-            <div style={{ display: "flex", gap: "1rem"}}>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
               <h4>Search Products by:</h4>
               <MarketplaceFilters />
-              <Link to="/sell" onMouseEnter={() => setIsSellHovered(true)} onMouseLeave={() => setIsSellHovered(false)}
+              <Link 
+                to="/sell" 
+                onMouseEnter={() => setIsSellHovered(true)} 
+                onMouseLeave={() => setIsSellHovered(false)}
                 style={{ 
                   marginLeft: "auto", 
                   backgroundColor: isSellHovered ? "#cc0000" : "#e60000", 
