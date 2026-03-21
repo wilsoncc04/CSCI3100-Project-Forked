@@ -22,6 +22,9 @@ class User < ApplicationRecord
 
     VERIFICATION_TTL = 24.hours
 
+    # Scopes
+    scope :sellers, -> { where(is_seller: true) }
+
     def generate_verification_otp!
         # 6-digit numeric OTP (zero-padded)
         self.verification_otp = rand(0..999999).to_s.rjust(6, '0')
@@ -33,6 +36,7 @@ class User < ApplicationRecord
         return false if verification_sent_at < VERIFICATION_TTL.ago
         return false unless ActiveSupport::SecurityUtils.secure_compare(verification_otp.to_s, otp.to_s)
 
+        # update verified_at and clear OTP fields
         update(verified_at: Time.current, verification_otp: nil, verification_sent_at: nil)
     end
 end

@@ -1,20 +1,24 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :update, :destroy]
+  before_action :authenticate_user!, only: [:update, :destroy, :change_password]
 
   # GET /users
+  # should be used for admin dashboard, not public API
   def index
     users = User.all
-    render json: users, status: :ok
+    render json: users.map { |u| format_user(u) }, status: :ok
   end
 
   # GET /users/sellers
+  # should be used for admin dashboard, not public API
   def sellers
-    render json: User.sellers, status: :ok
+    render json: User.sellers.map { |u| format_user(u) }, status: :ok
   end
 
   # GET /users/:id
+  # should be used for admin dashboard, not public API
   def show
-    render json: @user, status: :ok
+    render json: format_user(@user), status: :ok
   end
 
   # ====== register section start ======
@@ -96,8 +100,13 @@ class UsersController < ApplicationController
 
   # PATCH/PUT /users/:id
   def update
+    # Handle profile picture upload
+    if params[:profile_picture].present?
+      # leave here, finish it after implementing image upload
+    end
+
     if @user.update(user_params)
-      render json: @user, status: :ok
+      render json: format_user(@user), status: :ok
     else
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
     end
@@ -124,6 +133,11 @@ class UsersController < ApplicationController
 
   private
 
+  def user_params
+    params.require(:user).permit(
+      %i[name email password cuhk_id hostel is_seller college profile_picture])
+  end
+
   def set_user
     cuhk = params[:id].to_s.strip
     @user = User.find_by!(cuhk_id: cuhk)
@@ -131,7 +145,19 @@ class UsersController < ApplicationController
     render json: { error: 'User not found' }, status: :not_found
   end
 
-  def user_params
-    params.require(:user).permit(:email, :name, :password, :cuhk_id, :hostel, :is_seller, :seller_rating, :seller_review_count, :verified_at)
+    def format_user(user)
+    {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      cuhk_id: user.cuhk_id,
+      college: user.college,
+      hostel: user.hostel,
+      is_seller: user.is_seller,
+      seller_rating: user.seller_rating,
+      seller_review_count: user.seller_review_count,
+      profile_picture_url: user.profile_picture&.attached? ? url_for(user.profile_picture) : nil
+    }
   end
+
 end

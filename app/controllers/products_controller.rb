@@ -1,6 +1,6 @@
 class ProductsController < ApplicationController
   # attributes to include when rendering product JSON, %i mean ":" for all items
-  PRODUCT_JSON_ONLY = %i[id name description price created_at updated_at].freeze
+  PRODUCT_JSON_ONLY = %i[id name description price seller_id buyer_id status category_id location contact created_at updated_at].freeze
 
   # directly get the product list
   before_action :set_product, only: %i[show update destroy]
@@ -36,8 +36,12 @@ class ProductsController < ApplicationController
   # create product (basic implementation)
   def create
     product = Product.new(product_params)
+    # Handle image uploads
+    if params[:images].present?
+      # leave here, finish it after implementing image upload
+
     if product.save
-      render json: product.as_json(only: PRODUCT_JSON_ONLY), status: :created
+      render json: format_product(product), status: :created
     else
       render json: { errors: product.errors.full_messages }, status: :unprocessable_entity
     end
@@ -48,8 +52,13 @@ class ProductsController < ApplicationController
   # PATCH/PUT /products/:id
   # update product details
   def update
+     # Replace images if new ones provided
+    if params[:images].present?
+      # leave here, finish it after implementing image upload
+    end
+
     if @product.update(product_params)
-      render json: @product.as_json(only: PRODUCT_JSON_ONLY)
+      render json: format_product(@product),  status: :ok
     else
       render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
     end
@@ -98,7 +107,9 @@ class ProductsController < ApplicationController
   end
 
   def product_params
-    params.require(:product).permit(:name, :description, :price, :seller_id)
+    params.require(:product).permit(
+      %i[name description price seller_id category_id location 
+      contact status buyer_id image])
   end
 
   def render_error(error)
@@ -106,3 +117,21 @@ class ProductsController < ApplicationController
     render json: { error: error.message }, status: :internal_server_error
   end
 end
+
+  def format_product(product)
+    {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      seller_id: product.seller_id,
+      buyer_id: product.buyer_id,
+      status: product.status,
+      category_id: product.category_id,
+      location: product.location,
+      contact: product.contact,
+      images: product.images, # Assuming you have an images association or method to get image URLs
+      created_at: product.created_at,
+      updated_at: product.updated_at
+    }
+  end

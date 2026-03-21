@@ -9,6 +9,6 @@ FactoryBot.define do
     "Lee Woo Sing College"].sample }
     hostel { ["On-campus", "Off-campus"].sample }
     is_seller { [true, false].sample }
-    password { "password" }
+    password { "SecurePassword123" }
   end
 end

@@ -12,7 +12,12 @@ class ApplicationController < ActionController::Base
   end
 
   def authenticate_user!
-    redirect_to root_path, alert: 'Please log in' unless current_user
+    return if current_user
+    if request.format.json?
+      render json: { error: 'unauthenticated' }, status: :unauthorized
+      else
+    redirect_to root_path, alert: 'Please log in'
+  end
   end
 
   def require_admin!
