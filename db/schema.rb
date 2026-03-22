@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_22_072810) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_22_085850) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,7 +88,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_072810) do
     t.string "contact"
     t.datetime "created_at", null: false
     t.text "description"
-    t.string "image"
     t.string "location"
     t.string "name", null: false
     t.decimal "price", null: false
@@ -109,7 +108,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_072810) do
     t.boolean "is_seller", default: false, null: false
     t.string "name", null: false
     t.string "password_digest", null: false
-    t.string "profile_picture"
     t.float "seller_rating", default: 0.0, null: false
     t.integer "seller_review_count", default: 0, null: false
     t.datetime "updated_at", null: false
