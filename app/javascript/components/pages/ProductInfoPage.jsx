@@ -1,5 +1,51 @@
 import React from "react";
 import { useParams } from "react-router-dom";
+import { AiOutlineHeart, AiFillHeart, AiOutlineShoppingCart } from 'react-icons/ai';
+import { useState } from 'react';
+
+function LikeButton() {
+  const [liked, setLiked] = useState(false);
+  return (
+    <button 
+      onClick={() => setLiked(!liked)}
+      style={{
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        fontSize: '24px',
+        padding: '8px',
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {liked ? <AiFillHeart color="#dc3545" /> : <AiOutlineHeart />}
+      <span style={{ marginTop: '6px', fontSize: '0.9rem', color: '#333' }}>Interested</span>
+    </button>
+  );
+}
+
+function BuyButton() {
+  return (
+    <button 
+      style={{
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        fontSize: '24px',
+        padding: '8px',
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <AiOutlineShoppingCart />
+      <span style={{ marginTop: '6px', fontSize: '0.9rem', color: '#333' }}>Buy</span>
+    </button>
+  );
+}
 
 export default function ProductInfoPage() {
   const { id } = useParams();
@@ -23,11 +69,12 @@ export default function ProductInfoPage() {
           <p><strong>Description:</strong> A very detailed description of the item goes here.</p>
           <p><strong>Contact:</strong> User_Email@link.cuhk.edu.hk</p>
         </div>
-        <button style={{ padding: "1rem 2rem", backgroundColor: "#0066cc", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontSize: "1.1rem" }}>
-          Interested
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <LikeButton />
+          <BuyButton />
         </div>
-        <div style={{ margin: "3rem 0", padding: "2rem", border: "1px solid #ddd" }}>
+      </div>
+      <div style={{ margin: "3rem 0", padding: "2rem", border: "1px solid #ddd" }}>
         <h4>Price History Graph</h4>
         <div style={{ height: "200px", borderBottom: "2px solid #333", borderLeft: "2px solid #333", position: "relative" }}>
            <p style={{ position: "absolute", bottom: "50%", left: "40%", color: "#888" }}>[ Line Chart Component: Date vs Price ]</p>

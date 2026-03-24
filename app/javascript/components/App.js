@@ -1,12 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import AboutPage from "./pages/AboutPage";
 import IndexPage from "./pages/IndexPage";
-import ProfilePage from "./pages/ProfilePage";
+import AccountPage from "./pages/AccountPage";
 import ProductInfoPage from "./pages/ProductInfoPage";
 import SellPage from "./pages/SellPage";
-import MarketplaceFilters from "./common/MarketplaceFilters";
 
 export default function App() {
   const [isSellHovered, setIsSellHovered] = React.useState(false);
@@ -15,20 +12,14 @@ export default function App() {
     <BrowserRouter>
       <div style={{ padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
         <header style={{ marginBottom: "1rem" }}>
-          <h1 style={{ color: "#0066cc" }}>Rails + React (Router) 🚀</h1>
-          <nav style={{ display: "flex", gap: "1rem" }}>
-            <Link to="/" style={{ color: "#0066cc", textDecoration: "none" }}>Home</Link>
-            <Link to="/about" style={{ color: "#0066cc", textDecoration: "none" }}>About</Link>
-            <Link to="/index" style={{ color: "#0066cc", textDecoration: "none" }}>Index</Link>
-            <Link to="/Profile" style={{ color: "#0066cc", textDecoration: "none" }}>Profile</Link>
-          </nav>
-
-          <nav>
-            <h2>CUHK Second-hand Marketplace</h2>
-            <p>Welcome to the centralized trading platform for students.</p>
+          <nav> 
+            <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+              <div> 
+                <h2>CUHK Second-hand Marketplace</h2>
+                <p>Welcome to the centralized trading platform for students.</p>
+              </div>
+            </Link>
             <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-              <h4>Search Products by:</h4>
-              <MarketplaceFilters />
               <Link 
                 to="/sell" 
                 onMouseEnter={() => setIsSellHovered(true)} 
@@ -53,16 +44,15 @@ export default function App() {
               >
                 Sell
               </Link>
+              <Link to="/Account" style={{ color: "#0066cc", textDecoration: "none" }}>Account</Link>
             </div>
           </nav>
         </header>
 
         <main>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/index" element={<IndexPage />} />
-            <Route path="/Profile" element={<ProfilePage />} />
+            <Route path="/" element={<IndexPage />} />
+            <Route path="/Account" element={<AccountPage />} />
             <Route path="/product/:id" element={<ProductInfoPage />} />
             <Route path="/sell" element={<SellPage />} />
           </Routes>

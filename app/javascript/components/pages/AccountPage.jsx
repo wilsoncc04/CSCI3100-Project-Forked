@@ -4,7 +4,7 @@ import Interested from "./Interested";
 import PurchaseHistory from "./PurchaseHistory";
 import Setting from "./Setting";
 
-export default function ProfilePage() {
+export default function AccountPage() {
   const [activeTab, setActiveTab] = useState("Account info");
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
