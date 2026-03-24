@@ -102,14 +102,19 @@ class UsersController < ApplicationController
   def update
     # Handle profile picture upload
     if params[:profile_picture].present?
-      # leave here, finish it after implementing image upload
+      @user.profile_picture.purge if @user.profile_picture.attached?
+      @user.profile_picture.attach(params[:profile_picture]) if params[:profile_picture].is_a?(ActionDispatch::Http::UploadedFile)
     end
 
-    if @user.update(user_params)
-      render json: format_user(@user), status: :ok
-    else
-      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+    # Update other user attributes if provided
+    if params[:user].present?
+      if !@user.update(user_params)
+        render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+        return
+      end
     end
+
+    render json: format_user(@user), status: :ok
   end
 
   def change_password
