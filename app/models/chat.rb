@@ -5,5 +5,6 @@ class Chat < ApplicationRecord
   
   has_many :messages, foreign_key: 'chat_id', dependent: :destroy
   
-  validates :product_id, :interested_id, :seller_id, presence: true
+  validates :item_id, :interested_id, :seller_id, presence: true
+  alias_attribute :product_id, :item_id
 end

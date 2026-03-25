@@ -1,22 +1,13 @@
 class MessagesController < ApplicationController
   before_action :set_chat, only: [:index, :create, :show, :destroy]
   before_action :set_message, only: [:show, :destroy]
-  before_action :authorize_user, only: [:create, :destroy]
+  before_action :authenticate_user!
+  before_action :authorize_chat_participant!, only: [:index, :create, :show, :destroy]
+  # before_action :authorize_message_owner!, only: [:destroy]
 
   # GET /chats/:chat_id/messages
   # List all messages in a chat
   def index
-    # unless current_user
-    #   render json: { error: 'Unauthorized' }, status: :unauthorized
-    #   return
-    # end
-
-    # Verify user has access to this chat
-    # unless @chat.seller_id == current_user.id || @chat.interested_id == current_user.id
-    #   render json: { error: 'Forbidden' }, status: :forbidden
-    #   return
-    # end
-
     messages = @chat.messages.order(:created_at)
     render json: messages.map { |msg| format_message(msg, current_user) }
   end
@@ -24,32 +15,12 @@ class MessagesController < ApplicationController
   # GET /chats/:chat_id/messages/:id
   # Show a specific message
   def show
-    # unless current_user
-    #   render json: { error: 'Unauthorized' }, status: :unauthorized
-    #   return
-    # end
-
-    # unless @chat.seller_id == current_user.id || @chat.interested_id == current_user.id
-    #   render json: { error: 'Forbidden' }, status: :forbidden
-    #   return
-    # end
-
     render json: format_message(@message, current_user)
   end
 
   # POST /chats/:chat_id/messages
   # Create a new message in a chat
   def create
-    # unless current_user
-    #   render json: { error: 'Unauthorized' }, status: :unauthorized
-    #   return
-    # end
-
-    # unless @chat.seller_id == current_user.id || @chat.interested_id == current_user.id
-    #   render json: { error: 'Forbidden' }, status: :forbidden
-    #   return
-    # end
-
     # Build new message attached to this chat (.build => an object)
     message = @chat.messages.build(message_params)
     message.sender_id = current_user.id
@@ -57,24 +28,19 @@ class MessagesController < ApplicationController
     if message.save
       render json: format_message(message, current_user), status: :created
     else
-      render json: { errors: message.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: message.errors.full_messages }, status: :unprocessable_content
     end
+  rescue ActionController::ParameterMissing => e
+    render json: { error: e.message }, status: :bad_request
+  rescue StandardError => e
+    render_error(e)
   end
 
   # DELETE /chats/:chat_id/messages/:id
   # Delete a message (owner only)
+  # Cannot delete message in this project
   def destroy
-    # unless current_user
-    #   render json: { error: 'Unauthorized' }, status: :unauthorized
-    #   return
-    # end
-
-    # unless @chat.seller_id == current_user.id || @chat.interested_id == current_user.id
-    #   render json: { error: 'Forbidden' }, status: :forbidden
-    #   return
-    # end
-
-    @message.destroy
+    # @message.destroy
     head :no_content
   end
 
@@ -94,10 +60,17 @@ class MessagesController < ApplicationController
     end
   end
 
-  def authorize_user
-    # Users can only create messages in chats they're part of
-    # This is already checked in the create action, but this is a general guard
+  def authorize_chat_participant!
+    unless @chat.seller_id == current_user.id || @chat.interested_id == current_user.id
+      render_unauthorized
+    end
   end
+
+  # def authorize_message_owner!
+  #   unless @message.sender_id == current_user.id
+  #     render_unauthorized
+  #   end
+  # end
 
   def message_params
     params.require(:message).permit(:message)
@@ -126,5 +99,12 @@ class MessagesController < ApplicationController
       is_seller: user.is_seller,
       seller_rating: user.seller_rating
     }
+  end
+
+  # for safety and logging
+  def render_error(error)
+    logger.error("MessagesController error: #{error.class} - #{error.message}")
+    logger.error(error.backtrace.first(5).join("\n")) if error.backtrace
+    render json: { error: error.message }, status: :internal_server_error
   end
 end

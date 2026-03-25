@@ -5,7 +5,8 @@ class SessionsController < ApplicationController
     user = User.find_by(email: params[:email])
     if user && user.authenticate(params[:password])
       if user.verified_at.present?   #ensure the DB record is correctly updated after email verification
-        # Replace this with real session/token issuance as needed
+        # establish server-side session
+        session[:user_id] = user.id
         render json: { message: 'logged_in', user: format_user(user) }, status: :created
       else
         render json: { error: 'email_not_verified' }, status: :forbidden
@@ -18,6 +19,7 @@ class SessionsController < ApplicationController
 
   # DELETE /sessions/:id (logout)
   def destroy
+    reset_session
     head :no_content
   end
 

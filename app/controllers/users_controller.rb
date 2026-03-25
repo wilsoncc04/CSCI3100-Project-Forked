@@ -1,6 +1,7 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :update, :destroy]
   before_action :authenticate_user!, only: [:update, :destroy, :change_password]
+  before_action :authorize_user_owner!, only: [:update, :destroy]
 
   # GET /users
   # should be used for admin dashboard, not public API
@@ -35,7 +36,7 @@ class UsersController < ApplicationController
       render json: { user: user.as_json(except: [:password_digest, 
       :verification_otp, :verification_sent_at, :verification_token]), message: 'verification_email_sent' }, status: :created
     else
-      render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: user.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -71,7 +72,7 @@ class UsersController < ApplicationController
     if user.verify_otp!(otp)
       render json: { message: 'verified' }, status: :ok
     else
-      render json: { error: 'verification_failed_or_expired' }, status: :unprocessable_entity
+      render json: { error: 'verification_failed_or_expired' }, status: :unprocessable_content
     end
   end
 
@@ -109,7 +110,7 @@ class UsersController < ApplicationController
     # Update other user attributes if provided
     if params[:user].present?
       if !@user.update(user_params)
-        render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: @user.errors.full_messages }, status: :unprocessable_content
         return
       end
     end
@@ -123,7 +124,7 @@ class UsersController < ApplicationController
       if user.update(password: params[:new_password])
         render json: { message: 'password_changed' }, status: :ok
       else
-        render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: user.errors.full_messages }, status: :unprocessable_content
       end
     else
       render json: { error: 'invalid_credentials' }, status: :unauthorized
@@ -148,6 +149,12 @@ class UsersController < ApplicationController
     @user = User.find_by!(cuhk_id: cuhk)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'User not found' }, status: :not_found
+  end
+
+  def authorize_user_owner!
+    unless @user.id == current_user.id
+      render_unauthorized
+    end
   end
 
     def format_user(user)

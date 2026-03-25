@@ -1,16 +1,13 @@
 # message => chat => output
 # reference: https://medium.com/@reinteractivehq/adding-an-ai-chat-to-your-ruby-on-rails-application-58f5c943182b
 class ChatsController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_chat, only: [:show]
+  before_action :authorize_chat_participant!, only: [:show]
 
   # GET /chats
   # List all chats for the current user (as seller or buyer)
   def index
-    # unless current_user
-    #   render json: { error: 'Unauthorized' }, status: :unauthorized
-    #   return
-    # end
-
     # Get chats where user is seller or buyer
     seller_chats = Chat.where(seller_id: current_user.id)
     buyer_chats = Chat.where(interested_id: current_user.id)
@@ -23,17 +20,6 @@ class ChatsController < ApplicationController
   # GET /chats/:id
   # Get a specific chat with all messages
   def show
-    # unless current_user
-    #   render json: { error: 'Unauthorized' }, status: :unauthorized
-    #   return
-    # end
-
-    # Check if user has access to this chat
-    # unless @chat.seller_id == current_user.id || @chat.interested_id == current_user.id
-    #   render json: { error: 'Forbidden' }, status: :forbidden
-    #   return
-    # end
-
     chat_data = format_chat(@chat)
     chat_data[:messages] = @chat.messages.map { |msg| format_message(msg) }
 
@@ -43,11 +29,6 @@ class ChatsController < ApplicationController
   # POST /chats
   # Create a new chat between buyer and seller
   def create
-    # unless current_user
-    #   render json: { error: 'Unauthorized' }, status: :unauthorized
-    #   return
-    # end
-
     product = Product.find_by(id: params[:product_id])
     unless product
       render json: { error: 'Product not found' }, status: :not_found
@@ -59,7 +40,7 @@ class ChatsController < ApplicationController
 
     # Prevent seller from chatting with themselves
     if seller.id == buyer.id
-      render json: { error: 'Cannot chat with yourself' }, status: :unprocessable_entity
+      render json: { error: 'Cannot chat with yourself' }, status: :unprocessable_content
       return
     end
 
@@ -85,7 +66,7 @@ class ChatsController < ApplicationController
     if chat.save
       render json: format_chat(chat), status: :created
     else
-      render json: { errors: chat.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: chat.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -95,6 +76,12 @@ class ChatsController < ApplicationController
     @chat = Chat.find_by(id: params[:id])
     unless @chat
       render json: { error: 'Chat not found' }, status: :not_found
+    end
+  end
+
+  def authorize_chat_participant!
+    unless @chat.seller_id == current_user.id || @chat.interested_id == current_user.id
+      render_unauthorized
     end
   end
 

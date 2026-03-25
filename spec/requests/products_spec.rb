@@ -42,6 +42,12 @@ RSpec.describe 'Products API', type: :request do
       }
     end
 
+    before do
+      allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+        allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+      end
+    end
+
     context 'with single image upload' do
       it 'creates product with image successfully' do
         params = valid_params.merge(images: [create_test_image])
@@ -120,6 +126,12 @@ RSpec.describe 'Products API', type: :request do
   end
 
   describe 'PATCH /products/:id (update with image)' do
+    before do
+      allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+        allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+      end
+    end
+
     context 'with single image replacement' do
       it 'replaces all existing images' do
         # Create product with initial image
@@ -303,8 +315,126 @@ RSpec.describe 'Products API', type: :request do
       it 'lists products' do
         get products_path
         expect(response).to have_http_status(:ok)
-        products_data = JSON.parse(response.body)
-        expect(products_data).to be_an(Array)
+        response_data = JSON.parse(response.body)
+        expect(response_data).to include('data', 'pagination')
+        expect(response_data['data']).to be_an(Array)
+      end
+    end
+
+    context 'pagination' do
+      before do
+        # Create 35 products to test pagination (with default limit of 15)
+        35.times do |i|
+          create(:product,
+            name: "Paginated Product #{i + 1}",
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id
+          )
+        end
+      end
+
+      it 'returns first page with default limit' do
+        get products_path
+        response_data = JSON.parse(response.body)
+        expect(response_data['data'].length).to eq(15)
+        expect(response_data['pagination']['current_page']).to eq(1)
+        expect(response_data['pagination']['limit']).to eq(15)
+        expect(response_data['pagination']['total_count']).to eq(35)
+        expect(response_data['pagination']['total_pages']).to eq(3)
+      end
+
+      it 'returns second page with custom limit' do
+        get products_path, params: { page: 2, limit: 10 }
+        response_data = JSON.parse(response.body)
+        expect(response_data['data'].length).to eq(10)
+        expect(response_data['pagination']['current_page']).to eq(2)
+        expect(response_data['pagination']['limit']).to eq(10)
+        expect(response_data['pagination']['total_count']).to eq(35)
+        expect(response_data['pagination']['total_pages']).to eq(4)
+      end
+
+      it 'returns last page with remaining items' do
+        get products_path, params: { page: 3, limit: 15 }
+        response_data = JSON.parse(response.body)
+        expect(response_data['data'].length).to eq(5)
+        expect(response_data['pagination']['current_page']).to eq(3)
+        expect(response_data['pagination']['total_pages']).to eq(3)
+      end
+
+      it 'handles invalid page numbers gracefully' do
+        get products_path, params: { page: 0 }
+        response_data = JSON.parse(response.body)
+        expect(response_data['pagination']['current_page']).to eq(1)
+      end
+
+      it 'handles invalid limit gracefully' do
+        get products_path, params: { limit: 0 }
+        response_data = JSON.parse(response.body)
+        expect(response_data['pagination']['limit']).to eq(15)
+      end
+
+      it 'returns correct pagination data for custom limit' do
+        get products_path, params: { limit: 8 }
+        response_data = JSON.parse(response.body)
+        expect(response_data['data'].length).to eq(8)
+        expect(response_data['pagination']['total_pages']).to eq(5)
+      end
+    end
+
+    context 'fuzzy search with pagination' do
+      before do
+        # Create products with similar names for fuzzy search testing
+        create(:product, name: 'iPhone 13 Pro Max', seller_id: seller.id, buyer_id: buyer.id, category_id: category.id)
+        create(:product, name: 'iPhone 13 Pro', seller_id: seller.id, buyer_id: buyer.id, category_id: category.id)
+        create(:product, name: 'iPhone 12 Pro', seller_id: seller.id, buyer_id: buyer.id, category_id: category.id)
+        create(:product, name: 'Samsung Galaxy S21', seller_id: seller.id, buyer_id: buyer.id, category_id: category.id)
+        create(:product, name: 'Apple iPad Pro', seller_id: seller.id, buyer_id: buyer.id, category_id: category.id)
+      end
+
+      it 'searches products by keywords (fuzzy matching)' do
+        get products_path, params: { keywords: 'iPhone' }
+        response_data = JSON.parse(response.body)
+        expect(response_data['data'].length).to be >= 1
+        expect(response_data['data'].all? { |p| p['name'].include?('iPhone') }).to be true
+      end
+
+      it 'finds products with similar names (trigram matching)' do
+        get products_path, params: { keywords: 'iPhon' }
+        response_data = JSON.parse(response.body)
+        # Fuzzy search should still find "iPhone" matches
+        expect(response_data['data'].length).to be >= 1
+      end
+
+      it 'applies pagination to search results' do
+        # Create many iPhone products for pagination
+        15.times do |i|
+          create(:product,
+            name: "iPhone Variant #{i + 1}",
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id
+          )
+        end
+
+        get products_path, params: { keywords: 'iPhone', page: 1, limit: 5 }
+        response_data = JSON.parse(response.body)
+        expect(response_data['data'].length).to eq(5)
+        expect(response_data['pagination']['current_page']).to eq(1)
+      end
+
+      it 'returns correct total count for filtered results' do
+        get products_path, params: { keywords: 'iPhone', limit: 10 }
+        response_data = JSON.parse(response.body)
+        expect(response_data['pagination']['total_count']).to eq(3)
+        expect(response_data['pagination']['total_pages']).to eq(1)
+      end
+
+      it 'returns empty results when no matches found' do
+        get products_path, params: { keywords: 'NonexistentProduct' }
+        response_data = JSON.parse(response.body)
+        expect(response_data['data'].length).to eq(0)
+        expect(response_data['pagination']['total_count']).to eq(0)
       end
     end
   end
@@ -312,6 +442,9 @@ RSpec.describe 'Products API', type: :request do
   describe 'GET /products/:id (show)' do
     context 'with product containing images' do
       before do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+        end
         post products_path, params: {
           product: {
             name: 'Show Test Product',
@@ -337,6 +470,12 @@ RSpec.describe 'Products API', type: :request do
   end
 
   describe 'DELETE /products/:id' do
+    before do
+      allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+        allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+      end
+    end
+
     it 'deletes product and its images' do
       # Create product with image
       post products_path, params: {
@@ -365,6 +504,9 @@ RSpec.describe 'Products API', type: :request do
 
   describe 'Image URL formatting' do
     it 'returns valid image URLs in format_product response' do
+      allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+        allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+      end
       post products_path, params: {
         product: {
           name: 'Format Test',
@@ -390,6 +532,9 @@ RSpec.describe 'Products API', type: :request do
 
   describe 'Error handling' do
     it 'handles file upload errors gracefully' do
+      allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+        allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+      end
       # Try with invalid product data
       params = {
         product: {
@@ -402,6 +547,161 @@ RSpec.describe 'Products API', type: :request do
       post products_path, params: params
       # Accept either bad request or unprocessable entity
       expect(response.status).to satisfy { |status| [400, 422, 500].include?(status) }
+    end
+  end
+
+  describe 'Authentication and Authorization checks' do
+    let(:other_seller) { create(:user, is_seller: true, verified_at: Time.current) }
+    let(:product) { create(:product, seller_id: seller.id, buyer_id: buyer.id) }
+
+    context 'POST /products (create)' do
+      it 'requires authentication' do
+        params = {
+          product: {
+            name: 'New Product',
+            description: 'Product description',
+            price: 150.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          }
+        }
+        post products_path, params: params, headers: json_headers
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it 'allows authenticated user to create product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+        end
+
+        params = {
+          product: {
+            name: 'New Product',
+            description: 'Product description',
+            price: 150.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          }
+        }
+        expect {
+          post products_path, params: params
+        }.to change(Product, :count).by(1)
+      end
+    end
+
+    context 'PATCH /products/:id (update)' do
+      it 'requires authentication' do
+        patch product_path(product.id), params: {
+          product: { name: 'Updated Name' }
+        }, headers: json_headers
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it 'allows seller to update their own product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+        end
+
+        patch product_path(product.id), params: {
+          product: { name: 'Updated Name' }
+        }
+        expect(response).to have_http_status(:ok)
+        product.reload
+        expect(product.name).to eq('Updated Name')
+      end
+
+      it 'prevents other sellers from updating product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(other_seller)
+        end
+
+        patch product_path(product.id), params: {
+          product: { name: 'Hacked Name' }
+        }, headers: json_headers
+        expect(response).to have_http_status(:forbidden)
+        product.reload
+        expect(product.name).not_to eq('Hacked Name')
+      end
+
+      it 'prevents buyer from updating product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(buyer)
+        end
+
+        patch product_path(product.id), params: {
+          product: { name: 'Hacked Name' }
+        }, headers: json_headers
+        expect(response).to have_http_status(:forbidden)
+        product.reload
+        expect(product.name).not_to eq('Hacked Name')
+      end
+    end
+
+    context 'DELETE /products/:id (destroy)' do
+      it 'requires authentication' do
+        delete product_path(product.id), headers: json_headers
+        expect(response).to have_http_status(:unauthorized)
+        expect(Product.find_by(id: product.id)).to be_persisted
+      end
+
+      it 'allows seller to delete their own product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+        end
+
+        product_id = product.id
+        delete product_path(product.id)
+        expect(response).to have_http_status(:no_content)
+        expect(Product.find_by(id: product_id)).to be_nil
+      end
+
+      it 'prevents other sellers from deleting product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(other_seller)
+        end
+
+        delete product_path(product.id), headers: json_headers
+        expect(response).to have_http_status(:forbidden)
+        expect(product.reload).to be_persisted
+      end
+
+      it 'prevents buyer from deleting product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(buyer)
+        end
+
+        delete product_path(product.id), headers: json_headers
+        expect(response).to have_http_status(:forbidden)
+        expect(product.reload).to be_persisted
+      end
+    end
+
+    context 'GET /products/:id (show)' do
+      it 'allows unauthenticated access' do
+        get product_path(product.id)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'allows authenticated access' do
+        allow_any_instance_of(ProductsController).to receive(:current_user).and_return(buyer)
+        get product_path(product.id)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context 'GET /products (index)' do
+      it 'allows unauthenticated access' do
+        get products_path
+        expect(response).to have_http_status(:ok)
+      end
     end
   end
 end

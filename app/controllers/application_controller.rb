@@ -15,9 +15,24 @@ class ApplicationController < ActionController::Base
     return if current_user
     if request.format.json?
       render json: { error: 'unauthenticated' }, status: :unauthorized
-      else
-    redirect_to root_path, alert: 'Please log in'
+    else
+      redirect_to root_path, alert: 'Please log in'
+    end
   end
+
+  def authorize_user!(user)
+    # Check if current user is the same as the user being modified
+    # or if current user is an admin
+    return if current_user&.id == user.id
+    render_unauthorized
+  end
+
+  def render_unauthorized
+    if request.format.json?
+      render json: { error: 'unauthorized' }, status: :forbidden
+    else
+      redirect_to root_path, alert: 'You do not have permission to access this resource'
+    end
   end
 
   def require_admin!

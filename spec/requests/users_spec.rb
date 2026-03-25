@@ -163,7 +163,7 @@ RSpec.describe 'Users API', type: :request do
         invalid_params = valid_params.deep_dup # duplicate without sharing same hash
         invalid_params[:user][:email] = 'invalid@email.com'
         post users_path, params: invalid_params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(JSON.parse(response.body)).to include('errors')
       end
 
@@ -171,13 +171,13 @@ RSpec.describe 'Users API', type: :request do
         invalid_params = valid_params.deep_dup
         invalid_params[:user].delete(:password)
         post users_path, params: invalid_params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
       it 'fails with duplicate email' do
         post users_path, params: valid_params
         post users_path, params: valid_params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(JSON.parse(response.body)).to include('errors')
       end
 
@@ -189,7 +189,7 @@ RSpec.describe 'Users API', type: :request do
           }
         }
         post users_path, params: invalid_params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end
@@ -233,7 +233,7 @@ RSpec.describe 'Users API', type: :request do
           email: unverified_user.email,
           otp: '000000'
         }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(JSON.parse(response.body)).to include('error')
       end
 
@@ -262,7 +262,7 @@ RSpec.describe 'Users API', type: :request do
           email: unverified_user.email,
           otp: unverified_user.verification_otp
         }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end
@@ -443,7 +443,7 @@ RSpec.describe 'Users API', type: :request do
               email: 'invalid@email.com'
             }
           }
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
 
@@ -670,6 +670,59 @@ RSpec.describe 'Users API', type: :request do
         new_password: 'newpassword456'
       }, headers: json_headers
       expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  describe 'Authorization checks' do
+    context 'when updating user' do
+      it 'allows user to update their own account' do
+        allow_any_instance_of(UsersController).to receive(:authenticate_user!) do
+          allow_any_instance_of(UsersController).to receive(:current_user).and_return(user)
+        end
+
+        patch user_path(user.cuhk_id), params: {
+          user: { name: 'Updated Name' }
+        }
+        expect(response).to have_http_status(:ok)
+        user.reload
+        expect(user.name).to eq('Updated Name')
+      end
+
+      it 'prevents user from updating another user' do
+        allow_any_instance_of(UsersController).to receive(:authenticate_user!) do
+          allow_any_instance_of(UsersController).to receive(:current_user).and_return(user)
+        end
+
+        patch user_path(another_user.cuhk_id), params: {
+          user: { name: 'Hacked Name' }
+        }, headers: json_headers
+        expect(response).to have_http_status(:forbidden)
+        another_user.reload
+        expect(another_user.name).not_to eq('Hacked Name')
+      end
+    end
+
+    context 'when deleting user' do
+      it 'allows user to delete their own account' do
+        user_id = user.id
+        allow_any_instance_of(UsersController).to receive(:authenticate_user!) do
+          allow_any_instance_of(UsersController).to receive(:current_user).and_return(user)
+        end
+
+        delete user_path(user.cuhk_id)
+        expect(response).to have_http_status(:no_content)
+        expect(User.find_by(id: user_id)).to be_nil
+      end
+
+      it 'prevents user from deleting another user' do
+        allow_any_instance_of(UsersController).to receive(:authenticate_user!) do
+          allow_any_instance_of(UsersController).to receive(:current_user).and_return(user)
+        end
+
+        delete user_path(another_user.cuhk_id), headers: json_headers
+        expect(response).to have_http_status(:forbidden)
+        expect(another_user.reload).to be_persisted
+      end
     end
   end
 end

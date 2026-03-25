@@ -85,4 +85,39 @@ RSpec.describe 'Sessions API', type: :request do
       expect(response.body).to be_empty
     end
   end
+
+  describe 'Authentication for sessions' do
+    context 'POST /sessions (login)' do
+      it 'does not require authentication' do
+        post sessions_path, params: { email: user.email, password: 'password123' }
+        expect(response).to have_http_status(:created)
+      end
+
+      it 'allows unauthenticated users to login' do
+        # Should work without setting up any session first
+        post sessions_path, params: { email: user.email, password: 'password123' }
+        expect(response).to have_http_status(:created)
+        response_data = JSON.parse(response.body)
+        expect(response_data['message']).to eq('logged_in')
+      end
+    end
+
+    context 'DELETE /sessions/:id (logout)' do
+      it 'does not require authentication' do
+        # Unauthenticated users can call logout (no-op basically)
+        delete session_path(1)
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'clears authenticated session when user is logged in' do
+        # First login
+        post sessions_path, params: { email: user.email, password: 'password123' }
+        expect(response).to have_http_status(:created)
+        
+        # Then logout
+        delete session_path(1)
+        expect(response).to have_http_status(:no_content)
+      end
+    end
+  end
 end

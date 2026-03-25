@@ -4,22 +4,39 @@ class ProductsController < ApplicationController
 
   # directly get the product list
   before_action :set_product, only: %i[show update destroy]
+  before_action :authenticate_user!, only: %i[create update destroy]
+  before_action :authorize_product_seller!, only: %i[update destroy]
 
   # GET /products
   # show the first X products, where X is determined by a query parameter, default 15
-  # supports `q` for simple fuzzy search (name or description)
+  # supports pagination via `page` and `limit` parameters
+  # supports `keywords` for fuzzy search (using trigram matching on product name)
   def index
     limit = (params[:limit] || 15).to_i
     limit = 15 if limit <= 0
+    
+    page = (params[:page] || 1).to_i
+    page = 1 if page <= 0
+    offset = (page - 1) * limit
 
     products = Product.all
-    # basic search, not Fuzzy search
+    # fuzzy search using trigram matching
     if params[:keywords].present?
       products = products.search_by_name(params[:keywords])
     end
 
-    products = products.limit(limit)
-    render json: products.as_json(only: PRODUCT_JSON_ONLY)
+    total_count = products.count
+    products = products.limit(limit).offset(offset)
+    
+    render json: {
+      data: products.as_json(only: PRODUCT_JSON_ONLY),
+      pagination: {
+        current_page: page,
+        limit: limit,
+        total_count: total_count,
+        total_pages: (total_count.to_f / limit).ceil
+      }
+    }
   rescue StandardError => e
     render_error(e)
   end
@@ -45,7 +62,7 @@ class ProductsController < ApplicationController
       product.reload # Reload to ensure images are properly loaded
       render json: format_product(product), status: :created
     else
-      render json: { errors: product.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: product.errors.full_messages }, status: :unprocessable_content
     end
   rescue ActionController::ParameterMissing => e
     render json: { error: e.message }, status: :bad_request
@@ -59,7 +76,7 @@ class ProductsController < ApplicationController
     # Update product attributes if provided
     if params[:product].present?
       unless @product.update(product_params)
-        render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
         return
       end
     end
@@ -118,6 +135,12 @@ class ProductsController < ApplicationController
   # directly find the product by id for show, update, destroy, and price_history actions
   def set_product
     @product = Product.find(params[:id])
+  end
+
+  def authorize_product_seller!
+    unless @product.seller_id == current_user.id
+      render_unauthorized
+    end
   end
 
   def product_params

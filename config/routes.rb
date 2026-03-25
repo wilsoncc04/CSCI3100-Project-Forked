@@ -1,39 +1,31 @@
 Rails.application.routes.draw do
   root 'pages#index'
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
 
-    # API routes for core resources
-    resources :users, only: [:index, :show, :create, :update, :destroy] do
-      collection do
-        get :sellers
-        post :register
-        # Support OTP verification via POST with { email, otp }
-        post :verify
-        post :resend_verification
-        # Allow changing password via POST /users/change_password
-        post :change_password
-      end
+  # ===== API ROUTES =====
+  resources :users, only: [:index, :show, :create, :update, :destroy] do
+    collection do
+      get :sellers                  # GET /users/sellers - list all sellers
+      post :register                # POST /users/register - alias for create (user registration)
+      post :verify                  # POST /users/verify - verify email with OTP
+      post :resend_verification     # POST /users/resend_verification - resend OTP email
+      post :change_password         # POST /users/change_password - update password
     end
+  end
 
-    resources :products do
-      # Add a collection route for price_history. This will be reachable at
-      # GET /products/price_history and should accept a `product_id` query param.
-      collection do
-        get :price_history
-      end
+  resources :products do
+    collection do
+      get :price_history           # GET /products/price_history?product_id=X&points=Y
     end
+  end
 
-    resources :chats, only: [:index, :show, :create] do
-      resources :messages, only: [:index, :create, :show, :destroy]
-    end
+  resources :chats, only: [:index, :show, :create] do
+    resources :messages, only: [:index, :create, :show, :destroy]
+  end
 
-    resources :messages, only: [:index, :show, :create, :destroy]
+  # Login sesion 
+  resources :sessions, only: [:create, :destroy]
 
-    resources :sessions, only: [:create, :destroy]
-
-    # catch-all route to handle client-side routing in a single-page application (SPA).
+  # handle all other routes with React Router (for client-side routing)
   get '*path', to: 'pages#index', via: :all
 
 end
