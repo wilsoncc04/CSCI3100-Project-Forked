@@ -36,11 +36,19 @@ class ProductsController < ApplicationController
   def create
     product = Product.new(product_params)
     # Handle image uploads
+    if params[:images].present?
+      params[:images].each do |image|
+        product.image.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
+      end
+    end
     if product.save
+      product.reload # Reload to ensure images are properly loaded
       render json: format_product(product), status: :created
     else
       render json: { errors: product.errors.full_messages }, status: :unprocessable_entity
     end
+  rescue ActionController::ParameterMissing => e
+    render json: { error: e.message }, status: :bad_request
   rescue StandardError => e
     render_error(e)
   end
@@ -48,16 +56,26 @@ class ProductsController < ApplicationController
   # PATCH/PUT /products/:id
   # update product details
   def update
-     # Replace images if new ones provided
-    if params[:images].present?
-      # leave here, finish it after implementing image upload
+    # Update product attributes if provided
+    if params[:product].present?
+      unless @product.update(product_params)
+        render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+        return
+      end
     end
 
-    if @product.update(product_params)
-      render json: format_product(@product),  status: :ok
-    else
-      render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+    # Replace images if new ones provided
+    if params[:images].present?
+      @product.image.purge # Remove old images
+      params[:images].each do |image|
+        @product.image.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
+      end
+      @product.reload # Reload to get attached images
     end
+
+    render json: format_product(@product), status: :ok
+  rescue ActionController::ParameterMissing => e
+    render json: { error: e.message }, status: :bad_request
   rescue StandardError => e
     render_error(e)
   end
@@ -105,14 +123,15 @@ class ProductsController < ApplicationController
   def product_params
     params.require(:product).permit(
       %i[name description price seller_id category_id location 
-      contact status buyer_id image])
+      contact status buyer_id])
   end
 
+  # logger for error (just for safety)
   def render_error(error)
-    logger.error("ProductsController error: "+ error.message)
+    logger.error("ProductsController error: #{error.class} - #{error.message}")
+    logger.error(error.backtrace.first(5).join("\n")) if error.backtrace
     render json: { error: error.message }, status: :internal_server_error
   end
-end
 
   def format_product(product)
     {
@@ -126,8 +145,15 @@ end
       category_id: product.category_id,
       location: product.location,
       contact: product.contact,
-      images: product.images, # Assuming you have an images association or method to get image URLs
+      images: product.image.map { |img| safe_url_for(img) }.compact,
       created_at: product.created_at,
       updated_at: product.updated_at
     }
   end
+
+  def safe_url_for(blob)
+    url_for(blob)
+  rescue StandardError
+    nil
+  end
+end

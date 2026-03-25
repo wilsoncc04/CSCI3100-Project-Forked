@@ -4,14 +4,14 @@ import Interested from "./Interested";
 import PurchaseHistory from "./PurchaseHistory";
 import Setting from "./Setting";
 
-export default function ProfilePage() {
+export default function AccountPage() {
   const [activeTab, setActiveTab] = useState("Account info");
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const menuItems = ["Account info", "Interested", "Purchase History", "Setting", "Log out"];
 
   const handleLogout = () => {
-    if (window.confirm("確定要登出嗎？")) {
+    if (window.confirm("Are you sure you want to log out?")) {
       setIsLoggedIn(false);
     }
   };
@@ -19,8 +19,8 @@ export default function ProfilePage() {
   if (!isLoggedIn) {
     return (
       <div style={{ textAlign: "center", marginTop: "100px" }}>
-        <h2>您已成功登出</h2>
-        <button onClick={() => setIsLoggedIn(true)} style={loginBtn}>重新登入</button>
+        <h2>you have successfully logged out</h2>
+        <button onClick={() => setIsLoggedIn(true)} style={loginBtn}>Re-login</button>
       </div>
     );
   }
@@ -45,12 +45,11 @@ export default function ProfilePage() {
               key={item}
               onClick={item === "Log out" ? handleLogout : () => setActiveTab(item)}
               style={{
-                ...styles.menuItem,
-                backgroundColor: activeTab === item && item !== "Log out" ? "#007bff" : "transparent",
-                color: activeTab === item && item !== "Log out" ? "white" : "#333",
-                borderLeft: activeTab === item && item !== "Log out" ? "4px solid #0056b3" : "4px solid transparent",
-                fontWeight: item === "Log out" ? "bold" : "normal",
-                color: item === "Log out" ? "#dc3545" : (activeTab === item ? "white" : "#333")
+              ...styles.menuItem,
+              backgroundColor: (activeTab === item && item !== "Log out") ? "#007bff" : "transparent",
+              borderLeft: (activeTab === item && item !== "Log out") ? "4px solid #0056b3" : "4px solid transparent",
+              fontWeight: item === "Log out" ? "bold" : "normal",
+              color: item === "Log out" ? "#dc3545" : (activeTab === item ? "white" : "#333") 
               }}
             >
               {item}

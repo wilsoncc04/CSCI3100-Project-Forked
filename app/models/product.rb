@@ -8,10 +8,14 @@ class Product < ApplicationRecord
     has_many :chats, foreign_key: 'item_id', dependent: :destroy
 
     has_many_attached :image
-
+  
+    validates :name, presence: true
+    validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
+    validates :seller_id, presence: true
+    validates :buyer_id, presence: true
+  
     include PgSearch::Model
 
     pg_search_scope :search_by_name, against: :name, using: { trigram: { threshold: 0.2 } }
     # Adjust the threshold from 0 to 1 for strictness
-end
 end

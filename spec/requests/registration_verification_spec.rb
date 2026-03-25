@@ -22,10 +22,10 @@ RSpec.describe 'User registration and verification', type: :request do
 
     user = User.find_by(email: valid_params[:user][:email])
     expect(user).not_to be_nil
-    expect(user.verification_token).to be_present
+    expect(user.verification_otp).to be_present
 
     # verify endpoint
-    get verify_users_path, params: { token: user.verification_token }
+    post verify_users_path, params: { otp: user.verification_otp, email: user.email }
     expect(response).to have_http_status(:ok)
     user.reload
     expect(user.verified_at).to be_present

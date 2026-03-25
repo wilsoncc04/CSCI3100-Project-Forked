@@ -3,10 +3,7 @@ require 'cgi'
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "support", "paths"))
 
 Given(/^(?:|I )am on (.+)$/) do |page_name|
-  case page_name
   when "the marketplace index page"
-    visit '/index'
-  when "the home page"
     visit '/'
   else
     visit path_to(page_name)

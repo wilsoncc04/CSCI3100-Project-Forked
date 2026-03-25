@@ -45,7 +45,7 @@ export default function Setting() {
   const [password, setPassword] = useState({ old: "", new: "" });
 
   const handleUpdate = () => {
-    alert("密碼更新成功！");
+    alert("password updated！");
     setPassword({ old: "", new: "" });
   };
 
@@ -53,27 +53,27 @@ export default function Setting() {
     <SettingContainer>
       <h2>Settings</h2>
       <Section>
-        <SectionTitle>通知設定</SectionTitle>
+        <SectionTitle>Anouncement Setting</SectionTitle>
         <CheckboxLabel>
-          <input type="checkbox" defaultChecked /> 接收電子郵件通知
+          <input type="checkbox" defaultChecked /> accept new message notifications
         </CheckboxLabel>
         
         <Divider />
         
-        <SectionTitle>更改密碼</SectionTitle>
+        <SectionTitle>Change Password</SectionTitle>
         <PasswordInput 
           type="password" 
-          placeholder="舊密碼" 
+          placeholder="Old Password" 
           value={password.old}
           onChange={(e) => setPassword({...password, old: e.target.value})}
         />
         <PasswordInput 
           type="password" 
-          placeholder="新密碼" 
+          placeholder="New Password" 
           value={password.new}
           onChange={(e) => setPassword({...password, new: e.target.value})}
         />
-        <UpdateButton onClick={handleUpdate}>更新設定</UpdateButton>
+        <UpdateButton onClick={handleUpdate}>Update Settings</UpdateButton>
       </Section>
     </SettingContainer>
   );
