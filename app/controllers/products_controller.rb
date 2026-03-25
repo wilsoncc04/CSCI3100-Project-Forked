@@ -14,8 +14,8 @@ class ProductsController < ApplicationController
 
     products = Product.all
     # basic search, not Fuzzy search
-    if params[:q].present?
-      products = products.search_by_name(params[:q])
+    if params[:keywords].present?
+      products = products.search_by_name(params[:keywords])
     end
 
     products = products.limit(limit)
