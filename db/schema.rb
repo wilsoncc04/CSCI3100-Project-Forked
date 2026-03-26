@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_25_075840) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_102245) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -106,7 +106,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_075840) do
     t.string "cuhk_id"
     t.string "email", null: false
     t.string "hostel"
-    t.boolean "is_seller", default: false, null: false
+    t.boolean "is_admin"
     t.string "name", null: false
     t.string "password_digest", null: false
     t.float "seller_rating", default: 0.0, null: false
