@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { goodsTypes } from "../../common/productConstants"; 
+import { useNavigate } from "react-router-dom";
 
 export default function SellPage() {
   const [formData, setFormData] = useState({
@@ -37,6 +38,8 @@ export default function SellPage() {
   };
 
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -397,6 +400,7 @@ export default function SellPage() {
         <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
           <button
             type="button"
+            onClick={() => navigate("/")}
             style={{
               flex: 1,
               padding: "1rem",
