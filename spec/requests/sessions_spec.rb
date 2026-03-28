@@ -20,7 +20,7 @@ RSpec.describe 'Sessions API', type: :request do
         post sessions_path, params: { email: user.email, password: 'password123' }
         user_data = JSON.parse(response.body)['user']
         
-        expect(user_data).to include('id', 'email', 'name', 'cuhk_id', 'hostel', 'is_seller')
+        expect(user_data).to include('id', 'email', 'name', 'cuhk_id', 'hostel', 'is_admin')
       end
 
       it 'does not expose sensitive information' do

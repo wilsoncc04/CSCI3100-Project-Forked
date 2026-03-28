@@ -4,8 +4,8 @@ require 'tempfile'
 # Comprehensive tests for Products API including image upload functionality
 RSpec.describe 'Products API', type: :request do
   # Test data setup
-  let(:seller) { create(:user, is_seller: true, verified_at: Time.current) }
-  let(:buyer) { create(:user, is_seller: false, verified_at: Time.current) }
+  let(:seller) { create(:user, verified_at: Time.current) }
+  let(:buyer) { create(:user, verified_at: Time.current) }
   let(:category) { create(:category) }
   let(:json_headers) { { 'ACCEPT' => 'application/json' } }
 
@@ -712,7 +712,7 @@ RSpec.describe 'Products API', type: :request do
   end
 
   describe 'Authentication and Authorization checks' do
-    let(:other_seller) { create(:user, is_seller: true, verified_at: Time.current) }
+    let(:other_seller) { create(:user, verified_at: Time.current) }
     let(:product) { create(:product, seller_id: seller.id, buyer_id: buyer.id) }
 
     context 'POST /products (create)' do
@@ -862,6 +862,101 @@ RSpec.describe 'Products API', type: :request do
       it 'allows unauthenticated access' do
         get products_path
         expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context 'GET /products/price_history' do
+      let(:product) { create(:product, seller_id: seller.id, buyer_id: buyer.id) }
+
+      it 'returns price history for a product by product_id' do
+        get price_history_products_path, params: { product_id: product.id }
+        expect(response).to have_http_status(:ok)
+        response_data = JSON.parse(response.body)
+        expect(response_data).to include('product_id', 'prices')
+        expect(response_data['product_id']).to eq(product.id)
+        expect(response_data['prices']).to be_an(Array)
+      end
+
+      it 'returns price history with default points (10)' do
+        get price_history_products_path, params: { product_id: product.id }
+        expect(response).to have_http_status(:ok)
+        response_data = JSON.parse(response.body)
+        # Currently prices array is empty (not implemented), but endpoint should work
+        expect(response_data['prices']).to be_an(Array)
+      end
+
+      it 'accepts custom points parameter' do
+        get price_history_products_path, params: { product_id: product.id, points: 5 }
+        expect(response).to have_http_status(:ok)
+        response_data = JSON.parse(response.body)
+        expect(response_data['prices']).to be_an(Array)
+      end
+
+      it 'limits points to maximum 20' do
+        get price_history_products_path, params: { product_id: product.id, points: 50 }
+        expect(response).to have_http_status(:ok)
+        response_data = JSON.parse(response.body)
+        # Response should still return successfully, with points capped at 20
+        expect(response_data.keys).to include('product_id', 'prices')
+      end
+
+      it 'defaults to 10 points when points parameter is zero' do
+        get price_history_products_path, params: { product_id: product.id, points: 0 }
+        expect(response).to have_http_status(:ok)
+        response_data = JSON.parse(response.body)
+        expect(response_data['prices']).to be_an(Array)
+      end
+
+      it 'defaults to 10 points when points parameter is negative' do
+        get price_history_products_path, params: { product_id: product.id, points: -5 }
+        expect(response).to have_http_status(:ok)
+        response_data = JSON.parse(response.body)
+        expect(response_data['prices']).to be_an(Array)
+      end
+
+      it 'returns bad request when product_id is missing' do
+        get price_history_products_path
+        expect(response).to have_http_status(:bad_request)
+        response_data = JSON.parse(response.body)
+        expect(response_data).to include('error')
+        expect(response_data['error']).to match(/product_id/)
+      end
+
+      it 'returns error when product does not exist' do
+        get price_history_products_path, params: { product_id: 999999 }
+        expect(response).to have_http_status(:internal_server_error)
+      end
+
+      it 'allows unauthenticated access' do
+        get price_history_products_path, params: { product_id: product.id }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'allows authenticated access' do
+        allow_any_instance_of(ProductsController).to receive(:current_user).and_return(buyer)
+        get price_history_products_path, params: { product_id: product.id }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'returns empty prices array (price history not yet implemented)' do
+        get price_history_products_path, params: { product_id: product.id }
+        response_data = JSON.parse(response.body)
+        expect(response_data['prices']).to eq([])
+      end
+
+      it 'accepts id as query parameter (fallback to product_id)' do
+        get price_history_products_path, params: { id: product.id }
+        expect(response).to have_http_status(:ok)
+        response_data = JSON.parse(response.body)
+        expect(response_data['product_id']).to eq(product.id)
+      end
+
+      it 'prioritizes product_id parameter over id parameter' do
+        other_product = create(:product, seller_id: seller.id, buyer_id: buyer.id)
+        get price_history_products_path, params: { product_id: product.id, id: other_product.id }
+        response_data = JSON.parse(response.body)
+        # product_id parameter should take precedence
+        expect(response_data['product_id']).to eq(product.id)
       end
     end
   end

@@ -68,6 +68,26 @@
 - with product containing images
   - returns product details
 
+## GET /products/:id/price_history
+- successful requests
+  - returns price history for a product by product_id
+  - returns price history with default points (10)
+  - accepts custom points parameter
+  - returns empty prices array (price history not yet implemented)
+  - allows unauthenticated access
+  - allows authenticated access
+- points parameter validation
+  - limits points to maximum 20
+  - defaults to 10 points when points parameter is zero
+  - defaults to 10 points when points parameter is negative
+- query parameters
+  - accepts product_id as query parameter
+  - accepts id as query parameter (fallback to product_id)
+  - prioritizes product_id parameter over id parameter
+- error handling
+  - returns bad request when product_id is missing
+  - returns error when product does not exist
+
 ## DELETE /products/:id
 - deletes product and its images
 

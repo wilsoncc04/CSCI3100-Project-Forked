@@ -96,7 +96,7 @@ class MessagesController < ApplicationController
       email: user.email,
       name: user.name,
       profile_picture: user.profile_picture,
-      is_seller: user.is_seller,
+      is_admin: user.is_admin,
       seller_rating: user.seller_rating
     }
   end

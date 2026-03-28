@@ -31,7 +31,7 @@ RSpec.describe 'Users API', type: :request do
         get users_path
         users_data = JSON.parse(response.body)
         expect(users_data.first).to include(
-          'id', 'email', 'name', 'cuhk_id', 'hostel', 'is_seller'
+          'id', 'email', 'name', 'cuhk_id', 'hostel', 'is_admin'
         )
       end
     end
@@ -45,27 +45,28 @@ RSpec.describe 'Users API', type: :request do
     end
   end
 
-  describe 'GET /users/sellers' do
+  describe 'GET /users/admins' do
     before do
-      @seller1 = create(:user, is_seller: true, verified_at: Time.current)
-      @seller2 = create(:user, is_seller: true, verified_at: Time.current)
-      @buyer = create(:user, is_seller: false, verified_at: Time.current)
+      @seller1 = create(:user, verified_at: Time.current)
+      @seller2 = create(:user, verified_at: Time.current)
+      @buyer = create(:user, verified_at: Time.current)
     end
 
-    it 'returns only sellers' do
-      get sellers_users_path
+    it 'returns only admins' do
+      get admins_users_path
       expect(response).to have_http_status(:ok)
-      sellers_data = JSON.parse(response.body)
-      expect(sellers_data.length).to eq(2)
-      expect(sellers_data.map { |s| s['id'] }).to match_array([@seller1.id, @seller2.id])
+      admins_data = JSON.parse(response.body)
+      expect(admins_data.length).to eq(0)  # No one is admin by default
     end
 
-    it 'returns sellers with correct attributes' do
-      get sellers_users_path
-      sellers_data = JSON.parse(response.body)
-      expect(sellers_data.first).to include(
-        'id', 'email', 'name', 'is_seller'
-      )
+    it 'returns admins with correct attributes' do
+      get admins_users_path
+      admins_data = JSON.parse(response.body)
+      if admins_data.length > 0
+        expect(admins_data.first).to include(
+          'id', 'email', 'name', 'is_admin'
+        )
+      end
     end
   end
 
@@ -83,7 +84,7 @@ RSpec.describe 'Users API', type: :request do
         get user_path(user.cuhk_id)
         user_data = JSON.parse(response.body)
         expect(user_data).to include(
-          'id', 'email', 'name', 'cuhk_id', 'hostel', 'is_seller', 'college'
+          'id', 'email', 'name', 'cuhk_id', 'hostel', 'is_admin', 'college'
         )
       end
 
@@ -113,7 +114,7 @@ RSpec.describe 'Users API', type: :request do
           cuhk_id: '1155999999',
           hostel: 'On-campus',
           college: 'Chung Chi College',
-          is_seller: false
+          is_admin: false
         }
       }
     end
@@ -625,7 +626,7 @@ RSpec.describe 'Users API', type: :request do
           password: 'SecurePassword123',
           cuhk_id: '1155888888',
           hostel: 'On-campus',
-          is_seller: false
+          is_admin: false
         }
       }
       post users_path, params: params

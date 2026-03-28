@@ -10,10 +10,10 @@ class UsersController < ApplicationController
     render json: users.map { |u| format_user(u) }, status: :ok
   end
 
-  # GET /users/sellers
+  # GET /users/admins
   # should be used for admin dashboard, not public API
-  def sellers
-    render json: User.sellers.map { |u| format_user(u) }, status: :ok
+  def admins
+    render json: User.admins.map { |u| format_user(u) }, status: :ok
   end
 
   # GET /users/:id
@@ -26,7 +26,7 @@ class UsersController < ApplicationController
 
   # POST /users
   def create
-    # require: email, name, password, cuhk_id, hostel, is_seller
+    # require: email, name, password, cuhk_id, hostel, is_admin
     user = User.new(user_params)
     if user.save
       # generate a numeric OTP (if not already generated, prevent model bugs) and send email
@@ -141,7 +141,7 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      %i[name email password cuhk_id hostel is_seller college profile_picture])
+      %i[name email password cuhk_id hostel is_admin college profile_picture])
   end
 
   def set_user
@@ -165,7 +165,7 @@ class UsersController < ApplicationController
       cuhk_id: user.cuhk_id,
       college: user.college,
       hostel: user.hostel,
-      is_seller: user.is_seller,
+      is_admin: user.is_admin,
       seller_rating: user.seller_rating,
       seller_review_count: user.seller_review_count,
       profile_picture_url: user.profile_picture&.attached? ? url_for(user.profile_picture) : nil
