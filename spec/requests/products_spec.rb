@@ -72,6 +72,17 @@ RSpec.describe 'Products API', type: :request do
         expect(response_data['images']).to be_an(Array)
         expect(response_data['images'].first).to be_present
       end
+
+      it 'creates price history record when product is created' do
+        params = valid_params.merge(images: [create_test_image])
+        expect {
+          post products_path, params: params
+        }.to change(PriceHistory, :count).by(1)
+        created_product = Product.last
+        price_history = created_product.price_histories.first
+        expect(price_history.price).to eq(150.0)
+        expect(price_history.date).to be_present
+      end
     end
 
     context 'with multiple images upload' do
@@ -90,6 +101,14 @@ RSpec.describe 'Products API', type: :request do
         response_data = JSON.parse(response.body)
         expect(response_data['images'].count).to eq(2)
       end
+
+      it 'records price history for multiple image uploads' do
+        images = create_multiple_test_images(3)
+        params = valid_params.merge(images: images)
+        expect {
+          post products_path, params: params
+        }.to change(PriceHistory, :count).by(1)
+      end
     end
 
     context 'without images' do
@@ -104,6 +123,15 @@ RSpec.describe 'Products API', type: :request do
         post products_path, params: valid_params
         response_data = JSON.parse(response.body)
         expect(response_data['images']).to eq([])
+      end
+
+      it 'creates price history record even without images' do
+        expect {
+          post products_path, params: valid_params
+        }.to change(PriceHistory, :count).by(1)
+        created_product = Product.last
+        expect(created_product.price_histories.count).to eq(1)
+        expect(created_product.price_histories.first.price).to eq(150.0)
       end
     end
 
@@ -190,6 +218,34 @@ RSpec.describe 'Products API', type: :request do
         response_data = JSON.parse(response.body)
         expect(response_data['images'].count).to eq(1)
       end
+
+      it 'does not create price history when only images are replaced' do
+        # Create product with initial image
+        post products_path, params: {
+          product: {
+            name: 'Product',
+            description: 'Description',
+            price: 100.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          },
+          images: [create_test_image]
+        }
+        product = Product.last
+        initial_price_history_count = product.price_histories.count
+
+        # Update only images, not price
+        patch product_path(product.id), params: {
+          images: [create_test_image]
+        }
+
+        product.reload
+        expect(product.price_histories.count).to eq(initial_price_history_count)
+      end
     end
 
     context 'with multiple image replacement' do
@@ -218,6 +274,47 @@ RSpec.describe 'Products API', type: :request do
 
         product.reload
         expect(product.image.count).to eq(3)
+      end
+
+      it 'records price history when updating multiple prices' do
+        # Create product with initial price
+        post products_path, params: {
+          product: {
+            name: 'Test',
+            description: 'Test',
+            price: 100.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          },
+          images: create_multiple_test_images(2)
+        }
+        product = Product.last
+
+        # First update
+        patch product_path(product.id), params: {
+          product: {
+            price: 150.0
+          },
+          images: create_multiple_test_images(3)
+        }
+
+        product.reload
+        first_update_count = product.price_histories.count
+
+        # Second update
+        patch product_path(product.id), params: {
+          product: {
+            price: 200.0
+          }
+        }
+
+        product.reload
+        expect(product.price_histories.count).to eq(first_update_count + 1)
+        expect(product.price_histories.last.price).to eq(200.0)
       end
     end
 
@@ -251,6 +348,36 @@ RSpec.describe 'Products API', type: :request do
         product.reload
         expect(product.image.count).to eq(initial_count)
         expect(product.name).to eq('Updated Name')
+      end
+
+      it 'does not create price history when updating non-price attributes' do
+        # Create product
+        post products_path, params: {
+          product: {
+            name: 'Test',
+            description: 'Test',
+            price: 100.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          },
+          images: [create_test_image]
+        }
+        product = Product.last
+        initial_price_history_count = product.price_histories.count
+
+        # Update non-price attribute
+        patch product_path(product.id), params: {
+          product: {
+            name: 'Updated Name'
+          }
+        }
+
+        product.reload
+        expect(product.price_histories.count).to eq(initial_price_history_count)
       end
     end
 
@@ -286,6 +413,40 @@ RSpec.describe 'Products API', type: :request do
         expect(product.name).to eq('Updated Name')
         expect(product.price).to eq(200.0)
         expect(product.image.count).to eq(2)
+      end
+
+      it 'creates price history record when price is updated' do
+        # Create product
+        post products_path, params: {
+          product: {
+            name: 'Original Name',
+            description: 'Original description',
+            price: 100.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          },
+          images: [create_test_image]
+        }
+        product = Product.last
+        initial_price_history_count = product.price_histories.count
+
+        # Update price
+        expect {
+          patch product_path(product.id), params: {
+            product: {
+              price: 200.0
+            }
+          }
+        }.to change(PriceHistory, :count).by(1)
+
+        product.reload
+        expect(product.price).to eq(200.0)
+        expect(product.price_histories.count).to eq(initial_price_history_count + 1)
+        expect(product.price_histories.last.price).to eq(200.0)
       end
     end
   end
