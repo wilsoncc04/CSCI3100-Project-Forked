@@ -5,12 +5,15 @@
   - creates product with image successfully
   - attaches image to product
   - returns created status with image URL
+  - creates price history record when product is created
 - with multiple images upload
   - attaches multiple images to product
   - returns all image URLs in response
+  - records price history for multiple image uploads
 - without images
   - creates product without images
   - returns empty images array
+  - creates price history record even without images
 - with invalid parameters
   - fails with missing required fields
   - ignores non-UploadedFile objects in images
@@ -19,12 +22,29 @@
 - with single image replacement
   - replaces all existing images
   - returns updated product with new image URL
+  - does not create price history when only images are replaced
 - with multiple image replacement
   - replaces images with multiple new images
+  - records price history when updating multiple prices
 - without new images
   - keeps existing images when no new images provided
+  - does not create price history when updating non-price attributes
 - with other attribute updates and images
   - updates both attributes and images
+  - creates price history record when price is updated
+
+## Price History Tracking
+- Product creation
+  - creates initial price history record on product creation
+  - records correct price value in history
+  - records creation timestamp
+- Product price updates
+  - creates new price history record when price is changed
+  - maintains chronological order of price changes
+  - tracks multiple price updates over time
+- Non-price updates
+  - does not create price history for non-price attribute changes
+  - preserves existing price history when updating other attributes
 
 ## GET /products (index)
 - with products containing images
@@ -47,6 +67,26 @@
 ## GET /products/:id (show)
 - with product containing images
   - returns product details
+
+## GET /products/:id/price_history
+- successful requests
+  - returns price history for a product by product_id
+  - returns price history with default points (10)
+  - accepts custom points parameter
+  - returns empty prices array (price history not yet implemented)
+  - allows unauthenticated access
+  - allows authenticated access
+- points parameter validation
+  - limits points to maximum 20
+  - defaults to 10 points when points parameter is zero
+  - defaults to 10 points when points parameter is negative
+- query parameters
+  - accepts product_id as query parameter
+  - accepts id as query parameter (fallback to product_id)
+  - prioritizes product_id parameter over id parameter
+- error handling
+  - returns bad request when product_id is missing
+  - returns error when product does not exist
 
 ## DELETE /products/:id
 - deletes product and its images

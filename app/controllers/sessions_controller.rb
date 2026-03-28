@@ -33,7 +33,7 @@ class SessionsController < ApplicationController
       cuhk_id: user.cuhk_id,
       college: user.college,
       hostel: user.hostel,
-      is_seller: user.is_seller,
+      is_admin: user.is_admin,
       seller_rating: user.seller_rating,
       seller_review_count: user.seller_review_count,
       profile_picture_url: user.profile_picture&.attached? ? url_for(user.profile_picture) : nil

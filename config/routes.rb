@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   # ===== API ROUTES =====
   resources :users, only: [:index, :show, :create, :update, :destroy] do
     collection do
-      get :sellers                  # GET /users/sellers - list all sellers
+      get :admins                   # GET /users/admins - list all admins
       post :register                # POST /users/register - alias for create (user registration)
       post :verify                  # POST /users/verify - verify email with OTP
       post :resend_verification     # POST /users/resend_verification - resend OTP email

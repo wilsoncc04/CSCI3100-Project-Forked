@@ -153,10 +153,10 @@ bin/dev
 
 ## Running tests
 
-Run the Rails test suite with:
+Run the Rails test (RSpec):
 
 ```bash
-bin/rails test
+bundle exec rspec {directory}
 ```
 
 Add JavaScript tests if/when present (this project currently uses esbuild and

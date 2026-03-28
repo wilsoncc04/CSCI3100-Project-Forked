@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe 'Chats API', type: :request do
-  let(:seller) { create(:user, is_seller: true, verified_at: Time.current) }
-  let(:buyer) { create(:user, is_seller: false, verified_at: Time.current) }
+  let(:seller) { create(:user, verified_at: Time.current) }
+  let(:buyer) { create(:user, verified_at: Time.current) }
   let(:another_user) { create(:user, verified_at: Time.current) }
   let(:category) { create(:category) }
   let(:product) { create(:product, seller_id: seller.id, category_id: category.id) }
@@ -65,7 +65,7 @@ RSpec.describe 'Chats API', type: :request do
           
           expect(seller_data).to include(
             'id', 'cuhk_id', 'email', 'name', 'profile_picture', 
-            'is_seller', 'seller_rating'
+            'is_admin', 'seller_rating'
           )
         end
 
@@ -76,7 +76,7 @@ RSpec.describe 'Chats API', type: :request do
           
           expect(buyer_data).to include(
             'id', 'cuhk_id', 'email', 'name', 'profile_picture', 
-            'is_seller', 'seller_rating'
+            'is_admin', 'seller_rating'
           )
         end
 

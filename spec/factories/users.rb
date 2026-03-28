@@ -8,7 +8,6 @@ FactoryBot.define do
     "S.H. Ho College", "C.W. Chu College", "Wu Yee Sun College", 
     "Lee Woo Sing College"].sample }
     hostel { ["On-campus", "Off-campus"].sample }
-    is_seller { [true, false].sample }
     password { "SecurePassword123" }
   end
 end

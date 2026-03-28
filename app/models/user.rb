@@ -25,7 +25,7 @@ class User < ApplicationRecord
     VERIFICATION_TTL = 24.hours
 
     # Scopes
-    scope :sellers, -> { where(is_seller: true) }
+    scope :admins, -> { where(is_admin: true) }
 
     def generate_verification_otp!
         # 6-digit numeric OTP (zero-padded)
