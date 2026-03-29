@@ -6,6 +6,7 @@ import ProductInfoPage from "./pages/ProductInfoPage";
 import SellPage from "./pages/SellPage";
 import NotificationPage from "./pages/NotificationPage";
 import ChatPage from "./pages/ChatPage";
+import LoginPage from "./pages/LoginPage";
 
 const MailIcon = () => (
   <svg
@@ -44,6 +45,7 @@ export default function App() {
   const [isSellHovered, setIsSellHovered] = React.useState(false);
   const [isNotiHovered, setIsNotiHovered] = React.useState(false);
   const [isChatHovered, setIsChatHovered] = React.useState(false);
+  const [isLoginHovered, setIsLoginHovered] = React.useState(false);
   const secondaryBtnStyle = (isHovered) => ({
     backgroundColor: isHovered ? "#f0f0f0" : "#ffffff",
     color: "#333",
@@ -120,18 +122,32 @@ export default function App() {
               >
                 Sell
               </Link>
-
-              <Link
-                to="/Account"
-                style={{
-                  color: "#0066cc",
-                  textDecoration: "none",
-                  fontWeight: "bold",
-                  marginLeft: "0.5rem",
-                }}
-              >
-                Account
-              </Link>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Link
+                  to="/login"
+                  onMouseEnter={() => setIsLoginHovered(true)}
+                  onMouseLeave={() => setIsLoginHovered(false)}
+                  style={{
+                    color: isLoginHovered ? "#004499" : "#0066cc",
+                    textDecoration: "none",
+                    fontSize: "0.85rem",
+                    fontWeight: "bold",
+                    marginBottom: "4px"
+                  }}
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/Account"
+                  style={{
+                    color: "#0066cc",
+                    textDecoration: "none",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Account
+                </Link>
+              </div>
             </div>
           </nav>
         </header>
@@ -139,6 +155,7 @@ export default function App() {
         <main>
           <Routes>
             <Route path="/" element={<IndexPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/Account" element={<AccountPage />} />
             <Route path="/product/:id" element={<ProductInfoPage />} />
             <Route path="/sell" element={<SellPage />} />
