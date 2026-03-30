@@ -317,7 +317,7 @@ RSpec.describe 'Messages API', type: :request do
       message_data = JSON.parse(response.body)
       sender_data = message_data['sender']
 
-      expect(sender_data).to include('email', 'name', 'profile_picture', 'cuhk_id')
+      expect(sender_data).to include('email', 'name', 'profile_picture_url', 'cuhk_id')
     end
   end
 

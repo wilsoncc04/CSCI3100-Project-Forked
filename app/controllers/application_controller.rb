@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
   def authenticate_user!
     return if current_user
     if is_json_request?
-      render json: { error: 'unauthenticated' }, status: :unauthorized
+      render_error('unauthenticated', status: :unauthorized)
     else
       redirect_to root_path, alert: 'Please log in'
     end
@@ -33,7 +33,7 @@ class ApplicationController < ActionController::Base
 
   def render_unauthorized
     if is_json_request?
-      render json: { error: 'unauthorized' }, status: :forbidden
+      render_error('unauthorized', status: :forbidden)
     else
       redirect_to root_path, alert: 'You do not have permission to access this resource'
     end
@@ -42,5 +42,34 @@ class ApplicationController < ActionController::Base
   def require_admin!
     # Placeholder for admin authorization logic
     # For now, we'll just allow all requests to pass through
+  end
+
+  def render_error(error, status: :bad_request)
+    if error.is_a?(StandardError)
+      logger.error("#{self.class.name} error: #{error.class} - #{error.message}")
+      logger.error(error.backtrace.first(5).join("\n")) if error.backtrace
+      render json: { error: error.message }, status: :internal_server_error
+    elsif error.respond_to?(:full_messages)
+      render json: { errors: error.full_messages }, status: status
+    elsif error.is_a?(Array)
+      render json: { errors: error }, status: status
+    else
+      render json: { error: error.to_s }, status: status
+    end
+  end
+
+  def format_user(user)
+    {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      cuhk_id: user.cuhk_id,
+      college: user.college,
+      hostel: user.hostel,
+      is_admin: user.is_admin,
+      seller_rating: user.seller_rating,
+      seller_review_count: user.seller_review_count,
+      profile_picture_url: user.profile_picture&.attached? ? url_for(user.profile_picture) : nil
+    }
   end
 end

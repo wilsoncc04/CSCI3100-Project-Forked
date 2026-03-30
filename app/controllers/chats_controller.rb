@@ -32,7 +32,7 @@ class ChatsController < ApplicationController
   def create
     product = Product.find_by(id: params[:product_id])
     unless product
-      render json: { error: 'Product not found' }, status: :not_found
+      render_error('Product not found', status: :not_found)
       return
     end
 
@@ -41,7 +41,7 @@ class ChatsController < ApplicationController
 
     # Prevent seller from chatting with themselves
     if seller.id == buyer.id
-      render json: { error: 'Cannot chat with yourself' }, status: :unprocessable_content
+      render_error('Cannot chat with yourself', status: :unprocessable_content)
       return
     end
 
@@ -67,7 +67,7 @@ class ChatsController < ApplicationController
     if chat.save
       render json: format_chat(chat), status: :created
     else
-      render json: { errors: chat.errors.full_messages }, status: :unprocessable_content
+      render_error(chat.errors, status: :unprocessable_content)
     end
   end
 
@@ -76,7 +76,7 @@ class ChatsController < ApplicationController
   def set_chat
     @chat = Chat.find_by(id: params[:id])
     unless @chat
-      render json: { error: 'Chat not found' }, status: :not_found
+      render_error('Chat not found', status: :not_found)
     end
   end
 
@@ -113,20 +113,6 @@ class ChatsController < ApplicationController
       sender: format_user(message.sender),
       created_at: message.created_at,
       updated_at: message.updated_at
-    }
-  end
-
-  # Helper method to format user data consistently
-  # Includes: id (for API operations), cuhk_id (for display), email (for contact), name, and profile
-  def format_user(user)
-    {
-      id: user.id,
-      cuhk_id: user.cuhk_id,
-      email: user.email,
-      name: user.name,
-      profile_picture: user.profile_picture,
-      is_admin: user.is_admin,
-      seller_rating: user.seller_rating
     }
   end
 end

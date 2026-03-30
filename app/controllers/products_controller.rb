@@ -63,10 +63,10 @@ class ProductsController < ApplicationController
       product.reload # Reload to ensure images are properly loaded
       render json: format_product(product), status: :created
     else
-      render json: { errors: product.errors.full_messages }, status: :unprocessable_content
+      render_error(product.errors, status: :unprocessable_content)
     end
   rescue ActionController::ParameterMissing => e
-    render json: { error: e.message }, status: :bad_request
+    render_error(e.message, status: :bad_request)
   rescue StandardError => e
     render_error(e)
   end
@@ -77,7 +77,7 @@ class ProductsController < ApplicationController
     # Update product attributes if provided
     if params[:product].present?
       unless @product.update(product_params)
-        render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
+        render_error(@product.errors, status: :unprocessable_content)
         return
       end
     end
@@ -93,7 +93,7 @@ class ProductsController < ApplicationController
 
     render json: format_product(@product), status: :ok
   rescue ActionController::ParameterMissing => e
-    render json: { error: e.message }, status: :bad_request
+    render_error(e.message, status: :bad_request)
   rescue StandardError => e
     render_error(e)
   end
@@ -112,7 +112,7 @@ class ProductsController < ApplicationController
   def price_history
     product_id = params[:product_id] || params[:id]
     unless product_id.present?
-      render json: { error: 'product_id query parameter required' }, status: :bad_request
+      render_error('product_id query parameter required', status: :bad_request)
       return
     end
 
@@ -151,13 +151,6 @@ class ProductsController < ApplicationController
     params.require(:product).permit(
       %i[name description price seller_id category_id location 
       contact status condition buyer_id])
-  end
-
-  # logger for error (just for safety)
-  def render_error(error)
-    logger.error("ProductsController error: #{error.class} - #{error.message}")
-    logger.error(error.backtrace.first(5).join("\n")) if error.backtrace
-    render json: { error: error.message }, status: :internal_server_error
   end
 
   def format_product(product)

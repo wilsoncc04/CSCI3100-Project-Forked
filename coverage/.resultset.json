@@ -13,6 +13,157 @@
           null
         ]
       },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/category.rb": {
+        "lines": [
+          1,
+          1,
+          null
+        ]
+      },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/application_record.rb": {
+        "lines": [
+          1,
+          1,
+          null
+        ]
+      },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/chat.rb": {
+        "lines": [
+          1,
+          1,
+          1,
+          1,
+          null,
+          1,
+          null,
+          1,
+          1,
+          null
+        ]
+      },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/interest.rb": {
+        "lines": [
+          1,
+          1,
+          1,
+          null,
+          1,
+          1,
+          null
+        ]
+      },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/message.rb": {
+        "lines": [
+          1,
+          1,
+          1,
+          null,
+          1,
+          null,
+          1,
+          null,
+          1,
+          null,
+          1,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/price_history.rb": {
+        "lines": [
+          1,
+          1,
+          null,
+          1,
+          null
+        ]
+      },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/product.rb": {
+        "lines": [
+          1,
+          1,
+          1,
+          1,
+          null,
+          1,
+          1,
+          1,
+          null,
+          1,
+          null,
+          1,
+          1,
+          1,
+          1,
+          null,
+          1,
+          null,
+          1,
+          null,
+          1,
+          null,
+          null,
+          1,
+          null,
+          1,
+          355,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "/home/wilson/CSCI3100-Project-Forked/app/models/user.rb": {
+        "lines": [
+          1,
+          null,
+          1,
+          1,
+          null,
+          1,
+          1,
+          null,
+          1,
+          null,
+          1,
+          null,
+          null,
+          null,
+          1,
+          null,
+          null,
+          1,
+          null,
+          1,
+          null,
+          1,
+          464,
+          null,
+          1,
+          null,
+          null,
+          3,
+          null,
+          1,
+          null,
+          438,
+          438,
+          null,
+          null,
+          1,
+          7,
+          7,
+          6,
+          null,
+          null,
+          5,
+          null,
+          null
+        ]
+      },
       "/home/wilson/CSCI3100-Project-Forked/app/controllers/chats_controller.rb": {
         "lines": [
           null,
@@ -132,20 +283,6 @@
           null,
           null,
           null,
-          null,
-          null,
-          null,
-          1,
-          null,
-          70,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
           null
         ]
       },
@@ -196,144 +333,33 @@
           null,
           null,
           null,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/user.rb": {
-        "lines": [
-          1,
           null,
           1,
+          55,
           1,
+          1,
+          1,
+          54,
+          9,
+          45,
+          0,
           null,
-          1,
-          1,
-          null,
-          1,
-          null,
-          1,
+          45,
           null,
           null,
           null,
           1,
           null,
-          null,
-          1,
-          null,
-          1,
-          null,
-          1,
-          464,
-          null,
-          1,
-          null,
-          null,
-          3,
-          null,
-          1,
-          null,
-          438,
-          438,
-          null,
-          null,
-          1,
-          7,
-          7,
-          6,
-          null,
-          null,
-          5,
-          null,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/application_record.rb": {
-        "lines": [
-          1,
-          1,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/chat.rb": {
-        "lines": [
-          1,
-          1,
-          1,
-          1,
-          null,
-          1,
-          null,
-          1,
-          1,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/category.rb": {
-        "lines": [
-          1,
-          1,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/product.rb": {
-        "lines": [
-          1,
-          1,
-          1,
-          1,
-          null,
-          1,
-          1,
-          1,
-          null,
-          1,
-          null,
-          1,
-          1,
-          1,
-          1,
-          null,
-          1,
-          null,
-          1,
-          null,
-          1,
-          null,
-          null,
-          1,
-          null,
-          1,
-          355,
+          124,
           null,
           null,
           null,
           null,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/price_history.rb": {
-        "lines": [
-          1,
-          1,
           null,
-          1,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/message.rb": {
-        "lines": [
-          1,
-          1,
-          1,
           null,
-          1,
           null,
-          1,
           null,
-          1,
-          null,
-          1,
-          null,
+          124,
           null,
           null,
           null
@@ -429,27 +455,6 @@
           null,
           null,
           null,
-          null,
-          null,
-          null,
-          null,
-          1,
-          null,
-          27,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          1,
-          0,
-          0,
-          0,
           null,
           null
         ]
@@ -611,13 +616,6 @@
           null,
           null,
           null,
-          null,
-          1,
-          1,
-          1,
-          1,
-          null,
-          null,
           1,
           null,
           35,
@@ -642,17 +640,6 @@
           null,
           0,
           null,
-          null
-        ]
-      },
-      "/home/wilson/CSCI3100-Project-Forked/app/models/interest.rb": {
-        "lines": [
-          1,
-          1,
-          1,
-          null,
-          1,
-          1,
           null
         ]
       },
@@ -825,21 +812,6 @@
           null,
           null,
           null,
-          1,
-          null,
-          21,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          21,
-          null,
-          null,
-          null,
           null
         ]
       },
@@ -892,23 +864,6 @@
           4,
           4,
           null,
-          null,
-          1,
-          null,
-          1,
-          null,
-          6,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          6,
-          null,
-          null,
           null
         ]
       },
@@ -940,6 +895,6 @@
         "branches": {}
       }
     },
-    "timestamp": 1774765851
+    "timestamp": 1774869467
   }
 }

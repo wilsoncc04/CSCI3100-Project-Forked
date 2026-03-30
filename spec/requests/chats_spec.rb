@@ -64,7 +64,7 @@ RSpec.describe 'Chats API', type: :request do
           seller_data = chats_data.first['seller']
           
           expect(seller_data).to include(
-            'id', 'cuhk_id', 'email', 'name', 'profile_picture', 
+            'id', 'cuhk_id', 'email', 'name', 'profile_picture_url', 
             'is_admin', 'seller_rating'
           )
         end
@@ -75,7 +75,7 @@ RSpec.describe 'Chats API', type: :request do
           buyer_data = chats_data.first['buyer']
           
           expect(buyer_data).to include(
-            'id', 'cuhk_id', 'email', 'name', 'profile_picture', 
+            'id', 'cuhk_id', 'email', 'name', 'profile_picture_url', 
             'is_admin', 'seller_rating'
           )
         end
@@ -409,7 +409,7 @@ RSpec.describe 'Chats API', type: :request do
       chat_data = JSON.parse(response.body)
       seller_data = chat_data['seller']
       
-      expect(seller_data).to include('email', 'name', 'profile_picture')
+      expect(seller_data).to include('email', 'name', 'profile_picture_url')
     end
   end
 end

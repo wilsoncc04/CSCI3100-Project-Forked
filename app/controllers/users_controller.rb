@@ -37,7 +37,7 @@ class UsersController < ApplicationController
       render json: { user: user.as_json(except: [:password_digest, 
       :verification_otp, :verification_sent_at, :verification_token]), message: 'verification_email_sent' }, status: :created
     else
-      render json: { errors: user.errors.full_messages }, status: :unprocessable_content
+      render_error(user.errors, status: :unprocessable_content)
     end
   end
 
@@ -54,7 +54,7 @@ class UsersController < ApplicationController
     email = params[:email]
 
     if otp.blank?
-      render json: { error: 'otp_missing' }, status: :bad_request
+      render_error('otp_missing', status: :bad_request)
       return
     end
 
@@ -66,14 +66,14 @@ class UsersController < ApplicationController
            end
 
     if user.nil?
-      render json: { error: 'invalid_otp_or_email' }, status: :not_found
+      render_error('invalid_otp_or_email', status: :not_found)
       return
     end
 
     if user.verify_otp!(otp)
       render json: { message: 'verified' }, status: :ok
     else
-      render json: { error: 'verification_failed_or_expired' }, status: :unprocessable_content
+      render_error('verification_failed_or_expired', status: :unprocessable_content)
     end
   end
 
@@ -111,7 +111,7 @@ class UsersController < ApplicationController
     # Update other user attributes if provided
     if params[:user].present?
       if !@user.update(user_params)
-        render json: { errors: @user.errors.full_messages }, status: :unprocessable_content
+        render_error(@user.errors, status: :unprocessable_content)
         return
       end
     end
@@ -125,10 +125,10 @@ class UsersController < ApplicationController
       if user.update(password: params[:new_password])
         render json: { message: 'password_changed' }, status: :ok
       else
-        render json: { errors: user.errors.full_messages }, status: :unprocessable_content
+        render_error(user.errors, status: :unprocessable_content)
       end
     else
-      render json: { error: 'invalid_credentials' }, status: :unauthorized
+      render_error('invalid_credentials', status: :unauthorized)
     end
   end
 
@@ -156,28 +156,13 @@ class UsersController < ApplicationController
               User.find_by!(cuhk_id: id_param)
             end
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'User not found' }, status: :not_found
+    render_error('User not found', status: :not_found)
   end
 
   def authorize_user_owner!
     unless @user.id == current_user.id
       render_unauthorized
     end
-  end
-
-    def format_user(user)
-    {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      cuhk_id: user.cuhk_id,
-      college: user.college,
-      hostel: user.hostel,
-      is_admin: user.is_admin,
-      seller_rating: user.seller_rating,
-      seller_review_count: user.seller_review_count,
-      profile_picture_url: user.profile_picture&.attached? ? url_for(user.profile_picture) : nil
-    }
   end
 
 end

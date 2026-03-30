@@ -29,10 +29,10 @@ class MessagesController < ApplicationController
     if message.save
       render json: format_message(message, current_user), status: :created
     else
-      render json: { errors: message.errors.full_messages }, status: :unprocessable_content
+      render_error(message.errors, status: :unprocessable_content)
     end
   rescue ActionController::ParameterMissing => e
-    render json: { error: e.message }, status: :bad_request
+    render_error(e.message, status: :bad_request)
   rescue StandardError => e
     render_error(e)
   end
@@ -50,14 +50,14 @@ class MessagesController < ApplicationController
   def set_chat
     @chat = Chat.find_by(id: params[:chat_id])
     unless @chat
-      render json: { error: 'Chat not found' }, status: :not_found
+      render_error('Chat not found', status: :not_found)
     end
   end
 
   def set_message
     @message = Message.find_by(id: params[:id])
     unless @message
-      render json: { error: 'Message not found' }, status: :not_found
+      render_error('Message not found', status: :not_found)
     end
   end
 
@@ -86,26 +86,5 @@ class MessagesController < ApplicationController
       created_at: message.created_at,
       updated_at: message.updated_at
     }
-  end
-
-  # Helper method to format user data consistently
-  # Includes: id (for API operations), cuhk_id (for display), email (for contact), name, and profile
-  def format_user(user)
-    {
-      id: user.id,
-      cuhk_id: user.cuhk_id,
-      email: user.email,
-      name: user.name,
-      profile_picture: user.profile_picture,
-      is_admin: user.is_admin,
-      seller_rating: user.seller_rating
-    }
-  end
-
-  # for safety and logging
-  def render_error(error)
-    logger.error("MessagesController error: #{error.class} - #{error.message}")
-    logger.error(error.backtrace.first(5).join("\n")) if error.backtrace
-    render json: { error: error.message }, status: :internal_server_error
   end
 end
