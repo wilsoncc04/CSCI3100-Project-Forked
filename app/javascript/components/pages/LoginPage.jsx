@@ -1,116 +1,77 @@
 import React, { useState } from "react";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState(""); // 改為 username
   const [password, setPassword] = useState("");
-  const [showOtpPopup, setShowOtpPopup] = useState(false);
-  const [otp, setOtp] = useState("");
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    console.log("Login attempt:", { email, password });
-    setShowOtpPopup(true);
-  };
-
-  const handleVerifyOtp = (e) => {
-    e.preventDefault();
-    console.log("Verifying OTP:", otp);
-    alert("驗證成功！");
-    setShowOtpPopup(false);
-  };
-
-  const modalStyle = {
-    position: "fixed",
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000
-  };
-
-  const cardStyle = {
-    backgroundColor: "white",
-    padding: "2rem",
-    borderRadius: "12px",
-    width: "300px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+    // 這裡實作登入邏輯
+    console.log("Login attempt:", { username, password });
+    alert(`嘗試登入：${username}`);
   };
 
   const inputStyle = {
     width: "100%",
-    padding: "10px",
+    padding: "12px",
     margin: "10px 0",
-    borderRadius: "4px",
+    borderRadius: "8px",
     border: "1px solid #ddd",
-    boxSizing: "border-box"
+    boxSizing: "border-box",
+    fontSize: "1rem"
   };
 
   const buttonStyle = {
     width: "100%",
-    padding: "10px",
-    backgroundColor: "#e60000",
+    padding: "12px",
+    backgroundColor: "#0066cc", // 改用藍色區分登入與 Sell
     color: "white",
     border: "none",
-    borderRadius: "20px",
+    borderRadius: "25px",
     fontWeight: "bold",
     cursor: "pointer",
-    marginTop: "10px"
+    marginTop: "20px",
+    fontSize: "1rem"
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "40px auto", textAlign: "center" }}>
-      <h2>Log In</h2>
+    <div style={{ 
+      maxWidth: "350px", 
+      margin: "80px auto", 
+      padding: "2rem", 
+      border: "1px solid #eee", 
+      borderRadius: "15px",
+      boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+      textAlign: "center" 
+    }}>
+      <h2 style={{ marginBottom: "1.5rem" }}>Login</h2>
       <form onSubmit={handleLoginSubmit}>
+        <div style={{ textAlign: "left", marginBottom: "5px", fontSize: "0.9rem", fontWeight: "bold" }}>User Name</div>
         <input
           style={inputStyle}
-          type="email"
-          placeholder="Login Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
         />
+        
+        <div style={{ textAlign: "left", marginBottom: "5px", marginTop: "10px", fontSize: "0.9rem", fontWeight: "bold" }}>Password</div>
         <input
           style={inputStyle}
           type="password"
-          placeholder="Password"
+          placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        
         <button type="submit" style={buttonStyle}>Enter</button>
       </form>
-
-      {/* 驗證碼彈窗 (Verification Pop-up) */}
-      {showOtpPopup && (
-        <div style={modalStyle}>
-          <div style={cardStyle}>
-            <h3>Verify Code</h3>
-            <p style={{ fontSize: "0.9rem", color: "#666" }}>
-              Please enter the code sent to your email.
-            </p>
-            <form onSubmit={handleVerifyOtp}>
-              <input
-                style={inputStyle}
-                type="text"
-                placeholder="6-digit code"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                maxLength="6"
-                required
-              />
-              <button type="submit" style={buttonStyle}>Verify</button>
-              <button 
-                type="button" 
-                onClick={() => setShowOtpPopup(false)}
-                style={{ ...buttonStyle, backgroundColor: "#ccc", marginTop: "5px" }}
-              >
-                Cancel
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      
+      <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#666" }}>
+        New user? <a href="/register" style={{ color: "#0066cc", textDecoration: "none" }}>Register an account</a>
+      </p>
     </div>
   );
 };
