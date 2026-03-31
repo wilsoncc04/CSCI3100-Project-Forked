@@ -1,65 +1,26 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import { goodsTypes } from "../../common/productConstants";
+import { colleges } from "../../common/collegeConstants";
+
 
 export default function FiltersAndSearch() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isCollegeOpen, setIsCollegeOpen] = useState(false);
   const [isTypeOpen, setIsTypeOpen] = useState(false);
-  const [selectedCollege, setSelectedCollege] = useState(null);
-  const [selectedHall, setSelectedHall] = useState(null);
-  const [selectedType, setSelectedType] = useState(null);
-  const [searchKeywords, setSearchKeywords] = useState("");
+  const [selectedCollege, setSelectedCollege] = useState(searchParams.get("college") || null);
+  const [selectedHall, setSelectedHall] = useState(searchParams.get("hall") || null);
+  const [selectedType, setSelectedType] = useState(searchParams.get("type") || null);
+  const [searchKeywords, setSearchKeywords] = useState(searchParams.get("keywords") || "");
 
-  const colleges = [
-    {
-      name: "Chung Chi College",
-      halls: [
-        "Hua Lien Tang",
-        "Lee Shu Pui Hall",
-        "Madam S.H. Ho Hall",
-        "Ming Hua Tang",
-        "Pentecostal Mission Hall Complex (High Block)",
-        "Pentecostal Mission Hall Complex (Low Block)",
-        "Theology Building",
-        "Wen Chih Tang",
-        "Wen Lin Tang",
-        "Ying Lin Tang",
-      ],
-    },
-    {
-      name: "New Asia College",
-      halls: [
-        "Chih Hsing Hall",
-        "Xuesi Hall",
-        "Grace Tien Hall",
-        "Daisy Li Hall",
-        "Mei Yun Tang",
-      ],
-    },
-    {
-      name: "United College",
-      halls: [
-        "Adam Schall Residence",
-        "Bethlehem Hall",
-        "Hang Seng Hall",
-        "Chan Chun Ha Hostel",
-        "Choi Kai Yau Residence",
-      ],
-    },
-    { name: "Shaw College", halls: ["Kuo Mou Hall", "Student Hostel II"] },
-    {
-      name: "Morningside",
-      halls: ["High Block", "Low Block"],
-    },
-    { name: "S.H. Ho", halls: ["Ho Tim Hall", "Lee Quo Wei Hall"] },
-    { name: "C.W. Chu", halls: ["C.W. Chu Hall"] },
-    { name: "Wu Yee Sun", halls: ["East Block", "West Block"] },
-    {
-      name: "Lee Woo Sing",
-      halls: ["Dorothy and Ti-Hua KOO Building", "North Block"],
-    },
-  ];
+  useEffect(() => {
+    setSelectedCollege(searchParams.get("college") || null);
+    setSelectedHall(searchParams.get("hall") || null);
+    setSelectedType(searchParams.get("type") || null);
+    setSearchKeywords(searchParams.get("keywords") || "");
+  }, [searchParams]);
 
   const getSearchUrl = () => {
     const params = new URLSearchParams();
@@ -304,6 +265,11 @@ export default function FiltersAndSearch() {
           placeholder="Search keywords..."
           value={searchKeywords}
           onChange={(e) => setSearchKeywords(e.target.value)}
+          onKeyDown={function(e) {
+            if (e.key === 'Enter') {
+              navigate(getSearchUrl());
+            }
+          }}
           style={{
             width: "100%",
             padding: "10px 120px 10px 16px",
@@ -315,7 +281,7 @@ export default function FiltersAndSearch() {
           }}
         />
         <button
-          onClick={() => (window.location.href = getSearchUrl())}
+          onClick={() => navigate(getSearchUrl())}
           style={{
             position: "absolute",
             right: "4px",
