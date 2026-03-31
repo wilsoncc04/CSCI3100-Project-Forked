@@ -23,6 +23,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import NavButton from "./common/NavButton";
 import { logoutUser } from "../common/loginauth";
+import SearchResultsPage from "./pages/SearchResultsPage";
 
 const logo = "/logo.png";
 
@@ -173,6 +174,7 @@ export default function App() {
             <Route path="/sell" element={<SellPage />} />
             <Route path="/notifications" element={<NotificationPage />} />
             <Route path="/chat" element={<ChatPage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
           </Routes>
         </main>
       </AppContainer>

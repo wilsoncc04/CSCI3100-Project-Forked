@@ -41,4 +41,6 @@ class User < ApplicationRecord
         # update verified_at and clear OTP fields
         update(verified_at: Time.current, verification_otp: nil, verification_sent_at: nil)
     end
+
+    alias_attribute :hall, :hostel
 end
