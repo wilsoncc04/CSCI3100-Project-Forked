@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { loginUser } from "../../common/loginauth";
 import { useNavigate } from "react-router-dom";
 
-const LoginPage = () => {
+const LoginPage = ({ setUser }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,10 +17,12 @@ const LoginPage = () => {
       
       if (data.message === 'logged_in') {
         alert("Login Success!");
-        // 將使用者資訊存入 localStorage，方便前端顯示頭像或名稱
+        
+        if (setUser) setUser(data.user);
+        
         localStorage.setItem("currentUser", JSON.stringify(data.user));
-        // 跳轉到首頁
-        window.location.href = "/"; 
+        
+        navigate("/Account"); 
       }
     } catch (error) {
       console.error("Login Error:", error.response?.data);

@@ -14,6 +14,6 @@ export async function loginUser(email, password) {
 
 // 登出
 export async function logoutUser() {
-  const res = await axios.delete('/sessions/current'); // Rails routes 中的 destroy
+  const res = await axios.delete('/sessions'); 
   return res.data;
 }

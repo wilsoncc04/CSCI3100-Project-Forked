@@ -1,18 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FaUserCircle, FaEnvelope, FaPenNib, FaRegEdit, FaSave, FaTimes } from "react-icons/fa";
 import { MdOutlineDateRange } from "react-icons/md";
 
-export default function AccountInfo() {
+export default function AccountInfo({ user }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [profile, setProfile] = useState({
-    username: "User_2026",
-    email: "user@example.com",
-    bio: "Hello! I am a React developer.",
-    memberSince: "March 2026",
+    username: user?.name || "",
+    email: user?.email || "",
+    bio: user?.bio || "",
+    memberSince: user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "N/A",
   });
 
   const [tempProfile, setTempProfile] = useState({ ...profile });
+
+  useEffect(() => {
+    if (user) {
+      const newProfile = {
+        username: user.name || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        memberSince: new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      };
+      setProfile(newProfile);
+      setTempProfile(newProfile);
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,10 +42,27 @@ export default function AccountInfo() {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    console.log("Saving profile to API:", tempProfile);
-    setProfile({ ...tempProfile });
-    setIsEditing(false);
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.patch(`/users/${user.id}`, {
+        user: {
+          name: tempProfile.username,
+          bio: tempProfile.bio
+        }
+      });
+
+      if (response.status === 200) {
+        setProfile({ ...tempProfile });
+        setIsEditing(false);
+        alert("Profile updated successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      alert(error.response?.data?.message || "Update failed, please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -41,13 +73,12 @@ export default function AccountInfo() {
     <div style={styles.card}>
       <div style={styles.header}>
         <h2 style={styles.title}>Account Information</h2>
-        {/* 動態顯示按鈕 */}
         {isEditing ? (
           <div style={styles.headerBtnGroup}>
-            <button onClick={handleSave} style={styles.saveBtn}>
-              <FaSave style={styles.btnIcon} /> Save
+            <button onClick={handleSave} style={styles.saveBtn} disabled={loading}>
+              <FaSave style={styles.btnIcon} /> {loading ? "Saving..." : "Save"}
             </button>
-            <button onClick={handleCancel} style={styles.cancelBtn}>
+            <button onClick={handleCancel} style={styles.cancelBtn} disabled={loading}>
               <FaTimes style={styles.btnIcon} /> Cancel
             </button>
           </div>
@@ -59,7 +90,6 @@ export default function AccountInfo() {
       </div>
 
       <div style={styles.infoContainer}>
-        {/* 用戶頭像與名稱 (靜態顯示區) */}
         <div style={styles.avatarRow}>
           <FaUserCircle style={styles.avatarIcon} />
           <div>
@@ -82,28 +112,16 @@ export default function AccountInfo() {
 
         <hr style={styles.divider} />
 
-        {/* 電子郵件欄位 */}
         <div style={styles.fieldRow}>
           <div style={styles.iconColumn}>
             <FaEnvelope style={styles.fieldIcon} />
           </div>
           <div style={styles.contentColumn}>
             <label style={styles.label}>Email Address</label>
-            {isEditing ? (
-              <input
-                style={styles.input}
-                name="email"
-                type="email"
-                value={tempProfile.email}
-                onChange={handleChange}
-              />
-            ) : (
-              <p style={styles.value}>{profile.email}</p>
-            )}
+            <p style={styles.value}>{profile.email}</p>
           </div>
         </div>
 
-        {/* 個人簡介欄位 */}
         <div style={styles.fieldRow}>
           <div style={styles.iconColumn}>
             <FaPenNib style={styles.fieldIcon} />
@@ -199,7 +217,7 @@ const styles = {
   },
   fieldIcon: {
     fontSize: "20px",
-    color: "#007bff", 
+    color: "#702082", 
   },
   contentColumn: {
     flex: 1,
@@ -228,7 +246,6 @@ const styles = {
   smallIcon: {
     fontSize: "16px",
   },
-  // 輸入框
   input: {
     padding: "10px",
     fontSize: "16px",
@@ -237,10 +254,9 @@ const styles = {
     outline: "none",
     transition: "border-color 0.2s",
     "&:focus": {
-      borderColor: "#007bff",
+      borderColor: "#702082",
     },
   },
-  // 按鈕
   headerBtnGroup: {
     display: "flex",
     gap: "10px",
@@ -251,8 +267,8 @@ const styles = {
   editBtn: {
     padding: "8px 16px",
     backgroundColor: "white",
-    color: "#007bff",
-    border: "1px solid #007bff",
+    color: "#702082",
+    border: "1px solid #702082",
     borderRadius: "20px",
     cursor: "pointer",
     fontSize: "14px",

@@ -23,9 +23,10 @@ Rails.application.routes.draw do
   end
 
   # Login sesion 
-  resources :sessions, only: [:create, :destroy]
+  resource :sessions, only: [:create, :destroy, :show]
 
   # handle all other routes with React Router (for client-side routing)
-  get '*path', to: 'pages#index', via: :all
-
+  post '/users/register', to: 'users#register'
+  post '/users/verify', to: 'users#verify'
+  get '*path', to: 'pages#index', constraints: ->(req) { !req.xhr? && req.format.html? }
 end

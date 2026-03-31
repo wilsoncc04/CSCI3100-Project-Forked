@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -14,6 +15,7 @@ const RegisterPage = () => {
   // 處理註冊第一步：發送資料並要求 OTP
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
+    
     if (password !== confirmPassword) {
       alert("密碼確認不一致！");
       return;
@@ -21,14 +23,14 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      // 呼叫 API: POST /users/register
+      // 呼叫 API 時傳送使用者輸入的 name
       await registerUser({
-        name: email.split('@')[0], // 暫時以 Email 前綴當作名稱
+        name: name, 
         email: email,
         password: password
       });
       
-      setShowOtpPopup(true); // 顯示驗證碼輸入視窗
+      setShowOtpPopup(true); 
     } catch (error) {
       console.error("Registration Error:", error);
       alert(error.response?.data?.message || "註冊失敗，請檢查 Email 是否重複或格式錯誤");
@@ -64,6 +66,16 @@ const handleVerifyOtp = async (e) => {
     <div style={{ maxWidth: "400px", margin: "60px auto", padding: "2rem", border: "1px solid #eee", borderRadius: "15px", textAlign: "center" }}>
       <h2 style={{ color: "#702082" }}>Register</h2>
       <form onSubmit={handleRegisterSubmit}>
+        {/* 新增的 User Name 輸入框 */}
+        <input 
+          style={inputStyle} 
+          type="text" 
+          placeholder="User Name" 
+          value={name} 
+          onChange={(e) => setName(e.target.value)} 
+          required 
+        />
+        
         <input style={inputStyle} type="email" placeholder="CUHK Email (@link.cuhk.edu.hk)" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <input style={inputStyle} type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />

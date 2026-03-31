@@ -2,6 +2,13 @@
 class SessionsController < ApplicationController
   skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
   # POST /sessions (login)
+  def show
+    if current_user
+      render json: format_user(current_user), status: :ok
+    else
+      render json: { error: 'not_logged_in' }, status: :unauthorized
+    end
+  end
   def create
     user = User.find_by(email: params[:email])
     if user && user.authenticate(params[:password])
@@ -21,6 +28,9 @@ class SessionsController < ApplicationController
   # DELETE /sessions/:id (logout)
   def destroy
     reset_session
-    head :no_content
+    render json: { message: 'logged_out' }, status: :ok
+  end
+  def format_user(user)
+    user.as_json(only: [:id, :name, :email, :cuhk_id, :hostel, :college, :is_admin, :verified_at])
   end
 end
