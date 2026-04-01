@@ -49,7 +49,6 @@ export default function SellPage() {
     payload.append("product[price]", formData.price);
     payload.append("product[status]", formData.status);
     payload.append("product[condition]", formData.condition);
-    payload.append("product[category_name]", formData.category_id);
     payload.append("product[contact]", formData.contact);
     payload.append("product[location]", formData.location || "CUHK");
     const categoryId = goodsTypes.indexOf(formData.category_id) + 1;

@@ -12,7 +12,6 @@ class Product < ApplicationRecord
     validates :name, presence: true
     validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
     validates :seller_id, presence: true
-    validates :buyer_id, presence: true
 
     after_save :record_price_history, if: :saved_change_to_price? 
   

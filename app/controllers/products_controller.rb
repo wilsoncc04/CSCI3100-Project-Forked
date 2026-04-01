@@ -53,10 +53,11 @@ class ProductsController < ApplicationController
   # create product (basic implementation)
   def create
     product = Product.new(product_params)
+    product.seller_id = current_user.id
     # Handle image uploads
     if params[:images].present?
       params[:images].each do |image|
-        product.image.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
+        product.images.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
       end
     end
     if product.save
@@ -86,7 +87,7 @@ class ProductsController < ApplicationController
     if params[:images].present?
       @product.image.purge # Remove old images
       params[:images].each do |image|
-        @product.image.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
+        @product.images.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
       end
       @product.reload # Reload to get attached images
     end
