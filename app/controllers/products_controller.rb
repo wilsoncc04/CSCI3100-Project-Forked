@@ -20,17 +20,27 @@ class ProductsController < ApplicationController
     page = 1 if page <= 0
     offset = (page - 1) * limit
 
-    products = Product.all
-    # fuzzy search using trigram matching
+    products = Product.with_attached_images.includes(:seller).all
+
     if params[:keywords].present?
       products = products.search_by_name(params[:keywords])
     end
 
+    if params[:college].present?
+      products = products.joins(:seller).where(users: { college: params[:college] })
+    end 
+
+    if params[:type].present?
+      products = products.joins(:category).where(categories: { name: params[:type] })
+    end
+
     total_count = products.count
-    products = products.limit(limit).offset(offset)
+    paginated_products = products.limit(limit).offset(offset)
     
+    formatted_data = paginated_products.map { |p| format_product(p) }
+
     render json: {
-      data: products.as_json(only: PRODUCT_JSON_ONLY),
+      data: formatted_data,
       pagination: {
         current_page: page,
         limit: limit,
@@ -39,14 +49,22 @@ class ProductsController < ApplicationController
       }
     }
   rescue StandardError => e
-    render_error(e)
+    render json: { error: e.message }, status: :internal_server_error
   end
 
   # GET /products/:id
   # show a single product
   # in product info page
   def show
-    render json: @product.as_json(only: PRODUCT_JSON_ONLY)
+    product_data = @product.as_json(only: PRODUCT_JSON_ONLY)
+
+    product_data["images"] = if @product.images.attached?
+                               @product.images.map { |img| url_for(img) }
+                             else
+                               []
+                             end
+
+    render json: product_data
   end
 
   # POST /products
