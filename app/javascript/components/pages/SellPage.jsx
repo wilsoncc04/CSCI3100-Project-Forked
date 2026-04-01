@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { goodsTypes } from "../../common/productConstants"; 
 import { useNavigate } from "react-router-dom";
+import { AiOutlineClose } from "react-icons/ai";
 
 export default function SellPage() {
   const [formData, setFormData] = useState({
@@ -15,11 +16,12 @@ export default function SellPage() {
   });
 
   const [images, setImages] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const conditionOptions = [
     { id: "brand_new", label: "Brand New" },
     { id: "like_new", label: "Like New" },
-    { id: "used_good", label: "Used (Good)" },
+    { id: "used_good", label: "Used - Good" },
     { id: "heavily_used", label: "Heavily Used" },
   ];
 
@@ -30,7 +32,30 @@ export default function SellPage() {
   };
 
   const handleImageChange = (e) => {
-    setImages(Array.from(e.target.files));
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setImages((prevImages) => [...prevImages, ...newFiles]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false); 
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      setImages((prevImages) => [...prevImages, ...newFiles]);
+      e.dataTransfer.clearData();
+    }
   };
 
   const handleConditionSelect = (conditionLabel) => {
@@ -110,15 +135,23 @@ export default function SellPage() {
         style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
       >
         <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
           style={{
-            border: "2px dashed #ccc",
+            border: isDragging ? "2px dashed #0066cc" : "2px dashed #ccc",
+            backgroundColor: isDragging ? "#e6f2ff" : "transparent",
             padding: "2rem",
             textAlign: "center",
             cursor: "pointer",
+            borderRadius: "8px",
+            transition: "all 0.2s ease",
           }}
         >
-          <label style={{ cursor: "pointer", display: "block" }}>
-            Upload Photos (Click or Drag & Drop)
+          <label style={{ cursor: "pointer", display: "block", width: "100%", height: "100%" }}>
+            <span style={{ color: isDragging ? "#0066cc" : "#444", fontWeight: isDragging ? "bold" : "normal" }}>
+              {isDragging ? "Drop images here!" : "Upload Photos (Click or Drag & Drop)"}
+            </span>
             <input
               type="file"
               multiple
@@ -127,8 +160,62 @@ export default function SellPage() {
               style={{ display: "none" }}
             />
           </label>
-          {images.length > 0 && <p>{images.length} file(s) selected</p>}
+          {images.length > 0 && <p style={{ marginTop: "10px", color: "#28a745", fontWeight: "bold" }}>{images.length} file(s) selected</p>}
         </div>
+
+        {images.length > 0 && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+            gap: "10px",
+            marginTop: "1rem"
+          }}>
+            {images.map((file, index) => (
+              <div key={index} style={{ position: "relative", paddingTop: "100%" }}>
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`preview-${index}`}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd"
+                  }}
+                />
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImages(images.filter((_, i) => i !== index));
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: "-5px",
+                    right: "-5px",
+                    backgroundColor: "red",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "24px",
+                    height: "24px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                  }}
+                >
+                  <AiOutlineClose size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div>
           <label
