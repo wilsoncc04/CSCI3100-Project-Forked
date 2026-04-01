@@ -31,10 +31,14 @@ class SessionsController < ApplicationController
 
   # DELETE /sessions/:id (logout)
   def destroy
-    reset_session
+    session[:user_id] = nil
     render json: { message: 'logged_out' }, status: :ok
   end
   def format_user(user)
-    user.as_json(only: [:id, :name, :email, :cuhk_id, :hostel, :college, :is_admin, :verified_at])
-  end
+  user.as_json(
+    only: [:id, :name, :email, :cuhk_id, :hostel, :college, :is_admin, :verified_at, :created_at, :bio]
+  ).merge(
+    profile_picture_url: user.profile_picture.attached? ? url_for(user.profile_picture) : nil
+  )
+end
 end

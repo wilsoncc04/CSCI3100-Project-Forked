@@ -71,11 +71,17 @@ class UsersController < ApplicationController
     end
 
     if user.verify_otp!(otp)
-      render json: { message: 'verified' }, status: :ok
-    else
-      render_error('verification_failed_or_expired', status: :unprocessable_content)
-    end
+    # 關鍵：驗證成功後自動登入，這樣跳轉到 Account 頁面才拿得到資料
+    session[:user_id] = user.id 
+    
+    render json: { 
+      message: 'verified', 
+      user: format_user(user) # 把 user 資料傳回去，方便前端立刻 setUser
+    }, status: :ok
+  else
+    render_error('verification_failed_or_expired', status: :unprocessable_content)
   end
+end
 
   # POST /users/resend_verification
   def resend_verification
@@ -101,20 +107,21 @@ class UsersController < ApplicationController
   # ====== register section end ======
 
   # PATCH/PUT /users/:id
-  def update
-    # Handle profile picture upload
-    if params[:profile_picture].present?
-      @user.profile_picture.purge if @user.profile_picture.attached?
-      @user.profile_picture.attach(params[:profile_picture]) if params[:profile_picture].is_a?(ActionDispatch::Http::UploadedFile)
-    end
+ def update
+  # 1. 處理圖片上傳 (你原本的邏輯)
+  if params[:profile_picture].present?
+    @user.profile_picture.purge if @user.profile_picture.attached?
+    @user.profile_picture.attach(params[:profile_picture])
+  end
 
-    # Update other user attributes if provided
-    if params[:user].present?
-      if !@user.update(user_params)
-        render_error(@user.errors, status: :unprocessable_content)
-        return
-      end
+  # 2. 更新其他欄位 (College, Hostel 等)
+  if params[:user].present?
+    # user_params 已經包含了 :college 和 :hostel
+    unless @user.update(user_params)
+      render_error(@user.errors, status: :unprocessable_content)
+      return
     end
+  end
 
     render json: format_user(@user), status: :ok
   end
@@ -141,8 +148,16 @@ class UsersController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(
-      %i[name email password cuhk_id hostel is_admin college profile_picture])
+  params.require(:user).permit(
+    :name, :email, :password, :cuhk_id, :hostel, :college, :bio, :profile_picture
+  )
+end
+
+  def format_user(user)
+  user.as_json(except: [:password_digest, :verification_otp]).merge(
+    # 增加圖片網址回傳
+    profile_picture_url: user.profile_picture.attached? ? url_for(user.profile_picture) : nil
+  )
   end
 
   def set_user

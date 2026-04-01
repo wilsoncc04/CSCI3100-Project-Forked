@@ -1,72 +1,99 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaUserCircle, FaEnvelope, FaPenNib, FaRegEdit, FaSave, FaTimes } from "react-icons/fa";
+import { FaUserCircle, FaEnvelope, FaPenNib, FaRegEdit, FaSave, FaTimes, FaUniversity, FaBuilding, FaCamera } from "react-icons/fa";
 import { MdOutlineDateRange } from "react-icons/md";
+import { colleges } from "../../common/collegeConstants";
 
-export default function AccountInfo({ user }) {
+export default function AccountInfo({ user, setUser }) {
+  if (!user) {
+    return <div style={{ padding: "20px" }}>Loading user information...</div>;
+  }
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  
   const [profile, setProfile] = useState({
     username: user?.name || "",
     email: user?.email || "",
     bio: user?.bio || "",
+    college: user?.college || "",
+    hostel: user?.hostel || "",
     memberSince: user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "N/A",
+    avatarUrl: user?.profile_picture_url || null
   });
 
   const [tempProfile, setTempProfile] = useState({ ...profile });
-
-  useEffect(() => {
-    if (user) {
-      const newProfile = {
-        username: user.name || "",
-        email: user.email || "",
-        bio: user.bio || "",
-        memberSince: new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-      };
-      setProfile(newProfile);
-      setTempProfile(newProfile);
-    }
-  }, [user]);
+  const availableHalls = colleges.find(c => c.name === tempProfile.college)?.halls || [];
+ useEffect(() => {
+  if (user) {
+    const newProfile = {
+      username: user.name || "",
+      email: user.email || "",
+      bio: user.bio || "",
+      college: user.college || "",
+      hostel: user.hostel || "",
+      // 加上安全檢查：如果沒有 created_at，給予一個預設值
+      memberSince: user.created_at 
+        ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
+        : "N/A",
+      avatarUrl: user.profile_picture_url || null
+    };
+    setProfile(newProfile);
+    setTempProfile(newProfile);
+    if (!user.college) setIsEditing(true);
+  }
+}, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setTempProfile((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setTempProfile((prev) => {
+      const newState = { ...prev, [name]: value };
+      // 重點：如果更換了 College，就把原本選的 Hostel 清空，避免書院與宿舍不匹配
+      if (name === "college") {
+        newState.hostel = "";
+      }
+      return newState;
+    });
   };
 
-  const handleEdit = () => {
-    setTempProfile({ ...profile });
-    setIsEditing(true);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
   };
 
   const handleSave = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.patch(`/users/${user.id}`, {
-        user: {
-          name: tempProfile.username,
-          bio: tempProfile.bio
-        }
-      });
+    if (!tempProfile.college) {
+      alert("Please select your College.");
+      return;
+    }
 
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("user[name]", tempProfile.username);
+    formData.append("user[bio]", tempProfile.bio);
+    formData.append("user[college]", tempProfile.college);
+    formData.append("user[hostel]", tempProfile.hostel);
+    if (selectedFile) formData.append("profile_picture", selectedFile);
+    
+    try {
+      const response = await axios.patch(`/users/${user.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       if (response.status === 200) {
-        setProfile({ ...tempProfile });
+        setProfile({ ...tempProfile, avatarUrl: response.data.profile_picture_url || tempProfile.avatarUrl });
+        if (setUser) setUser(response.data);
         setIsEditing(false);
         alert("Profile updated successfully!");
       }
     } catch (error) {
-      console.error("Failed to update profile:", error);
-      alert(error.response?.data?.message || "Update failed, please try again.");
+      alert(error.response?.data?.error || "Update failed");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
   };
 
   return (
@@ -78,12 +105,14 @@ export default function AccountInfo({ user }) {
             <button onClick={handleSave} style={styles.saveBtn} disabled={loading}>
               <FaSave style={styles.btnIcon} /> {loading ? "Saving..." : "Save"}
             </button>
-            <button onClick={handleCancel} style={styles.cancelBtn} disabled={loading}>
-              <FaTimes style={styles.btnIcon} /> Cancel
-            </button>
+            {profile.college && (
+              <button onClick={() => setIsEditing(false)} style={styles.cancelBtn}>
+                <FaTimes style={styles.btnIcon} /> Cancel
+              </button>
+            )}
           </div>
         ) : (
-          <button onClick={handleEdit} style={styles.editBtn}>
+          <button onClick={() => setIsEditing(true)} style={styles.editBtn}>
             <FaRegEdit style={styles.btnIcon} /> Edit Profile
           </button>
         )}
@@ -91,16 +120,22 @@ export default function AccountInfo({ user }) {
 
       <div style={styles.infoContainer}>
         <div style={styles.avatarRow}>
-          <FaUserCircle style={styles.avatarIcon} />
+          <div style={{ position: "relative" }}>
+            {previewUrl || profile.avatarUrl ? (
+              <img src={previewUrl || profile.avatarUrl} alt="Avatar" style={styles.avatarImage} />
+            ) : (
+              <FaUserCircle style={styles.avatarIcon} />
+            )}
+            {isEditing && (
+              <label style={styles.uploadOverlay}>
+                <FaCamera />
+                <input type="file" hidden onChange={handleFileChange} accept="image/*" />
+              </label>
+            )}
+          </div>
           <div>
             {isEditing ? (
-              <input
-                style={styles.inputUsername}
-                name="username"
-                value={tempProfile.username}
-                onChange={handleChange}
-                placeholder="Username"
-              />
+              <input style={styles.inputUsername} name="username" value={tempProfile.username} onChange={handleChange} />
             ) : (
               <p style={styles.valueUsername}>{profile.username}</p>
             )}
@@ -113,38 +148,68 @@ export default function AccountInfo({ user }) {
         <hr style={styles.divider} />
 
         <div style={styles.fieldRow}>
-          <div style={styles.iconColumn}>
-            <FaEnvelope style={styles.fieldIcon} />
-          </div>
+          <div style={styles.iconColumn}><FaEnvelope style={styles.fieldIcon} /></div>
           <div style={styles.contentColumn}>
             <label style={styles.label}>Email Address</label>
             <p style={styles.value}>{profile.email}</p>
           </div>
         </div>
 
+        {/* College Dropdown */}
         <div style={styles.fieldRow}>
-          <div style={styles.iconColumn}>
-            <FaPenNib style={styles.fieldIcon} />
-          </div>
+          <div style={styles.iconColumn}><FaUniversity style={styles.fieldIcon} /></div>
           <div style={styles.contentColumn}>
-            <label style={styles.label}>Bio</label>
+            <label style={styles.label}>College (Must)</label>
             {isEditing ? (
-              <textarea
-                style={{ ...styles.input, height: "100px", resize: "none" }}
-                name="bio"
-                value={tempProfile.bio}
-                onChange={handleChange}
-              />
+              <select style={styles.input} name="college" value={tempProfile.college} onChange={handleChange}>
+                <option value="">Select College</option>
+                {colleges.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+              </select>
             ) : (
-              <p style={styles.valueBio}>{profile.bio || "No bio yet."}</p>
+              <p style={styles.value}>{profile.college || "Not set"}</p>
             )}
+          </div>
+        </div>
+
+        {/* Hostel Dropdown (依據 College 變動) */}
+        <div style={styles.fieldRow}>
+          <div style={styles.iconColumn}><FaBuilding style={styles.fieldIcon} /></div>
+          <div style={styles.contentColumn}>
+            <label style={styles.label}>Hostel (Optional)</label>
+            {isEditing ? (
+              <select 
+                style={styles.input} 
+                name="hostel" 
+                value={tempProfile.hostel} 
+                onChange={handleChange}
+                disabled={!tempProfile.college} // 沒選書院前不能選宿舍
+              >
+                <option value="">Select Hostel</option>
+                {availableHalls.map(hall => <option key={hall} value={hall}>{hall}</option>)}
+              </select>
+            ) : (
+              <p style={styles.value}>{profile.hostel || "Not set"}</p>
+            )}
+          </div>
+        </div>
+
+        <div style={styles.fieldRow}>
+          <div style={styles.iconColumn}><FaPenNib style={styles.fieldIcon} /></div>
+            <div style={styles.contentColumn}>
+             <label style={styles.label}>Bio</label>
+              {isEditing ? (
+               <textarea style={{ ...styles.input, height: "80px", resize: "none" }} name="bio" value={tempProfile.bio} onChange={handleChange} />
+               ) : (
+               <p style={{ ...styles.valueBio, fontStyle: profile.bio ? "normal" : "italic" }}>
+                 {profile.bio || "No bio yet."}
+               </p>
+                )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
 const styles = {
   card: {
     padding: "30px",
@@ -237,12 +302,11 @@ const styles = {
     padding: "5px 0",
   },
   valueBio: {
-    fontSize: "15px",
-    color: "#555",
-    margin: 0,
-    lineHeight: "1.6",
-    fontStyle: profile => (profile.bio ? "normal" : "italic"),
-  },
+  fontSize: "15px",
+  color: "#555",
+  margin: 0,
+  lineHeight: "1.6",
+},
   smallIcon: {
     fontSize: "16px",
   },

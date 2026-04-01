@@ -24,7 +24,7 @@ import RegisterPage from "./pages/RegisterPage";
 import NavButton from "./common/NavButton";
 import { logoutUser } from "../common/loginauth";
 import SearchResultsPage from "./pages/SearchResultsPage";
-
+axios.defaults.withCredentials = true;
 const logo = "/logo.png";
 
 const AppContainer = styled.div` padding: 2rem; font-family: system-ui, sans-serif; `;
@@ -67,19 +67,6 @@ const DropdownItem = styled(Link)`
   &:hover { background-color: #f8f9fa; color: #702082; }
 `;
 
-const navigationItems = [
-  { label: "Home", to: "/", icon: BsHouseDoor },
-  { label: "Notifications", to: "/notifications", icon: BsBell },
-  { label: "Chat", to: "/chat", icon: BsChatDots },
-  { label: "Sell", to: "/sell", icon: BsHandbag, variant: "primary" },
-];
-
-const profileItems = [
-  { label: "Account", to: "/Account", icon: BsPersonCircle },
-  { label: "Log in", to: "/login", icon: BsBoxArrowInRight },
-  { label: "Register", to: "/register", icon: BsPencilSquare },
-];
-
 export default function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
@@ -96,17 +83,31 @@ export default function App() {
     checkAuth();
   }, []);
 
-  const handleLogoutClick = async () => {
-    if (window.confirm("Are you sure you want to log out?")) {
-      try {
-        await logoutUser();
-        setUser(null); // 清除前端狀態
-        window.location.href = "/"; // 登出後導回首頁並重新整理
-      } catch (err) {
-        alert("Logout failed");
-      }
+const handleLogoutClick = async () => {
+  if (window.confirm("Are you sure you want to log out?")) {
+    try {
+      await logoutUser();
+      
+      // 關鍵步驟 1: 清空 React 全域狀態，觸發重新渲染
+      setUser(null); 
+      
+      // 關鍵步驟 2: 關閉下拉選單，避免它「卡」在開啟狀態
+      setShowProfile(false); 
+      
+      // 關鍵步驟 3: 清除本地緩存
+      localStorage.removeItem("currentUser");
+
+      // 建議：直接導向首頁，這會觸發重新載入
+      window.location.href = "/"; 
+    } catch (err) {
+      console.error("Logout failed", err);
+      // 即便 API 報錯，也要強行清空前端狀態
+      setUser(null);
+      localStorage.removeItem("currentUser");
+      window.location.href = "/";
     }
-  };
+  }
+};
   
   return (
     <BrowserRouter>
@@ -134,30 +135,29 @@ export default function App() {
                   <NavButton label="Profile" to="#" icon={BsPersonCircle} />
                   
                   <DropdownMenu show={showProfile}>
-                    {user ? (
-                      <>
-                        {/* 已登入狀態：顯示 Account 和 Log out */}
-                        <div style={userEmailLabel}>{user.email}</div>
-                        <DropdownItem to="/Account">
-                          <BsPersonCircle /> Account
-                        </DropdownItem>
-                        <hr style={divider} />
-                        <DropdownItem as="button" onClick={handleLogoutClick} style={logoutBtnStyle}>
-                          <BsBoxArrowLeft /> Log out
-                        </DropdownItem>
-                      </>
-                    ) : (
-                      <>
-                        {/* 未登入狀態：顯示 Log in 和 Register */}
-                        <DropdownItem to="/login">
-                          <BsBoxArrowInRight /> Log in
-                        </DropdownItem>
-                        <DropdownItem to="/register">
+                    {user && user.email ? (  // 增加 user.email 檢查確保對象完整
+                        <>
+                          <div style={userEmailLabel}>{user.email}</div>
+                          <DropdownItem to="/Account">
+                            <BsPersonCircle /> Account
+                          </DropdownItem>
+                          <hr style={divider} />
+                          {/* 這裡改用 button 形式確保點擊有效 */}
+                          <DropdownItem as="button" onClick={handleLogoutClick} style={logoutBtnStyle}>
+                           <BsBoxArrowLeft /> Log out
+                          </DropdownItem>
+                          </>
+                        ) : (
+                           <>
+                          <DropdownItem to="/login">
+                         <BsBoxArrowInRight /> Log in
+                           </DropdownItem>
+                           <DropdownItem to="/register">
                           <BsPencilSquare /> Register
-                        </DropdownItem>
+                          </DropdownItem>
                       </>
-                    )}
-                  </DropdownMenu>
+                      )}  
+                </DropdownMenu>
                 </DropdownContainer>
               </RightNavGroup>
             </NavRow>
@@ -168,7 +168,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<IndexPage />} />
             <Route path="/login" element={<LoginPage setUser={setUser} />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register" element={<RegisterPage setUser={setUser} />} />
             <Route path="/Account" element={<AccountPage setUser={setUser} />} />
             <Route path="/product/:id" element={<ProductInfoPage />} />
             <Route path="/sell" element={<SellPage />} />

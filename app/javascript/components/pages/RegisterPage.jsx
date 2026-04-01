@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { registerUser, verifyToken } from "../../common/register";
 import { useNavigate } from "react-router-dom";
 
-const RegisterPage = () => {
+const RegisterPage = ({ setUser }) => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,7 +15,6 @@ const RegisterPage = () => {
   // 處理註冊第一步：發送資料並要求 OTP
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    
     if (password !== confirmPassword) {
       alert("密碼確認不一致！");
       return;
@@ -23,13 +22,11 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      // 呼叫 API 時傳送使用者輸入的 name
       await registerUser({
         name: name, 
         email: email,
         password: password
       });
-      
       setShowOtpPopup(true); 
     } catch (error) {
       console.error("Registration Error:", error);
@@ -40,22 +37,31 @@ const RegisterPage = () => {
   };
 
 const handleVerifyOtp = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  try {
-    const result = await verifyToken(email, otp); 
-    
-    if (result.message === 'verified') {
-      alert("註冊成功！");
-      navigate("/login");
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // 調用 verifyToken
+      const result = await verifyToken(email, otp); 
+      
+      if (result.message === 'verified') {
+        alert("驗證成功！正在前往完善個人資料...");
+        
+        // 1. 更新全域狀態：因為後端已經在 Session 存入 user_id，
+        // 這裡直接把後端回傳的 user 物件交給 App.js
+        if (setUser && result.user) {
+          setUser(result.user);
+        }
+
+        // 2. 跳轉到 Account 頁面 (因為 college 還是空的，AccountInfo 會自動開啟編輯模式)
+        navigate("/Account");
+      }
+    } catch (error) {
+      console.error("Verify Error:", error.response?.data);
+      alert("驗證失敗，請檢查驗證碼是否正確");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Verify Error:", error.response?.data);
-    alert("驗證失敗，請檢查驗證碼是否正確");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // --- UI 樣式 ---
   const inputStyle = { width: "100%", padding: "12px", margin: "10px 0", borderRadius: "8px", border: "1px solid #ddd", boxSizing: "border-box" };

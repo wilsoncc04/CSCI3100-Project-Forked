@@ -1,6 +1,5 @@
 Rails.application.routes.draw do
   root 'pages#index'
-
   # ===== API ROUTES =====
   resources :users, only: [:index, :show, :create, :update, :destroy] do
     collection do
@@ -23,10 +22,10 @@ Rails.application.routes.draw do
   end
 
   # Login session
-  resources :sessions, only: [:create, :show] do
+  get '/sessions', to: 'sessions#show'
+  resources :sessions, only: [:create] do
     collection do
-      # logout doesn't need an ID since we can identify the user from the session
-      delete :destroy, to: 'sessions#destroy', as: :logout
+      delete :destroy # DELETE /sessions/destroy - logout
     end
   end
 

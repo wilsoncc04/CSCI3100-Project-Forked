@@ -28,20 +28,22 @@ export default function AccountPage({ setUser }) {
   }, [navigate]);
 
   const handleLogout = async () => {
-    if (window.confirm("Are you sure you want to log out?")) {
-      try {
-        await logoutUser();
-        // 1. 清除 App.js 的全局狀態
-        if (setUser) setUser(null); 
-        // 2. 清除本地存儲
-        localStorage.removeItem("currentUser");
-        // 3. 跳轉
-        navigate("/login");
-      } catch (error) {
-        alert("Logout failed");
-      }
+  if (window.confirm("Are you sure you want to log out?")) {
+    try {
+      await logoutUser();
+      if (setUser) setUser(null); 
+      localStorage.removeItem("currentUser");
+      
+      // 建議改用這個，確保頁面乾淨重啟
+      window.location.href = "/login"; 
+    } catch (error) {
+      console.error("Logout failed", error);
+      // 即便 API 失敗，前端也應該強制清除狀態並跳轉
+      localStorage.removeItem("currentUser");
+      window.location.href = "/login";
     }
-  };
+  }
+};
 
   if (loading) {
     return (
