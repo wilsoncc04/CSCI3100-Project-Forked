@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaTimes, FaUndo } from "react-icons/fa";
 import { goodsTypes } from "../../common/productConstants";
 import { colleges } from "../../common/collegeConstants";
 
@@ -30,6 +30,16 @@ export default function FiltersAndSearch() {
     if (searchKeywords.trim()) params.set("keywords", searchKeywords.trim());
     const query = params.toString();
     return `/search${query ? `?${query}` : ""}`;
+  };
+
+  const handleResetFilters = () => {
+    setSelectedCollege(null);
+    setSelectedHall(null);
+    setSelectedType(null);
+  };
+
+  const handleClearKeywords = () => {
+    setSearchKeywords("");
   };
 
   const panelStyle = {
@@ -75,7 +85,7 @@ export default function FiltersAndSearch() {
 
   const activeItemStyle = {
     fontWeight: "bold",
-    color: "#e60000",
+    color: "#9e0ebb",
   };
 
   const hallStyle = {
@@ -259,6 +269,36 @@ export default function FiltersAndSearch() {
           </div>
         )}
       </div>
+
+      {(selectedCollege || selectedType) && (
+        <button
+          onClick={handleResetFilters}
+          title="Reset Filters"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#666",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "8px",
+            borderRadius: "50%",
+            transition: "background-color 0.2s, color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#ffe6e6";
+            e.currentTarget.style.color = "#e60000";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+            e.currentTarget.style.color = "#666";
+          }}
+        >
+          <FaUndo size={14} />
+        </button>
+      )}
+
       <div style={{ position: "relative", flex: 1 }}>
         <input
           type="text"
@@ -272,14 +312,42 @@ export default function FiltersAndSearch() {
           }}
           style={{
             width: "100%",
-            padding: "10px 120px 10px 16px",
+            padding: "10px 140px 10px 16px",
             borderRadius: "20px",
             border: "none",
             outline: "none",
             fontSize: "0.95rem",
             backgroundColor: "transparent",
+            boxSizing: "border-box", 
           }}
         />
+
+        {searchKeywords && (
+          <button
+            onClick={handleClearKeywords}
+            title="Clear Keywords"
+            style={{
+              position: "absolute",
+              right: "110px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              color: "#aaa",
+              cursor: "pointer",
+              padding: "5px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "50%",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#555")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#aaa")}
+          >
+            <FaTimes size={14} />
+          </button>
+        )}
+        
         <button
           onClick={() => navigate(getSearchUrl())}
           style={{
