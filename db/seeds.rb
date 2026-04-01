@@ -17,4 +17,4 @@ categories = [
   "Others"
 ]
 
-categories.each { |name| Category.find_or_create_by!(name: name) }
+categories.each { |name| Category.find_or_create_by!(category_name: name) }
