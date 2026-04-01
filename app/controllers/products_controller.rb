@@ -85,7 +85,7 @@ class ProductsController < ApplicationController
 
     # Replace images if new ones provided
     if params[:images].present?
-      @product.image.purge # Remove old images
+      @product.images.purge # Remove old images
       params[:images].each do |image|
         @product.images.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
       end
@@ -167,7 +167,7 @@ class ProductsController < ApplicationController
       location: product.location,
       contact: product.contact,
       condition: product.condition,
-      images: product.image.map { |img| safe_url_for(img) }.compact,
+      images: product.images.map { |img| safe_url_for(img) }.compact,
       created_at: product.created_at,
       updated_at: product.updated_at
     }

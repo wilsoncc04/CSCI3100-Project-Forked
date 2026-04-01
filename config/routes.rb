@@ -22,8 +22,13 @@ Rails.application.routes.draw do
     resources :messages, only: [:index, :create, :show, :destroy]
   end
 
-  # Login sesion 
-  resource :sessions, only: [:create, :destroy, :show]
+  # Login session
+  resources :sessions, only: [:create, :show] do
+    collection do
+      # logout doesn't need an ID since we can identify the user from the session
+      delete :destroy, to: 'sessions#destroy', as: :logout
+    end
+  end
 
   # handle all other routes with React Router (for client-side routing)
   post '/users/register', to: 'users#register'

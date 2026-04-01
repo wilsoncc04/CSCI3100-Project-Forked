@@ -55,7 +55,7 @@ RSpec.describe 'Chats API', type: :request do
           chats_data = JSON.parse(response.body)
           product_data = chats_data.first['product']
           
-          expect(product_data).to include('id', 'name', 'price', 'image')
+          expect(product_data).to include('id', 'name', 'price', 'images')
         end
 
         it 'formats seller data correctly' do

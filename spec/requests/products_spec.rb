@@ -60,7 +60,7 @@ RSpec.describe 'Products API', type: :request do
         params = valid_params.merge(images: [create_test_image])
         post products_path, params: params
         created_product = Product.last
-        expect(created_product.image).to be_attached
+        expect(created_product.images).to be_attached
       end
 
       it 'returns created status with image URL' do
@@ -91,7 +91,7 @@ RSpec.describe 'Products API', type: :request do
         params = valid_params.merge(images: images)
         post products_path, params: params
         created_product = Product.last
-        expect(created_product.image.count).to eq(3)
+        expect(created_product.images.count).to eq(3)
       end
 
       it 'returns all image URLs in response' do
@@ -116,7 +116,7 @@ RSpec.describe 'Products API', type: :request do
         post products_path, params: valid_params
         expect(response).to have_http_status(:created)
         created_product = Product.last
-        expect(created_product.image.count).to eq(0)
+        expect(created_product.images.count).to eq(0)
       end
 
       it 'returns empty images array' do
@@ -148,7 +148,7 @@ RSpec.describe 'Products API', type: :request do
         params = valid_params.merge(images: ['not_a_file'])
         post products_path, params: params
         created_product = Product.last
-        expect(created_product.image.count).to eq(0)
+        expect(created_product.images.count).to eq(0)
       end
     end
   end
@@ -187,7 +187,7 @@ RSpec.describe 'Products API', type: :request do
         }
 
         product.reload
-        expect(product.image.count).to eq(1)
+        expect(product.images.count).to eq(1)
       end
 
       it 'returns updated product with new image URL' do
@@ -273,7 +273,7 @@ RSpec.describe 'Products API', type: :request do
         }
 
         product.reload
-        expect(product.image.count).to eq(3)
+        expect(product.images.count).to eq(3)
       end
 
       it 'records price history when updating multiple prices' do
@@ -336,7 +336,7 @@ RSpec.describe 'Products API', type: :request do
           images: [create_test_image]
         }
         product = Product.last
-        initial_count = product.image.count
+        initial_count = product.images.count
 
         # Update without images
         patch product_path(product.id), params: {
@@ -346,7 +346,7 @@ RSpec.describe 'Products API', type: :request do
         }
 
         product.reload
-        expect(product.image.count).to eq(initial_count)
+        expect(product.images.count).to eq(initial_count)
         expect(product.name).to eq('Updated Name')
       end
 
@@ -412,7 +412,7 @@ RSpec.describe 'Products API', type: :request do
         product.reload
         expect(product.name).to eq('Updated Name')
         expect(product.price).to eq(200.0)
-        expect(product.image.count).to eq(2)
+        expect(product.images.count).to eq(2)
       end
 
       it 'creates price history record when price is updated' do

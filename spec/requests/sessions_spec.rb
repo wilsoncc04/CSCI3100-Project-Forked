@@ -74,15 +74,16 @@ RSpec.describe 'Sessions API', type: :request do
     end
   end
 
-  describe 'DELETE /sessions/:id (logout)' do
-    it 'returns no content status' do
-      delete session_path(1)
-      expect(response).to have_http_status(:no_content)
+  describe 'DELETE /sessions (logout)' do
+    it 'returns ok status' do
+      delete logout_sessions_path
+      expect(response).to have_http_status(:ok)
     end
 
-    it 'returns empty response body' do
-      delete session_path(1)
-      expect(response.body).to be_empty
+    it 'returns logout message in response body' do
+      delete logout_sessions_path
+      response_data = JSON.parse(response.body)
+      expect(response_data['message']).to eq('logged_out')
     end
   end
 
@@ -102,11 +103,11 @@ RSpec.describe 'Sessions API', type: :request do
       end
     end
 
-    context 'DELETE /sessions/:id (logout)' do
+    context 'DELETE /sessions (logout)' do
       it 'does not require authentication' do
         # Unauthenticated users can call logout (no-op basically)
-        delete session_path(1)
-        expect(response).to have_http_status(:no_content)
+        delete logout_sessions_path
+        expect(response).to have_http_status(:ok)
       end
 
       it 'clears authenticated session when user is logged in' do
@@ -115,8 +116,8 @@ RSpec.describe 'Sessions API', type: :request do
         expect(response).to have_http_status(:created)
         
         # Then logout
-        delete session_path(1)
-        expect(response).to have_http_status(:no_content)
+        delete logout_sessions_path
+        expect(response).to have_http_status(:ok)
       end
     end
   end

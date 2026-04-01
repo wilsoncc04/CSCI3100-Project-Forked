@@ -1,7 +1,8 @@
 # Login and logout actions for user sessions
 class SessionsController < ApplicationController
   skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
-  # POST /sessions (login)
+
+  # GET /sessions (check login status)
   def show
     if current_user
       render json: format_user(current_user), status: :ok
@@ -9,9 +10,12 @@ class SessionsController < ApplicationController
       render json: { error: 'not_logged_in' }, status: :unauthorized
     end
   end
+
+  # POST /sessions (login)
   def create
-    user = User.find_by(email: params[:email])
-    if user && user.authenticate(params[:password])
+    login_params = params[:session] || params
+    user = User.find_by(email: login_params[:email])
+    if user && user.authenticate(login_params[:password])
       if user.verified_at.present?   #ensure the DB record is correctly updated after email verification
         # establish server-side session
         session[:user_id] = user.id
