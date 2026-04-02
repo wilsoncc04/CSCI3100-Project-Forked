@@ -61,7 +61,7 @@ class ProductsController < ApplicationController
     product_data = @product.as_json(only: PRODUCT_JSON_ONLY)
 
     product_data["images"] = if @product.images.attached?
-                               @product.images.map { |a| rails_blob_url(a) }
+                               @product.images.map { |a| a.url }
                              else
                                []
                              end
