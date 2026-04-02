@@ -61,7 +61,13 @@ class ProductsController < ApplicationController
     product_data = @product.as_json(only: PRODUCT_JSON_ONLY)
 
     product_data["images"] = if @product.images.attached?
-                               @product.images.map { |a| a.url }
+                               @product.images.map do |image|
+                                 if image.service.respond_to?(:cloudinary_url)
+                                  image.url
+                                 else
+                                  rails_blob_url(image)
+                               end
+                              end
                              else
                                []
                              end
