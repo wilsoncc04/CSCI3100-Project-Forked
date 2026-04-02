@@ -59,7 +59,7 @@ class ProductsController < ApplicationController
     product_data = @product.as_json(only: PRODUCT_JSON_ONLY)
 
     product_data["images"] = if @product.images.attached?
-                               @product.images.map { |img| url_for(img) }
+                               @product.images.map { |img| img.service_url }
                              else
                                []
                              end
