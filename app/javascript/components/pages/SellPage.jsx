@@ -439,6 +439,7 @@ export default function SellPage() {
             value={formData.price}
             onChange={handleChange}
             placeholder="0"
+            step="0.1"
             min="0"
             style={{
               width: "100%",
