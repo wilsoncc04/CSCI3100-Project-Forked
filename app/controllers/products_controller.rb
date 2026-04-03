@@ -5,7 +5,7 @@ class ProductsController < ApplicationController
 
   # directly get the product list
   before_action :set_product, only: %i[show update destroy]
-  before_action :authenticate_user!, only: %i[create update destroy]
+  before_action :authenticate_user!, only: %i[create update destroy selling]
   before_action :authorize_product_seller!, only: %i[update destroy]
 
   # GET /products
@@ -129,6 +129,16 @@ class ProductsController < ApplicationController
   def destroy
     @product.destroy
     head :no_content     # return 204 No Content on successful deletion
+  rescue StandardError => e
+    render_error(e)
+  end
+
+  # GET /products/selling
+  # Returns products currently being sold by the authenticated user
+  def selling
+    products = Product.with_attached_images.where(seller_id: current_user.id)
+    formatted_data = products.map { |p| format_product(p) }
+    render json: formatted_data, status: :ok
   rescue StandardError => e
     render_error(e)
   end

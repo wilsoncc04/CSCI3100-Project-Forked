@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   resources :products do
     collection do
       get :price_history           # GET /products/price_history?product_id=X&points=Y
+      get :selling                 # GET /products/selling - list current user's selling products
     end
   end
 

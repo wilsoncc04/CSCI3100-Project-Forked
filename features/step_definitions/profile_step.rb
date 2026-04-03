@@ -20,9 +20,9 @@ When(/^(?:|I )fill in "(.*)" with "(.*)"$/) do |field_name, value|
   fill_in(field_name, with: value)
 end
 
-Then(/^(?:|I )should see "(.*)"$/) do |text|
-  expect(page).to have_content(text)
-end
+## Generic "I should see" step removed from this file to avoid ambiguity
+## The project provides a shared implementation in search_steps.rb
+## which will be used for assertions like `Then I should see "..."`.
 
 Then(/^the purchase table should contain:$/) do |table|
   table.raw.each do |row|
