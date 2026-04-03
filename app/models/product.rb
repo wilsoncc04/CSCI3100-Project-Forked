@@ -6,6 +6,7 @@ class Product < ApplicationRecord
     has_many :interests, class_name: 'Interest', foreign_key: 'item_id', dependent: :destroy
     has_many :price_histories, class_name: 'PriceHistory', foreign_key: 'product_id', dependent: :destroy
     has_many :chats, foreign_key: 'item_id', dependent: :destroy
+    has_many :community_items, dependent: :destroy
 
     has_many_attached :images
   
@@ -19,6 +20,18 @@ class Product < ApplicationRecord
 
     pg_search_scope :search_by_name, against: :name, using: { trigram: { threshold: 0.2 } }
     # Adjust the threshold from 0 to 1 for strictness
+
+    def image_urls
+        return [] unless images.attached?
+    
+        images.map do |image|
+          if image.service.respond_to?(:cloudinary_url)
+            image.url
+          else
+            Rails.application.routes.url_helpers.rails_blob_url(image, only_path: true)
+          end
+        end
+    end
 
     private
 

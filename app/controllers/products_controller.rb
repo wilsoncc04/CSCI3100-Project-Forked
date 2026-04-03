@@ -4,7 +4,7 @@ class ProductsController < ApplicationController
   PRODUCT_JSON_ONLY = %i[id name description price seller_id buyer_id status category_id location contact condition created_at updated_at].freeze
 
   # directly get the product list
-  before_action :set_product, only: %i[show update destroy]
+  before_action :set_product, only: %i[show update destroy price_history]
   before_action :authenticate_user!, only: %i[create update destroy selling]
   before_action :authorize_product_seller!, only: %i[update destroy]
 
@@ -21,26 +21,15 @@ class ProductsController < ApplicationController
     offset = (page - 1) * limit
 
     products = Product.with_attached_images.includes(:seller).all
-
-    if params[:keywords].present?
-      products = products.search_by_name(params[:keywords])
-    end
-
-    if params[:college].present?
-      products = products.joins(:seller).where(users: { college: params[:college] })
-    end 
-
-    if params[:type].present?
-      products = products.joins(:category).where(categories: { category_name: params[:type] })
-    end
+    products = products.search_by_name(params[:keywords]) if params[:keywords].present?
+    products = products.joins(:seller).where(users: { college: params[:college] }) if params[:college].present?
+    products = products.joins(:category).where(categories: { category_name: params[:type] }) if params[:type].present?
 
     total_count = products.count
     paginated_products = products.limit(limit).offset(offset)
     
-    formatted_data = paginated_products.map { |p| format_product(p) }
-
     render json: {
-      data: formatted_data,
+      data: paginated_products.map { |p| format_product(p) },
       pagination: {
         current_page: page,
         limit: limit,
@@ -49,30 +38,14 @@ class ProductsController < ApplicationController
       }
     }
   rescue StandardError => e
-    render json: { error: e.message }, status: :internal_server_error
+    render_error(e)
   end
 
   # GET /products/:id
   # show a single product
   # in product info page
   def show
-    @product = Product.with_attached_images.find(params[:id])
-
-    product_data = @product.as_json(only: PRODUCT_JSON_ONLY)
-
-    product_data["images"] = if @product.images.attached?
-                               @product.images.map do |image|
-                                 if image.service.respond_to?(:cloudinary_url)
-                                  image.url
-                                 else
-                                  rails_blob_url(image)
-                               end
-                              end
-                             else
-                               []
-                             end
-
-    render json: product_data
+    render json: format_product(@product)
   end
 
   # POST /products
@@ -80,15 +53,13 @@ class ProductsController < ApplicationController
   def create
     product = Product.new(product_params)
     product.seller_id = current_user.id
+    
     # Handle image uploads
-    if params[:images].present?
-      params[:images].each do |image|
-        product.images.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
-      end
-    end
+    attach_images(product, params[:images]) if params[:images].present?
+
     if product.save
-      product.reload # Reload to ensure images are properly loaded
-      render json: format_product(product), status: :created
+      promote_to_community(product) if params[:promote_to_community] == 'true'
+      render json: format_product(product.reload), status: :created
     else
       render_error(product.errors, status: :unprocessable_content)
     end
@@ -101,7 +72,6 @@ class ProductsController < ApplicationController
   # PATCH/PUT /products/:id
   # update product details
   def update
-    # Update product attributes if provided
     if params[:product].present?
       unless @product.update(product_params)
         render_error(@product.errors, status: :unprocessable_content)
@@ -109,13 +79,10 @@ class ProductsController < ApplicationController
       end
     end
 
-    # Replace images if new ones provided
     if params[:images].present?
-      @product.images.purge # Remove old images
-      params[:images].each do |image|
-        @product.images.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
-      end
-      @product.reload # Reload to get attached images
+      @product.images.purge
+      attach_images(@product, params[:images])
+      @product.reload
     end
 
     render json: format_product(@product), status: :ok
@@ -128,7 +95,7 @@ class ProductsController < ApplicationController
   # DELETE /products/:id
   def destroy
     @product.destroy
-    head :no_content     # return 204 No Content on successful deletion
+    head :no_content
   rescue StandardError => e
     render_error(e)
   end
@@ -137,8 +104,7 @@ class ProductsController < ApplicationController
   # Returns products currently being sold by the authenticated user
   def selling
     products = Product.with_attached_images.where(seller_id: current_user.id)
-    formatted_data = products.map { |p| format_product(p) }
-    render json: formatted_data, status: :ok
+    render json: products.map { |p| format_product(p) }, status: :ok
   rescue StandardError => e
     render_error(e)
   end
@@ -147,25 +113,15 @@ class ProductsController < ApplicationController
   # Returns price history records for a product.
   # Query param `points` controls number of data points (default 10, max 20).
   def price_history
-    product_id = params[:product_id] || params[:id]
-    unless product_id.present?
-      render_error('product_id query parameter required', status: :bad_request)
-      return
-    end
-
-    product = Product.find(product_id)
-
     points = (params[:points] || 10).to_i
-    points = 10 if points <= 0
-    # maximum 20 points
+    points = [points, 1].max
     points = [points, 20].min
 
-    # Fetch price history records, ordered by date descending (most recent first)
-    price_histories = product.price_histories.order(date: :desc).limit(points)
+    price_histories = @product.price_histories.order(date: :desc).limit(points)
 
     render json: { 
-      product_id: product.id, 
-      prices: price_histories.map { |ph| ph.price }
+      product_id: @product.id, 
+      prices: price_histories.map(&:price)
     }, status: :ok
   rescue StandardError => e
     render_error(e)
@@ -175,13 +131,11 @@ class ProductsController < ApplicationController
 
   # directly find the product by id for show, update, destroy, and price_history actions
   def set_product
-    @product = Product.find(params[:id])
+    @product = Product.with_attached_images.find(params[:id])
   end
 
   def authorize_product_seller!
-    unless @product.seller_id == current_user.id
-      render_unauthorized
-    end
+    render_unauthorized unless @product.seller_id == current_user.id
   end
 
   def product_params
@@ -191,27 +145,28 @@ class ProductsController < ApplicationController
   end
 
   def format_product(product)
-    {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      seller_id: product.seller_id,
-      buyer_id: product.buyer_id,
-      status: product.status,
-      category_id: product.category_id,
-      location: product.location,
-      contact: product.contact,
-      condition: product.condition,
-      images: product.images.map { |img| safe_url_for(img) }.compact,
-      created_at: product.created_at,
-      updated_at: product.updated_at
-    }
+    product.as_json(only: PRODUCT_JSON_ONLY).merge(
+      "images" => product.image_urls
+    )
   end
 
-  def safe_url_for(blob)
-    url_for(blob)
-  rescue StandardError
-    nil
+  def attach_images(product, images)
+    images.each do |image|
+      product.images.attach(image) if image.is_a?(ActionDispatch::Http::UploadedFile)
+    end
+  end
+
+  # for community promotion(add description)
+  def promote_to_community(product)
+    return unless params[:community_description].present?
+
+    CommunityItem.create!(
+      user: current_user,
+      product: product,
+      description: params[:community_description],
+      college: current_user.college || "Unknown"
+    )
+  rescue ActiveRecord::RecordInvalid => e
+    logger.error "CommunityItem creation failed: #{e.message}"
   end
 end

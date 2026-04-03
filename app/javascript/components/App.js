@@ -24,6 +24,8 @@ import RegisterPage from "./pages/RegisterPage";
 import NavButton from "./common/NavButton";
 import { logoutUser } from "../common/loginauth";
 import SearchResultsPage from "./pages/SearchResultsPage";
+import CommunityPage from "./pages/CommunityPage";
+import { BsPeopleFill } from "react-icons/bs";
 axios.defaults.withCredentials = true;
 const logo = "/logo.png";
 
@@ -121,6 +123,7 @@ const handleLogoutClick = async () => {
             
             <NavRow>
               <NavButton label="Home" to="/" icon={BsHouseDoor} />
+              <NavButton label="Community" to="/community" icon={BsPeopleFill} />
               
               <RightNavGroup>
                 <NavButton label="Notifications" to="/notifications" icon={BsBell} />
@@ -174,6 +177,7 @@ const handleLogoutClick = async () => {
             <Route path="/sell" element={<SellPage />} />
             <Route path="/notifications" element={<NotificationPage />} />
             <Route path="/chat" element={<ChatPage />} />
+            <Route path="/community" element={<CommunityPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
           </Routes>
         </main>

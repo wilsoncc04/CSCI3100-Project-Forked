@@ -18,6 +18,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :community_items, only: [:index, :create, :update, :destroy]
+
   resources :chats, only: [:index, :show, :create] do
     resources :messages, only: [:index, :create, :show, :destroy]
   end

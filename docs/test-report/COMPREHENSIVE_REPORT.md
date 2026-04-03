@@ -103,8 +103,16 @@ These tests return 404 instead of 401 because the API validates resource existen
 - **GET /products?keywords=X** - Search products ✓
 - **GET /products/price_history** - Product price history ✓
 - **POST /products** - Create product (requires auth) ✓
-- **PATCH /products/:id** - Update product (requires auth) - *Tested, working*
-- **DELETE /products/:id** - Delete product (requires auth) - *Tested, working*
+- **PATCH /products/:id** - Update product (requires auth) ✓
+- **DELETE /products/:id** - Delete product (requires auth) ✓
+- **GET /products/selling** - Current user's items ✓
+
+### ✓ Community Endpoints (5/5 Working)
+- **GET /community_items** - List college promotions ✓
+- **POST /community_items** - Create promotion ✓
+- **PATCH /community_items/:id** - Update promotion ✓
+- **DELETE /community_items/:id** - Delete promotion ✓
+- **POST /products (with promote_to_community)** - Integrated flow ✓
 
 ### ✓ Chat Endpoints (3/3 Working)
 - **GET /chats** - List user chats (requires auth) ✓
