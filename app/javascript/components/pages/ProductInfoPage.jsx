@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import {
   AiOutlineHeart,
   AiFillHeart,
@@ -11,69 +12,367 @@ import {
   AiOutlinePicture
 } from "react-icons/ai";
 
-function LikeButton() {
+const ActionButton = styled.button`
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 8px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ActionButtonText = styled.span`
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #333;
+`;
+
+function LikeButton({ productId }) {
   const [liked, setLiked] = useState(false);
 
   const handleLike = async () => {
-    // to connect POST /users/interests API
     setLiked(!liked);
     console.log(`Product ${productId} added to interests list`);
   };
 
   return (
-    <button
-      onClick={() => setLiked(!liked)}
-      style={{
-        border: "none",
-        background: "none",
-        cursor: "pointer",
-        fontSize: "24px",
-        padding: "8px",
-        display: "inline-flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <ActionButton onClick={handleLike}>
       {liked ? <AiFillHeart color="#dc3545" /> : <AiOutlineHeart />}
-      <span style={{ marginTop: "6px", fontSize: "0.9rem", color: "#333" }}>
-        Interested
-      </span>
-    </button>
+      <ActionButtonText>Interested</ActionButtonText>
+    </ActionButton>
   );
 }
 
-function BuyButton() {
+function BuyButton({ productId }) {
   const navigate = useNavigate();
 
   const handleBuyClick = () => {
-    // to call API changing status to "reserved"
-    // and trigger Notification for the seller
     console.log(`Initiating buy process for Product ${productId}`);
     navigate(`/chat?product=${productId}`);
   };
 
   return (
-    <button
-      style={{
-        border: "none",
-        background: "none",
-        cursor: "pointer",
-        fontSize: "24px",
-        padding: "8px",
-        display: "inline-flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <ActionButton onClick={handleBuyClick}>
       <AiOutlineShoppingCart />
-      <span style={{ marginTop: "6px", fontSize: "0.9rem", color: "#333" }}>
-        Buy
-      </span>
-    </button>
+      <ActionButtonText>Buy</ActionButtonText>
+    </ActionButton>
   );
 }
+
+const PageContainer = styled.div`
+  max-width: 900px;
+  margin: 2rem auto;
+  font-family: sans-serif;
+  padding: 0 1rem;
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+`;
+
+const PageTitle = styled.h2`
+  margin: 0;
+  color: #333;
+`;
+
+const StatusBadge = styled.span`
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  background-color: ${(props) => (props.$isBrandNew ? "#e6f2ff" : "#f0f0f0")};
+  color: ${(props) => (props.$isBrandNew ? "#0066cc" : "#666")};
+`;
+
+const SingleImageWrapper = styled.div`
+  width: 100%;
+  height: 400px;
+  margin-bottom: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: zoom-in;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+`;
+
+const FullImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const GridContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  height: 400px;
+`;
+
+const MainGridBox = styled.div`
+  flex: 2;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: ${(props) => (props.$hasImage ? "zoom-in" : "default")};
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 8px 16px -8px rgba(0, 0, 0, 0.08);
+  }
+`;
+
+const SubGridColumn = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const SubGridBox = styled.div`
+  flex: 1;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: ${(props) => (props.$hasImage ? "zoom-in" : "default")};
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const SubGridImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  ${SubGridBox}:hover & {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+  }
+`;
+
+const OverlayCount = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  pointer-events: none;
+`;
+
+const EmptyText = styled.span`
+  color: ${(props) => (props.$isMain ? "#aaa" : "#ddd")};
+  font-size: ${(props) => (props.$isMain ? "1rem" : "0.8rem")};
+`;
+
+const DetailsContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+`;
+
+const InfoSection = styled.div`
+  flex: 1;
+  padding-right: 2rem;
+`;
+
+const ProductName = styled.h1`
+  margin: 0 0 0.5rem 0;
+  color: #222;
+  font-size: 2rem;
+`;
+
+const ProductPrice = styled.p`
+  font-size: 2rem;
+  color: #e60000;
+  font-weight: bold;
+  margin: 0 0 1.5rem 0;
+`;
+
+const ConditionWrapper = styled.p`
+  margin: 0 0 1.5rem 0;
+`;
+
+const ConditionTag = styled.span`
+  background-color: #f0f0f0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #555;
+  font-weight: bold;
+`;
+
+const DescriptionWrapper = styled.div`
+  margin-bottom: 1rem;
+`;
+
+const SectionTitle = styled.h4`
+  margin: 0 0 0.5rem 0;
+  color: #555;
+`;
+
+const DescriptionText = styled.p`
+  color: #444;
+  line-height: 1.6;
+  white-space: pre-wrap;
+`;
+
+const ContactSection = styled.div`
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+`;
+
+const SellerRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+`;
+
+const AvatarCircle = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 20px;
+`;
+
+const SellerNameText = styled.p`
+  margin: 0;
+  font-weight: normal;
+  color: #666;
+  font-size: 0.95rem;
+`;
+
+const ContactInfoList = styled.div`
+  font-size: 0.8rem;
+  color: #999;
+  line-height: 1.6;
+`;
+
+const ContactItem = styled.p`
+  margin: 0;
+`;
+
+const ButtonsColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const GraphWrapper = styled.div`
+  margin: 3rem 0;
+  padding: 2rem;
+  border: 1px solid #ddd;
+`;
+
+const GraphArea = styled.div`
+  height: 200px;
+  border-bottom: 2px solid #333;
+  border-left: 2px solid #333;
+  position: relative;
+`;
+
+const GraphPlaceholder = styled.p`
+  position: absolute;
+  bottom: 50%;
+  left: 40%;
+  color: #888;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  cursor: zoom-out;
+`;
+
+const ModalCloseButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  background: none;
+  border: none;
+  color: #f9f9f9;
+  font-size: 40px;
+  cursor: pointer;
+`;
+
+const ModalNavButton = styled.button`
+  position: absolute;
+  background: none;
+  border: none;
+  color: #f9f9f9;
+  font-size: 50px;
+  cursor: pointer;
+  z-index: 10000;
+  padding: 20px;
+  ${(props) => (props.$direction === "left" ? "left: 5%;" : "right: 5%;")}
+`;
+
+const ModalDisplayImage = styled.img`
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: cover;
+  border-radius: 8px;
+`;
+
+const LoadingErrorState = styled.div`
+  text-align: center;
+  margin-top: 50px;
+  color: ${(props) => (props.$isError ? "red" : "inherit")};
+`;
 
 export default function ProductInfoPage() {
   const { id } = useParams();
@@ -81,7 +380,7 @@ export default function ProductInfoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [sellerName, setSellerName] = useState("Anonymous User"); 
+  const [sellerName, setSellerName] = useState("Anonymous User");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -93,9 +392,9 @@ export default function ProductInfoPage() {
         if (!response.ok) throw new Error("Product not found");
         const data = await response.json();
         setProduct(data);
-        const sellerId = data.seller_id; 
+        const sellerId = data.seller_id;
         if (sellerId) {
-          const userResponse = await fetch(`/users/${sellerId}`); 
+          const userResponse = await fetch(`/users/${sellerId}`);
           if (userResponse.ok) {
             const userData = await userResponse.json();
             setSellerName(userData.name);
@@ -131,272 +430,131 @@ export default function ProductInfoPage() {
     setCurrentImageIndex((index) => (index === images.length - 1 ? 0 : index + 1));
   };
 
-  if (isLoading) return <div style={{ textAlign: "center", marginTop: "50px" }}>Loading Product...</div>;
-  if (error) return <div style={{ textAlign: "center", marginTop: "50px", color: "red" }}>Error: {error}</div>;
+  if (isLoading) return <LoadingErrorState>Loading Product...</LoadingErrorState>;
+  if (error) return <LoadingErrorState $isError>Error: {error}</LoadingErrorState>;
   if (!product) return null;
 
   const images = product.images || [];
 
   return (
-    <div style={{ maxWidth: "900px", margin: "2rem auto", fontFamily: "sans-serif", padding: "0 1rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-        <h2 style={{ margin: 0, color: "#333" }}>Product Details</h2>
-        <span style={{ 
-          padding: "5px 12px", 
-          borderRadius: "20px", 
-          fontSize: "0.9rem",
-          fontWeight: "bold",
-          backgroundColor: product.status === "Brand New" ? "#e6f2ff" : "#f0f0f0",
-          color: product.status === "Brand New" ? "#0066cc" : "#666" 
-        }}>
+    <PageContainer>
+      <HeaderContainer>
+        <PageTitle>Product Details</PageTitle>
+        <StatusBadge $isBrandNew={product.status === "Brand New"}>
           {product.status || "Available"}
-        </span>
-      </div>
-    
-      {images.length === 1 ? (
-        <div 
-          onClick={() => openModal(0)}
-          style={{ 
-            width: "100%", 
-            height: "400px", 
-            marginBottom: "2rem", 
-            backgroundColor: "#fff", 
-            borderRadius: "12px", 
-            overflow: "hidden", 
-            cursor: "zoom-in", 
-            border: "1px solid #f0f0f0", 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center",
-            boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1), 0 4px 10px -5px rgba(0,0,0,0.04)"
-           }}
-        >
-          <img src={images[0]} alt="Main Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        </div>
-      ) : (
-        <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", height: "400px" }}>
-          <div 
-            onClick={() => openModal(0)}
-            style={{ 
-              flex: 2, 
-              backgroundColor: "#fff", 
-              borderRadius: "12px", 
-              overflow: "hidden", 
-              cursor: images.length > 0 ? "zoom-in" : "default",
-              border: "1px solid #f0f0f0",
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center",
-              boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1), 0 4px 10px -5px rgba(0,0,0,0.04)",
-              transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)"
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = "translateY(-5px)"; 
-              e.currentTarget.style.boxShadow = "0 20px 40px -10px rgba(0,0,0,0.15), 0 8px 16px -8px rgba(0,0,0,0.08)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 10px 30px -10px rgba(0,0,0,0.1), 0 4px 10px -5px rgba(0,0,0,0.04)";
-            }}    
-          >
-            {images[0] ? (
-              <img src={images[0]} alt="Main Photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <span style={{ color: "#aaa" }}>No Image Available</span>
-            )}
-          </div>
+        </StatusBadge>
+      </HeaderContainer>
 
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {images.length === 1 ? (
+        <SingleImageWrapper onClick={() => openModal(0)}>
+          <FullImage src={images[0]} alt="Main Photo" />
+        </SingleImageWrapper>
+      ) : (
+        <GridContainer>
+          <MainGridBox onClick={() => openModal(0)} $hasImage={images.length > 0}>
+            {images[0] ? (
+              <FullImage src={images[0]} alt="Main Photo" />
+            ) : (
+              <EmptyText $isMain>No Image Available</EmptyText>
+            )}
+          </MainGridBox>
+
+          <SubGridColumn>
             {[1, 2, 3].map((index) => {
               const isLastVisibleBox = index === 3;
               const hasMoreImages = images.length > 4;
 
               return (
-                <div 
+                <SubGridBox
                   key={index}
                   onClick={() => images[index] && openModal(index)}
-                  style={{ 
-                    flex: 1, 
-                    backgroundColor: "#fff", 
-                    borderRadius: "8px", 
-                    overflow: "hidden", 
-                    cursor: images[index] ? "zoom-in" : "default",
-                    border: "1px solid #f0f0f0",
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center",
-                    position: "relative",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                    transition: "transform 0.3s ease, box-shadow 0.3s ease"
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                    e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.1)";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.05)";
-                  }}
+                  $hasImage={!!images[index]}
                 >
                   {images[index] ? (
                     <>
-                      <img src={images[index]} alt={`Detail ${index}`} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "all 0.3s ease", cursor: "pointer"}} 
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.transform = "scale(1.1)";   
-                            e.currentTarget.style.filter = "brightness(1.1)"; 
-                          }} 
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.transform = "scale(1)";
-                            e.currentTarget.style.filter = "brightness(1)";
-                          }}/>
-                      
+                      <SubGridImage src={images[index]} alt={`Detail ${index}`} />
                       {isLastVisibleBox && hasMoreImages && (
-                        <div style={{
-                          position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
-                          backgroundColor: "rgba(0, 0, 0, 0.6)", color: "white",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
-                          fontSize: "1.2rem", fontWeight: "bold", pointerEvents: "none"
-                        }}>
+                        <OverlayCount>
                           <AiOutlinePicture size={24} /> {images.length} images
-                        </div>
+                        </OverlayCount>
                       )}
                     </>
                   ) : (
-                    <span style={{ color: "#ddd", fontSize: "0.8rem" }}>Empty</span>
+                    <EmptyText>Empty</EmptyText>
                   )}
-                </div>
+                </SubGridBox>
               );
             })}
-          </div>
-        </div>
+          </SubGridColumn>
+        </GridContainer>
       )}
-      
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", backgroundColor: "#fff", padding: "2rem", borderRadius: "12px", border: "1px solid #eee", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
-        <div style={{ flex: 1, paddingRight: "2rem" }}>
-          <h1 style={{ margin: "0 0 0.5rem 0", color: "#222", fontSize: "2rem" }}>
-            {product.name}
-          </h1>
-          <p style={{ fontSize: "2rem", color: "#e60000", fontWeight: "bold", margin: "0 0 1.5rem 0" }}>
-            ${product.price} HKD
-          </p>
-          <p style={{ margin: "0 0 1.5rem 0" }}>
-            <span style={{ backgroundColor: "#f0f0f0", padding: "4px 10px", borderRadius: "6px", fontSize: "0.9rem", color: "#555",fontWeight: "bold"}}>
-              Condition: {product.condition || "Not Specified"}
-            </span>
-          </p>
-          <div style={{ marginBottom: "1rem" }}>
-            <h4 style={{ margin: "0 0 0.5rem 0", color: "#555" }}>
-              Description
-            </h4>
-            <p style={{ color: "#444", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
-              {product.description}
-            </p>
-          </div>
 
-          <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #eee" }}>
-            <h4 style={{ margin: "0 0 0.5rem 0", color: "#555" }}>
-              Contact Information
-            </h4>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", marginBottom: "0.8rem" }}>
-              <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", color: "#aaa", fontSize: "20px" }}>
+      <DetailsContainer>
+        <InfoSection>
+          <ProductName>{product.name}</ProductName>
+          <ProductPrice>${product.price} HKD</ProductPrice>
+          <ConditionWrapper>
+            <ConditionTag>Condition: {product.condition || "Not Specified"}</ConditionTag>
+          </ConditionWrapper>
+          
+          <DescriptionWrapper>
+            <SectionTitle>Description</SectionTitle>
+            <DescriptionText>{product.description}</DescriptionText>
+          </DescriptionWrapper>
+
+          <ContactSection>
+            <SectionTitle>Contact Information</SectionTitle>
+            <SellerRow>
+              <AvatarCircle>
                 <AiOutlineUser />
-              </div>
-              <p style={{ margin: 0, fontWeight: "normal", color: "#666", fontSize: "0.95rem" }}>
-                {sellerName}
-              </p>
-            </div>
-            
-            {/* <p style={{ margin: 0, color: "#0066cc", fontWeight: "bold" }}>{product.contact}</p> */}
-            <div style={{ fontSize: "0.8rem", color: "#999", lineHeight: "1.6" }}>
-              <p style={{ margin: 0 }}>
+              </AvatarCircle>
+              <SellerNameText>{sellerName}</SellerNameText>
+            </SellerRow>
+
+            <ContactInfoList>
+              <ContactItem>
                 <strong>contact:</strong> {product.contact}
-              </p>
-              <p style={{ margin: 0 }}>
+              </ContactItem>
+              <ContactItem>
                 <strong>Location:</strong> {product.location || "CUHK"}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              </ContactItem>
+            </ContactInfoList>
+          </ContactSection>
+        </InfoSection>
+
+        <ButtonsColumn>
           <LikeButton productId={product.id} />
           <BuyButton productId={product.id} />
-        </div>
-      </div>
+        </ButtonsColumn>
+      </DetailsContainer>
 
-
-      <div style={{ margin: "3rem 0", padding: "2rem", border: "1px solid #ddd" }}>
+      <GraphWrapper>
         <h4>Price History Graph</h4>
-        <div
-          style={{
-            height: "200px",
-            borderBottom: "2px solid #333",
-            borderLeft: "2px solid #333",
-            position: "relative",
-          }}
-        >
-          <p
-            style={{
-              position: "absolute",
-              bottom: "50%",
-              left: "40%",
-              color: "#888",
-            }}
-          >
-            [ Line Chart Component: Date vs Price ]
-          </p>
-        </div>
-      </div>
+        <GraphArea>
+          <GraphPlaceholder>[ Line Chart Component: Date vs Price ]</GraphPlaceholder>
+        </GraphArea>
+      </GraphWrapper>
 
       {isModalOpen && (
-        <div onClick={closeModal} style={{
-          position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
-          backgroundColor: "rgba(0, 0, 0, 0.9)",
-          display: "flex", justifyContent: "center", alignItems: "center",
-          zIndex: 9999,
-          cursor: "zoom-out"
-        }}>
-          <button 
-            onClick={closeModal}
-            style={{
-              position: "absolute", top: "20px", right: "30px",
-              background: "none", border: "none", color: "#f9f9f9",
-              fontSize: "40px", cursor: "pointer"
-            }}
-          >
+        <ModalOverlay onClick={closeModal}>
+          <ModalCloseButton onClick={closeModal}>
             <AiOutlineClose />
-          </button>
+          </ModalCloseButton>
 
           {images.length > 1 && (
             <>
-              <button 
-                onClick={prevImage}
-                style={{
-                  position: "absolute", left: "5%", background: "none", border: "none", color: "#f9f9f9",
-                  fontSize: "50px", cursor: "pointer", zIndex: 10000, padding: "20px"
-                }}
-              >
+              <ModalNavButton $direction="left" onClick={prevImage}>
                 <AiOutlineLeft />
-              </button>
-              <button 
-                onClick={nextImage}
-                style={{
-                  position: "absolute", right: "5%", background: "none", border: "none", color: "#f9f9f9",
-                  fontSize: "50px", cursor: "pointer", zIndex: 10000, padding: "20px"
-                }}
-              >
+              </ModalNavButton>
+              <ModalNavButton $direction="right" onClick={nextImage}>
                 <AiOutlineRight />
-              </button>
+              </ModalNavButton>
             </>
           )}
 
-          <img 
-            src={images[currentImageIndex]} 
-            alt="Full Screen product image" 
-            style={{ maxWidth: "90%", maxHeight: "90%", objectFit: "cover", borderRadius: "8px" }} 
-          />
-        </div>
+          <ModalDisplayImage src={images[currentImageIndex]} alt="Full Screen product image" />
+        </ModalOverlay>
       )}
-    </div>
+    </PageContainer>
   );
 }
