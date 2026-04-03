@@ -1,0 +1,60 @@
+Given(/^the following categories exist:$/) do |table|
+  table.hashes.each do |row|
+    Category.find_or_create_by!(category_name: row['name'])
+  end
+end
+
+Given(/^the following users exist:$/) do |table|
+  table.hashes.each do |row|
+    User.create!(
+      email: row['email'],
+      password: row['password'],
+      name: row['name'] || "Test User",
+      college: row['college'] || "Shaw",
+      verified_at: Time.current
+    )
+  end
+end
+
+Given(/^the following products exist:$/) do |table|
+  table.hashes.each do |row|
+    seller = User.find_by!(email: row['seller'])
+    category = Category.find_by!(category_name: row['category'])
+    Product.create!(
+      name: row['name'],
+      price: row['price'],
+      category: category,
+      seller: seller,
+      status: "Available",
+      condition: "New"
+    )
+  end
+end
+
+# Redundant step removed to avoid ambiguity with interaction_steps.rb
+# Given(/^(?:|I )am on the home page$/) do
+#   visit '/'
+# end
+
+When(/^I hover over "([^"]*)"$/) do |text|
+  find('button', text: text).hover
+rescue Capybara::ElementNotFound
+  # Fallback just in case text is nested or slightly different
+  find('div,button', text: text).hover
+end
+
+When(/^I click "([^"]*)"$/) do |text|
+  click_link_or_button(text, match: :first)
+end
+
+When(/^I click Search$/) do
+  click_button('Search')
+end
+
+Then(/^I should see "([^"]*)"$/) do |text|
+  expect(page).to have_content(text)
+end
+
+Then(/^I should not see "([^"]*)"$/) do |text|
+  expect(page).not_to have_content(text)
+end

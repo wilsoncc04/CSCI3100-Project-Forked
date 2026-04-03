@@ -42,6 +42,9 @@ Purpose: concise backend development checklist and priorities. See [Proposal.md]
 - **Sessions / Auth**
   - Login, logout, registration, email verification flows, rate-limiting.
 
+- **CommunityItemsController**
+  - CRUD for community promotions, filtering by college, integration with product creation. [COMPLETED]
+
 ## Auth & Registration
 
 - Recommended: Solution 1 — CUHK email verification - **1155XXXXXX@link.cuhk.edu.hk**(preferred for integrity).

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_01_152304) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_03_064222) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -56,6 +56,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_01_152304) do
     t.index ["interested_id"], name: "index_chats_on_interested_id"
     t.index ["item_id"], name: "index_chats_on_item_id"
     t.index ["seller_id"], name: "index_chats_on_seller_id"
+  end
+
+  create_table "community_items", force: :cascade do |t|
+    t.string "college"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.bigint "product_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["product_id"], name: "index_community_items_on_product_id"
+    t.index ["user_id"], name: "index_community_items_on_user_id"
   end
 
   create_table "interests", force: :cascade do |t|
@@ -128,6 +139,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_01_152304) do
   add_foreign_key "chats", "products", column: "item_id"
   add_foreign_key "chats", "users", column: "interested_id"
   add_foreign_key "chats", "users", column: "seller_id"
+  add_foreign_key "community_items", "products"
+  add_foreign_key "community_items", "users"
   add_foreign_key "interests", "products", column: "item_id"
   add_foreign_key "interests", "users", column: "interested_id"
   add_foreign_key "messages", "chats"

@@ -135,6 +135,23 @@ RSpec.describe 'Products API', type: :request do
       end
     end
 
+    context 'with community promotion' do
+      it 'creates community item when promote_to_community is true' do
+        params = valid_params.merge(promote_to_community: 'true', community_description: 'Best deal!')
+        expect {
+          post products_path, params: params
+        }.to change(CommunityItem, :count).by(1)
+        expect(CommunityItem.last.description).to eq('Best deal!')
+      end
+
+      it 'does not create community item when promote_to_community is false' do
+        params = valid_params.merge(promote_to_community: 'false', community_description: 'Best deal!')
+        expect {
+          post products_path, params: params
+        }.to_not change(CommunityItem, :count)
+      end
+    end
+
     context 'with invalid parameters' do
       it 'fails with missing required fields' do
         invalid_params = valid_params.deep_dup

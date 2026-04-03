@@ -258,6 +258,44 @@ const sendMessage = (chatId, content) => {
 
 ---
 
+## 5. College Community Board
+
+### List Community Items
+**Endpoint:** `GET /community_items`  
+**Parameters:**
+- `college`: string (Optional - Filter by college name)
+
+**Example:**
+```javascript
+const fetchCommunityItems = (college) => {
+  const url = college ? `/community_items?college=${encodeURIComponent(college)}` : '/community_items';
+  return api.get(url);
+};
+```
+
+### Create Community Promotion
+**Endpoint:** `POST /community_items`  
+**Parameters:**
+- `community_item[product_id]`: number
+- `community_item[description]`: string
+- `community_item[college]`: string (Optional, defaults to user's college)
+
+**Example:**
+```javascript
+const promoteToCommunity = (data) => {
+  return api.post('/community_items', { community_item: data });
+};
+```
+
+### Integrated Product Creation
+When creating a product, you can also promote it to the community in one request.
+**Endpoint:** `POST /products`  
+**Additional Parameters:**
+- `promote_to_community`: "true" (string)
+- `community_description`: "Your advertisement text" (string)
+
+---
+
 ## Common Response Formats
 
 ### Success

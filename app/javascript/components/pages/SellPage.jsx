@@ -13,6 +13,8 @@ export default function SellPage() {
     category_id: "",
     condition: "Brand New",
     status: "available",
+    promote_to_community: false,
+    community_description: "",
   });
 
   const [images, setImages] = useState([]);
@@ -62,6 +64,10 @@ export default function SellPage() {
     setFormData({ ...formData, condition: conditionLabel });
   };
 
+  const handleCheckboxChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.checked });
+  };
+
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
   const navigate = useNavigate();
@@ -78,6 +84,13 @@ export default function SellPage() {
     payload.append("product[location]", formData.location || "CUHK");
     const categoryId = goodsTypes.indexOf(formData.category_id) + 1;
     payload.append("product[category_id]", categoryId);
+    
+    // Community item creation
+    if (formData.promote_to_community) {
+      payload.append("promote_to_community", "true");
+      payload.append("community_description", formData.community_description);
+    }
+    
     images.forEach((image, index) => {
       payload.append("images[]", image);
     });
@@ -482,6 +495,41 @@ export default function SellPage() {
             }}
             required
           />
+        </div>
+
+        <div style={{ backgroundColor: "#f9f9f9", padding: "1rem", borderRadius: "8px", border: "1px solid #eee" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: "bold", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              name="promote_to_community"
+              checked={formData.promote_to_community}
+              onChange={handleCheckboxChange}
+            />
+            Promote to College Community Board
+          </label>
+          {formData.promote_to_community && (
+            <div style={{ marginTop: "1rem" }}>
+              <label htmlFor="community_description" style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                Advertisement Description (visible to college members)
+              </label>
+              <textarea
+                id="community_description"
+                name="community_description"
+                value={formData.community_description}
+                onChange={handleChange}
+                placeholder="Write a catchy description for your college mates!"
+                required
+                style={{
+                  width: "100%",
+                  padding: "0.8rem",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  boxSizing: "border-box",
+                  minHeight: "80px"
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
