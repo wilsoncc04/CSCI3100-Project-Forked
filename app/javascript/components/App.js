@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-do
 import styled from "styled-components";
 import axios from "axios";
 import { 
-  BsHouseDoor, 
   BsBell, 
   BsChatDots, 
   BsHandbag, 
@@ -29,13 +28,14 @@ import { BsPeopleFill } from "react-icons/bs";
 axios.defaults.withCredentials = true;
 const logo = "/logo.png";
 
-const AppContainer = styled.div` padding: 2rem; font-family: system-ui, sans-serif; `;
-const LogoImg = styled.img` height: 3.8em; width: auto; display: block; `;
+const AppContainer = styled.div` max-width: 90%; margin: 0 auto; width: 100%; padding: 2rem; font-family: system-ui, sans-serif; box-sizing: border-box;`;
+const LogoImg = styled.img` height: 3.8em; width: auto; display: block; &:hover ${LogoImg} { transform: scale(1.05); }  `;
 const Header = styled.header` margin-bottom: 2rem; `;
 const Nav = styled.nav` display: flex; justify-content: space-between; align-items: center; gap: 1.2rem; `;
-const BrandLink = styled(Link)` text-decoration: none; color: #530662; display: flex; align-items: center; gap: 0.8rem; cursor: pointer; `;
-const Title = styled.h2` margin: 0; font-weight: 900; line-height: 1; white-space: nowrap; `;
-const NavRow = styled.div` display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; width: 100%; `;
+const BrandLink = styled(Link)` text-decoration: none; color: #530662; display: flex; align-items: center;
+                               gap: 0.8rem; cursor: pointer; padding: 0.5rem; `;
+const Title = styled.h2` margin: 0; font-weight: 900; line-height: 1; white-space: nowrap; &:hover ${Title} { transform: scale(1.007); } `;
+const NavRow = styled.div` display: flex; gap: 0.6rem; align-items: center; width: 100%; `;
 const RightNavGroup = styled.div` display: flex; gap: 0.6rem; margin-left: auto; align-items: center; `;
 
 const DropdownContainer = styled.div`
@@ -122,7 +122,6 @@ const handleLogoutClick = async () => {
             </BrandLink>
             
             <NavRow>
-              <NavButton label="Home" to="/" icon={BsHouseDoor} />
               <NavButton label="Community" to="/community" icon={BsPeopleFill} />
               
               <RightNavGroup>
