@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       post :verify                  # POST /users/verify - verify email with OTP
       post :resend_verification     # POST /users/resend_verification - resend OTP email
       post :change_password         # POST /users/change_password - update password
+      get :interests                # GET /users/interests - list user's interested products
     end
   end
 
@@ -16,6 +17,10 @@ Rails.application.routes.draw do
       get :price_history           # GET /products/price_history?product_id=X&points=Y
       get :selling                 # GET /products/selling - list current user's selling products
     end
+    member do
+    post :interest, to: 'products#toggle_interest'
+    post :buy
+  end
   end
 
   resources :community_items, only: [:index, :create, :update, :destroy]

@@ -14,3 +14,4 @@ if (rootElement) {
   const root = createRoot(rootElement);
   root.render(<App />);
 } // Entry point for the build script in your package.json
+import "./channels"

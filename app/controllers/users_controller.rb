@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
   before_action :set_user, only: [:show, :update, :destroy]
-  before_action :authenticate_user!, only: [:update, :destroy, :change_password]
+  before_action :authenticate_user!, only: [:update, :destroy, :change_password, :interests]
   before_action :authorize_user_owner!, only: [:update, :destroy]
 
   # GET /users
@@ -144,6 +144,24 @@ end
     @user.destroy
     head :no_content
   end
+
+  # GET /users/interests
+  def interests
+  # 這裡不需要 set_user，因為我們直接用 current_user
+  @interests = current_user.interests.includes(:product)
+
+  render json: @interests.map { |interest|
+    product = interest.product
+    next if product.nil? # 防呆：萬一產品被刪了
+    {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      status: product.status,
+      images: product.image_urls 
+    }
+  }.compact, status: :ok
+end
 
   private
 

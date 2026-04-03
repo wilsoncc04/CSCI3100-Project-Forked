@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import styled from "styled-components";
 import axios from "axios";
 import { 
@@ -9,24 +9,26 @@ import {
   BsPersonCircle, 
   BsBoxArrowInRight, 
   BsPencilSquare,
-  BsBoxArrowLeft
-
+  BsBoxArrowLeft,
+  BsGear,
+  BsPeopleFill,
+  BsHouseDoor
 } from "react-icons/bs";
+
 import IndexPage from "./pages/IndexPage";
 import AccountPage from "./pages/AccountPage";
 import ProductInfoPage from "./pages/ProductInfoPage";
-import SellPage from "./pages/SellPage";
+import SellPage from "./common/SellPage";
 import NotificationPage from "./pages/NotificationPage";
 import ChatPage from "./pages/ChatPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import CommunityPage from "./pages/CommunityPage";
 import NavButton from "./common/NavButton";
 import { logoutUser } from "../common/loginauth";
 import SearchResultsPage from "./pages/SearchResultsPage";
-import CommunityPage from "./pages/CommunityPage";
-import { BsPeopleFill } from "react-icons/bs";
+
 axios.defaults.withCredentials = true;
-const logo = "/logo.png";
 
 const AppContainer = styled.div` max-width: 90%; margin: 0 auto; width: 100%; padding: 2rem; font-family: system-ui, sans-serif; box-sizing: border-box;`;
 const LogoImg = styled.img` height: 3.8em; width: auto; display: block; &:hover ${LogoImg} { transform: scale(1.05); }  `;
@@ -41,21 +43,32 @@ const RightNavGroup = styled.div` display: flex; gap: 0.6rem; margin-left: auto;
 const DropdownContainer = styled.div`
   position: relative;
   display: inline-block;
+  height: 100%; 
 `;
 
 const DropdownMenu = styled.div`
   position: absolute;
-  top: 110%;
+  top: 100%; 
   right: 0;
   background: white;
   border: 1px solid #eee;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   z-index: 1000;
-  min-width: 160px;
-  overflow: hidden;
+  min-width: 180px;
   display: ${props => props.show ? 'flex' : 'none'};
   flex-direction: column;
+  margin-top: 5px; 
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -15px;
+    left: 0;
+    right: 0;
+    height: 15px;
+    background: transparent;
+  }
 `;
 
 const DropdownItem = styled(Link)`
@@ -66,6 +79,7 @@ const DropdownItem = styled(Link)`
   align-items: center;
   gap: 10px;
   font-size: 0.95rem;
+  transition: all 0.2s;
   &:hover { background-color: #f8f9fa; color: #702082; }
 `;
 
@@ -79,37 +93,29 @@ export default function App() {
         const res = await axios.get("/sessions");
         setUser(res.data);
       } catch (err) {
-        setUser(null); // 未登入
+        setUser(null);
       }
     };
     checkAuth();
   }, []);
 
-const handleLogoutClick = async () => {
-  if (window.confirm("Are you sure you want to log out?")) {
-    try {
-      await logoutUser();
-      
-      // 關鍵步驟 1: 清空 React 全域狀態，觸發重新渲染
-      setUser(null); 
-      
-      // 關鍵步驟 2: 關閉下拉選單，避免它「卡」在開啟狀態
-      setShowProfile(false); 
-      
-      // 關鍵步驟 3: 清除本地緩存
-      localStorage.removeItem("currentUser");
-
-      // 建議：直接導向首頁，這會觸發重新載入
-      window.location.href = "/"; 
-    } catch (err) {
-      console.error("Logout failed", err);
-      // 即便 API 報錯，也要強行清空前端狀態
-      setUser(null);
-      localStorage.removeItem("currentUser");
-      window.location.href = "/";
+  const handleLogoutClick = async (e) => {
+    e.preventDefault(); 
+    if (window.confirm("Are you sure you want to log out?")) {
+      try {
+        await logoutUser();
+        setUser(null); 
+        setShowProfile(false); 
+        localStorage.removeItem("currentUser");
+        window.location.href = "/"; 
+      } catch (err) {
+        console.error("Logout failed", err);
+        setUser(null);
+        localStorage.removeItem("currentUser");
+        window.location.href = "/";
+      }
     }
-  }
-};
+  };
   
   return (
     <BrowserRouter>
@@ -122,44 +128,44 @@ const handleLogoutClick = async () => {
             </BrandLink>
             
             <NavRow>
+             {/* 同時保留 Home 和 Community */}
+              <NavButton label="Home" to="/" icon={BsHouseDoor} />
               <NavButton label="Community" to="/community" icon={BsPeopleFill} />
-              
-              <RightNavGroup>
+  
+               <RightNavGroup>
                 <NavButton label="Notifications" to="/notifications" icon={BsBell} />
                 <NavButton label="Chat" to="/chat" icon={BsChatDots} />
                 <NavButton label="Sell" to="/sell" icon={BsHandbag} variant="primary" />
 
-                {/* Profile 下拉選單 */}
                 <DropdownContainer 
                   onMouseEnter={() => setShowProfile(true)} 
                   onMouseLeave={() => setShowProfile(false)}
                 >
-                  <NavButton label="Profile" to="#" icon={BsPersonCircle} />
+                  <NavButton label="Setting" to="#" icon={BsGear} />
                   
                   <DropdownMenu show={showProfile}>
-                    {user && user.email ? (  // 增加 user.email 檢查確保對象完整
-                        <>
-                          <div style={userEmailLabel}>{user.email}</div>
-                          <DropdownItem to="/Account">
-                            <BsPersonCircle /> Account
-                          </DropdownItem>
-                          <hr style={divider} />
-                          {/* 這裡改用 button 形式確保點擊有效 */}
-                          <DropdownItem as="button" onClick={handleLogoutClick} style={logoutBtnStyle}>
-                           <BsBoxArrowLeft /> Log out
-                          </DropdownItem>
-                          </>
-                        ) : (
-                           <>
-                          <DropdownItem to="/login">
-                         <BsBoxArrowInRight /> Log in
-                           </DropdownItem>
-                           <DropdownItem to="/register">
-                          <BsPencilSquare /> Register
-                          </DropdownItem>
+                    {user && user.email ? (
+                      <>
+                        <div style={userEmailLabel}>{user.email}</div>
+                        <DropdownItem to="/Account">
+                          <BsPersonCircle /> Account Info
+                        </DropdownItem>
+                        <hr style={divider} />
+                        <DropdownItem as="button" onClick={handleLogoutClick} style={logoutBtnStyle}>
+                          <BsBoxArrowLeft /> Log out
+                        </DropdownItem>
                       </>
-                      )}  
-                </DropdownMenu>
+                    ) : (
+                      <>
+                        <DropdownItem to="/login">
+                          <BsBoxArrowInRight /> Log in
+                        </DropdownItem>
+                        <DropdownItem to="/register">
+                          <BsPencilSquare /> Register
+                        </DropdownItem>
+                      </>
+                    )}  
+                  </DropdownMenu>
                 </DropdownContainer>
               </RightNavGroup>
             </NavRow>
@@ -186,16 +192,18 @@ const handleLogoutClick = async () => {
 }
 
 const userEmailLabel = {
-  padding: "10px 16px",
-  fontSize: "0.75rem",
-  color: "#888",
+  padding: "12px 16px",
+  fontSize: "0.8rem",
+  color: "#666",
+  backgroundColor: "#fcfcfc",
   borderBottom: "1px solid #eee",
   whiteSpace: "nowrap",
   overflow: "hidden",
-  textOverflow: "ellipsis"
+  textOverflow: "ellipsis",
+  fontWeight: "500"
 };
 
-const divider = { border: "none", borderTop: "1px solid #eee", margin: "4px 0" };
+const divider = { border: "none", borderTop: "1px solid #eee", margin: "0" };
 
 const logoutBtnStyle = {
   width: "100%",
@@ -203,5 +211,7 @@ const logoutBtnStyle = {
   background: "none",
   textAlign: "left",
   cursor: "pointer",
-  color: "#dc3545"
+  color: "#dc3545",
+  fontWeight: "500",
+  fontFamily: "inherit"
 };

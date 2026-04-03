@@ -1,17 +1,13 @@
 class ProductsController < ApplicationController
-  skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
-  # attributes to include when rendering product JSON, %i mean ":" for all items
+  skip_before_action :verify_authenticity_token
+  
   PRODUCT_JSON_ONLY = %i[id name description price seller_id buyer_id status category_id location contact condition created_at updated_at].freeze
 
-  # directly get the product list
-  before_action :set_product, only: %i[show update destroy price_history]
-  before_action :authenticate_user!, only: %i[create update destroy selling]
+  before_action :set_product, only: %i[show update destroy price_history toggle_interest buy]
+  before_action :authenticate_user!, only: %i[create update destroy selling toggle_interest buy]
   before_action :authorize_product_seller!, only: %i[update destroy]
 
   # GET /products
-  # show the first X products, where X is determined by a query parameter, default 15
-  # supports pagination via `page` and `limit` parameters
-  # supports `keywords` for fuzzy search (using trigram matching on product name)
   def index
     limit = (params[:limit] || 15).to_i
     limit = 15 if limit <= 0
@@ -42,19 +38,18 @@ class ProductsController < ApplicationController
   end
 
   # GET /products/:id
-  # show a single product
-  # in product info page
   def show
-    render json: format_product(@product)
+    is_liked = false
+    if current_user
+      is_liked = Interest.exists?(interested_id: current_user.id, item_id: @product.id)
+    end
+    render json: format_product(@product).merge(is_liked: is_liked)
   end
 
   # POST /products
-  # create product (basic implementation)
   def create
     product = Product.new(product_params)
     product.seller_id = current_user.id
-    
-    # Handle image uploads
     attach_images(product, params[:images]) if params[:images].present?
 
     if product.save
@@ -70,7 +65,6 @@ class ProductsController < ApplicationController
   end
 
   # PATCH/PUT /products/:id
-  # update product details
   def update
     if params[:product].present?
       unless @product.update(product_params)
@@ -86,8 +80,6 @@ class ProductsController < ApplicationController
     end
 
     render json: format_product(@product), status: :ok
-  rescue ActionController::ParameterMissing => e
-    render_error(e.message, status: :bad_request)
   rescue StandardError => e
     render_error(e)
   end
@@ -101,37 +93,74 @@ class ProductsController < ApplicationController
   end
 
   # GET /products/selling
-  # Returns products currently being sold by the authenticated user
   def selling
     products = Product.with_attached_images.where(seller_id: current_user.id)
     render json: products.map { |p| format_product(p) }, status: :ok
-  rescue StandardError => e
-    render_error(e)
   end
 
   # GET /products/:id/price_history
-  # Returns price history records for a product.
-  # Query param `points` controls number of data points (default 10, max 20).
   def price_history
     points = (params[:points] || 10).to_i
-    points = [points, 1].max
-    points = [points, 20].min
-
+    points = [[points, 1].max, 20].min
     price_histories = @product.price_histories.order(date: :desc).limit(points)
 
     render json: { 
       product_id: @product.id, 
       prices: price_histories.map(&:price)
     }, status: :ok
-  rescue StandardError => e
-    render_error(e)
   end
+
+  # POST /products/:id/interest
+  def toggle_interest
+    interest = Interest.find_by(interested_id: current_user.id, item_id: @product.id)
+    if interest
+      interest.destroy
+      render json: { status: 'unliked', message: 'Removed from interests' }, status: :ok
+    else
+      Interest.create!(interested_id: current_user.id, item_id: @product.id)
+      render json: { status: 'liked', message: 'Added to interests' }, status: :ok
+    end
+  end
+
+  # POST /products/:id/buy
+  def buy
+  @product = Product.find(params[:id])
+  
+  ActiveRecord::Base.transaction do
+    # 1. 更新產品狀態
+    @product.update!(status: 'reserved', buyer_id: current_user.id)
+
+    # 2. 建立或尋找聊天室
+    chat = Chat.find_or_create_by!(
+      item_id: @product.id,
+      seller_id: @product.seller_id,
+      interested_id: current_user.id
+    )
+
+    # 3. 直接建立一條 Message 作為「通知」
+    # 這樣賣家進到聊天列表就能看到這條訊息
+    Message.create!(
+      chat_id: chat.id,
+      sender_id: current_user.id,
+      message: "I want to buy \"#{@product.name}\". System: Request sent."
+    )
+
+    render json: { 
+      chat_id: chat.id, 
+      product_name: @product.name,
+      message: 'Purchase request sent via chat' 
+    }, status: :ok
+  end
+rescue => e
+  render json: { error: e.message }, status: :internal_server_error
+end
 
   private
 
-  # directly find the product by id for show, update, destroy, and price_history actions
   def set_product
     @product = Product.with_attached_images.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    render_error('Product not found', status: :not_found)
   end
 
   def authorize_product_seller!
@@ -156,17 +185,15 @@ class ProductsController < ApplicationController
     end
   end
 
-  # for community promotion(add description)
   def promote_to_community(product)
     return unless params[:community_description].present?
-
     CommunityItem.create!(
       user: current_user,
       product: product,
       description: params[:community_description],
       college: current_user.college || "Unknown"
     )
-  rescue ActiveRecord::RecordInvalid => e
+  rescue => e
     logger.error "CommunityItem creation failed: #{e.message}"
   end
 end

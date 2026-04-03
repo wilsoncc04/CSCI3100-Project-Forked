@@ -1,53 +1,67 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const NotificationPage = () => {
-  const notifications = [
-    { id: 1, user: "Alex Chen", product: "Calculus Textbook", time: "2 mins ago" },
-    { id: 2, user: "Sarah Wong", product: "MacBook Pro M2", time: "1 hour ago" },
-    { id: 3, user: "Jason Li", product: "Desk Lamp", time: "3 hours ago" },
-  ];
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        // 1. 檢查登入狀態
+        const userRes = await axios.get("/sessions");
+        if (!userRes.data || !userRes.data.id) {
+          navigate("/login");
+          return;
+        }
+        setCurrentUser(userRes.data);
+
+        // 2. 獲取聊天列表
+        const chatsRes = await axios.get("/chats");
+        setChats(chatsRes.data);
+      } catch (err) {
+        console.error("Auth check failed or fetch error", err);
+        navigate("/login"); // 出錯（如 401）則跳轉
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [navigate]);
+
+  if (loading) return <div style={{ padding: "20px" }}>Loading...</div>;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "600px" }}>
-      <h2 style={{ color: "#333", display: "flex", alignItems: "center", gap: "10px" }}>
-        Notification ✉️
-      </h2>
-      <p style={{ color: "#666" }}>Manage your buying requests and messages.</p>
-      <hr style={{ border: "0.5px solid #eee", margin: "20px 0" }} />
-      
-      {notifications.length > 0 ? (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {notifications.map((noti) => (
-            <li 
-              key={noti.id} 
-              style={{
-                padding: "15px",
-                borderBottom: "1px solid #eee",
-                backgroundColor: "#f9f9f9",
-                borderRadius: "12px",
-                marginBottom: "12px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                display: "flex",
-                flexDirection: "column"
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+      <h2>Messages & Requests ✉️</h2>
+      {chats.length > 0 ? (
+        chats.map(chat => {
+          // 判斷對方是誰：如果我是賣家，顯示買家名；如果我是買家，顯示賣家名
+          const partnerName = currentUser.id === chat.seller.id ? chat.buyer.name : chat.seller.name;
+          
+          return (
+            <div 
+              key={chat.id} 
+              onClick={() => navigate(`/chat?chat_id=${chat.id}`)}
+              style={{ 
+                padding: "15px", borderBottom: "1px solid #eee", cursor: "pointer",
+                backgroundColor: "#f9f9f9", marginBottom: "10px", borderRadius: "8px"
               }}
             >
-              <div>
-                <span style={{ fontWeight: "bold", color: "#333" }}>{noti.user}</span> 
-                <span style={{ color: "#555" }}> wants to buy your </span>
-                <span style={{ color: "#0066cc", fontWeight: "bold" }}>
-                  "{noti.product}"
-                </span>
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "#999", marginTop: "8px" }}>
-                {noti.time}
-              </div>
-            </li>
-          ))}
-        </ul>
+              <strong>{partnerName}</strong>
+              <p style={{ margin: "5px 0", color: "#666" }}>
+                {chat.last_message || `New request for "${chat.product.name}"`}
+              </p>
+              <small style={{ color: "#999" }}>{new Date(chat.updated_at).toLocaleString()}</small>
+            </div>
+          );
+        })
       ) : (
-        <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>
-          <p>Your inbox is empty.</p>
-        </div>
+        <p style={{ color: "#999", textAlign: "center" }}>No messages yet.</p>
       )}
     </div>
   );

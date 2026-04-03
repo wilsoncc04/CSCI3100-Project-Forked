@@ -9,6 +9,7 @@
     "build:watch": "esbuild app/javascript/application.js --bundle --sourcemap --outdir=app/assets/builds --public-path=/assets --loader:.js=jsx --watch"
   },
   "dependencies": {
+    "@rails/actioncable": "^8.1.300",
     "@rails/activestorage": "^8.1.200",
     "axios": "^1.13.6",
     "bootstrap": "^5.3.8",

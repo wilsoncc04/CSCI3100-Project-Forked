@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_03_064222) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_03_094546) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -87,6 +87,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_03_064222) do
     t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
 
+  create_table "notifications", force: :cascade do |t|
+    t.string "action"
+    t.integer "actor_id"
+    t.datetime "created_at", null: false
+    t.datetime "read_at"
+    t.integer "target_id"
+    t.string "target_type"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
   create_table "price_histories", force: :cascade do |t|
     t.datetime "date"
     t.decimal "price"
@@ -145,6 +157,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_03_064222) do
   add_foreign_key "interests", "users", column: "interested_id"
   add_foreign_key "messages", "chats"
   add_foreign_key "messages", "users", column: "sender_id"
+  add_foreign_key "notifications", "users"
   add_foreign_key "price_histories", "products"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "users", column: "buyer_id"

@@ -10,71 +10,94 @@ import {
   AiOutlineRight,
   AiOutlinePicture
 } from "react-icons/ai";
+import axios from "axios";
 
-function LikeButton() {
-  const [liked, setLiked] = useState(false);
+// --- 1. 必須在組件外部定義樣式，否則會報錯 ---
+const iconButtonStyle = {
+  border: "none",
+  background: "none",
+  cursor: "pointer",
+  fontSize: "24px",
+  padding: "8px",
+  display: "inline-flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const labelStyle = { 
+  marginTop: "6px", 
+  fontSize: "0.9rem", 
+  color: "#333",
+  fontWeight: "500" 
+};
+
+// --- 2. 子組件定義 ---
+function LikeButton({ productId, initialLiked }) {
+  // 初始值設為從 API 拿到的狀態
+  const [liked, setLiked] = useState(initialLiked);
+
+  // 當 product 資料非同步加載完成後，同步更新這個 state
+  useEffect(() => {
+    setLiked(initialLiked);
+  }, [initialLiked]);
 
   const handleLike = async () => {
-    // to connect POST /users/interests API
-    setLiked(!liked);
-    console.log(`Product ${productId} added to interests list`);
+    try {
+      const res = await axios.post(`/products/${productId}/interest`);
+      // 後端 toggle_interest 回傳的 status 會告訴我們現在是 'liked' 還是 'unliked'
+      setLiked(res.data.status === 'liked');
+    } catch (err) {
+      console.error(err);
+      alert("Please login first.");
+    }
   };
 
   return (
-    <button
-      onClick={() => setLiked(!liked)}
-      style={{
-        border: "none",
-        background: "none",
-        cursor: "pointer",
-        fontSize: "24px",
-        padding: "8px",
-        display: "inline-flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <button onClick={handleLike} style={iconButtonStyle}>
       {liked ? <AiFillHeart color="#dc3545" /> : <AiOutlineHeart />}
-      <span style={{ marginTop: "6px", fontSize: "0.9rem", color: "#333" }}>
-        Interested
-      </span>
+      <span style={labelStyle}>Interested</span>
     </button>
   );
 }
 
-function BuyButton() {
+function BuyButton({ product }) {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleBuyClick = () => {
-    // to call API changing status to "reserved"
-    // and trigger Notification for the seller
-    console.log(`Initiating buy process for Product ${productId}`);
-    navigate(`/chat?product=${productId}`);
+  const handleBuyClick = async () => {
+    if (!product) return;
+    if (!window.confirm(`Confirm interest in buying "${product.name}"?`)) return;
+
+    setLoading(true);
+    try {
+      const res = await axios.post(`/products/${product.id}/buy`);
+      // 跳轉並帶上參數
+      navigate(`/chat?chat_id=${res.data.chat_id}&auto_send=true&product_name=${encodeURIComponent(product.name)}`);
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to initiate purchase.");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const isReserved = product?.status === 'reserved' || product?.status === 'sold';
+
   return (
-    <button
-      style={{
-        border: "none",
-        background: "none",
-        cursor: "pointer",
-        fontSize: "24px",
-        padding: "8px",
-        display: "inline-flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+    <button 
+      onClick={handleBuyClick} 
+      disabled={isReserved || loading}
+      style={{ ...iconButtonStyle, opacity: isReserved ? 0.5 : 1 }}
     >
-      <AiOutlineShoppingCart />
-      <span style={{ marginTop: "6px", fontSize: "0.9rem", color: "#333" }}>
-        Buy
+      <AiOutlineShoppingCart color={isReserved ? "#ccc" : "#333"} />
+      <span style={labelStyle}>
+        {isReserved ? "Reserved" : "Buy"}
       </span>
     </button>
   );
 }
 
+// --- 3. 主頁面組件 ---
 export default function ProductInfoPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
@@ -89,20 +112,23 @@ export default function ProductInfoPage() {
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const response = await fetch(`/products/${id}`);
-        if (!response.ok) throw new Error("Product not found");
-        const data = await response.json();
+        // 使用 axios 更加簡潔 (來自 Stashed changes)
+        const response = await axios.get(`/products/${id}`);
+        const data = response.data;
         setProduct(data);
+
+        // 保留抓取賣家名稱的邏輯 (來自 Updated upstream)
         const sellerId = data.seller_id; 
         if (sellerId) {
-          const userResponse = await fetch(`/users/${sellerId}`); 
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            setSellerName(userData.name);
+          try {
+            const userResponse = await axios.get(`/users/${sellerId}`); 
+            setSellerName(userResponse.data.name);
+          } catch (userErr) {
+            console.error("Failed to fetch seller name", userErr);
           }
         }
       } catch (err) {
-        setError(err.message);
+        setError(err.response?.data?.error || err.message);
       } finally {
         setIsLoading(false);
       }
@@ -133,7 +159,7 @@ export default function ProductInfoPage() {
 
   if (isLoading) return <div style={{ textAlign: "center", marginTop: "50px" }}>Loading Product...</div>;
   if (error) return <div style={{ textAlign: "center", marginTop: "50px", color: "red" }}>Error: {error}</div>;
-  if (!product) return null;
+  if (!product) return <div style={{ textAlign: "center", marginTop: "50px" }}>Product not found</div>;
 
   const images = product.images || [];
 
@@ -319,9 +345,12 @@ export default function ProductInfoPage() {
         </div>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <LikeButton productId={product.id} />
-          <BuyButton productId={product.id} />
-        </div>
+          <LikeButton 
+            productId={product.id} 
+            initialLiked={product.is_liked} 
+         />
+         <BuyButton product={product} />
+      </div>
       </div>
 
 
