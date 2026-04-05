@@ -33,7 +33,7 @@ class UsersController < ApplicationController
       # generate a numeric OTP (if not already generated, prevent model bugs) and send email
       user.generate_verification_otp! if user.verification_otp.blank?
       user.save if user.changed?
-      UserMailer.verification_email(user).deliver_later # app/mailers/user_mailer.rb, async
+      UserMailer.verification_email(user).deliver_now # app/mailers/user_mailer.rb, async (temporarily changing to deliver_now to test mailing capability)
       render json: { user: user.as_json(except: [:password_digest, 
       :verification_otp, :verification_sent_at, :verification_token]), message: 'verification_email_sent' }, status: :created
     else
