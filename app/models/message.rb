@@ -4,7 +4,7 @@ class Message < ApplicationRecord
   
   validates :chat_id, :sender_id, :message, presence: true
   
-  after_create_commit :broadcast_message
+  after_create :broadcast_message
   
   private
   
