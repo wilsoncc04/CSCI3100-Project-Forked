@@ -98,4 +98,6 @@ Rails.application.configure do
   Rails.application.routes.default_url_options[:host] = "csci3100-project-25spring-d069c5b80a72.herokuapp.com/"
 
   Rails.application.routes.default_url_options[:protocol] = "https"
+
+  config.action_cable.adapter = :solid_cable
 end
