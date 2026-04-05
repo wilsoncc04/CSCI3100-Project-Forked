@@ -156,9 +156,14 @@ class ProductsController < ApplicationController
       message: 'Purchase request sent via chat' 
     }, status: :ok
   end
-rescue => e
-  render json: { error: e.message }, status: :internal_server_error
-end
+  rescue ActiveRecord::RecordInvalid => e
+    # This catches validation errors specifically and tells you WHICH one failed
+    render json: { error: "Validation failed: #{e.record.errors.full_messages.join(', ')}" }, status: :unprocessable_entity
+  rescue => e
+    # Logs the error to Heroku logs so you can see it
+    Rails.logger.error "Purchase Error: #{e.message}"
+    render json: { error: "Something went wrong. Please try again." }, status: :internal_server_error
+  end
 
   private
 
