@@ -1,5 +1,5 @@
 class UserMailer < ApplicationMailer
-  default from: 'noreply@example.com'
+  default from: 'noreply@csci3100-project-25spring-d069c5b80a72.herokuapp.com'
 
   def verification_email(user)
     @user = user
