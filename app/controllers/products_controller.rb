@@ -136,11 +136,15 @@ class ProductsController < ApplicationController
     @product.update!(status: 'reserved', buyer_id: current_user.id)
 
     # 2. 建立或尋找聊天室
-    chat = Chat.find_or_create_by!(
-      item_id: @product.id,
-      seller_id: @product.seller_id,
-      interested_id: current_user.id
-    )
+    chat = Chat.find_by(item_id: @product.id, interested_id: current_user.id)
+
+    if chat.nil?
+      chat = Chat.create!(
+        item_id: @product.id,
+        seller_id: @product.seller_id,
+        interested_id: current_user.id
+      )
+    end
 
     # 3. 直接建立一條 Message 作為「通知」
     # 這樣賣家進到聊天列表就能看到這條訊息
