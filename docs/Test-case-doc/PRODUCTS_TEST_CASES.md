@@ -68,25 +68,36 @@
 - with product containing images
   - returns product details
 
-## GET /products/:id/price_history
+## GET /products/price_history
 - successful requests
   - returns price history for a product by product_id
   - returns price history with default points (10)
   - accepts custom points parameter
-  - returns empty prices array (price history not yet implemented)
   - allows unauthenticated access
   - allows authenticated access
+  - returns numeric `prices` values from `PriceHistory`
 - points parameter validation
   - limits points to maximum 20
-  - defaults to 10 points when points parameter is zero
-  - defaults to 10 points when points parameter is negative
+  - handles zero and negative points gracefully
 - query parameters
   - accepts product_id as query parameter
   - accepts id as query parameter (fallback to product_id)
   - prioritizes product_id parameter over id parameter
 - error handling
   - returns bad request when product_id is missing
-  - returns error when product does not exist
+  - returns not found when product does not exist
+
+## POST /products/:id/interest
+- requires authentication
+- authenticated user can like a product (creates `Interest`, returns `liked`)
+- authenticated user can unlike a product by toggling again (deletes `Interest`, returns `unliked`)
+
+## POST /products/:id/buy
+- requires authentication
+- authenticated buyer can reserve product successfully
+- updates product status to `reserved` and sets `buyer_id`
+- creates chat and initial system message for first purchase request
+- reuses existing chat when buyer already has chat for the product
 
 ## DELETE /products/:id
 - deletes product and its images

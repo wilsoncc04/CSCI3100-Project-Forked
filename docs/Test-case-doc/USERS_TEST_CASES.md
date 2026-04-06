@@ -7,9 +7,9 @@
 - when no users exist
   - returns an empty array
 
-## GET /users/sellers
-- returns only sellers
-- returns sellers with correct attributes
+## GET /users/admins
+- returns only admin users
+- validates admin response schema when data exists
 
 ## GET /users/:id
 - when user exists
@@ -25,7 +25,7 @@
   - returns created status
   - returns user data without sensitive info
   - generates verification OTP
-  - sends verification email
+  - sends verification email (synchronous delivery)
   - does not verify user immediately
 - with invalid parameters
   - fails with invalid email format
@@ -67,6 +67,13 @@
 - without authentication
   - requires authentication
 
+## GET /users/interests
+- with authentication
+  - returns current user's interested products
+  - returns empty array when no interests exist
+- without authentication
+  - returns unauthorized error
+
 ## PATCH /users/:id
 - when authenticated
   - updates the user
@@ -91,6 +98,7 @@
 - allows unauthenticated access to verify action
 - allows unauthenticated access to index action
 - allows unauthenticated access to show action
+- requires authentication for interests action
 - requires authentication for update action
 - requires authentication for destroy action
 - requires authentication for change_password action

@@ -4,6 +4,28 @@ RSpec.describe 'Sessions API', type: :request do
   let(:user) { create(:user, email: '1155123456@link.cuhk.edu.hk', password: 'password123', verified_at: Time.current) }
   let(:unverified_user) { create(:user, email: '1155654321@link.cuhk.edu.hk', password: 'password123', verified_at: nil) }
 
+  describe 'GET /sessions (show login status)' do
+    it 'returns unauthenticated error when not logged in' do
+      get '/sessions'
+
+      expect(response).to have_http_status(:unauthorized)
+      response_data = JSON.parse(response.body)
+      expect(response_data['error']).to eq('not_logged_in')
+    end
+
+    it 'returns current user data when logged in' do
+      post sessions_path, params: { email: user.email, password: 'password123' }
+      expect(response).to have_http_status(:created)
+
+      get '/sessions'
+
+      expect(response).to have_http_status(:ok)
+      response_data = JSON.parse(response.body)
+      expect(response_data['id']).to eq(user.id)
+      expect(response_data['email']).to eq(user.email)
+    end
+  end
+
   describe 'POST /sessions (login)' do
     context 'when credentials are valid and user is verified' do
       it 'returns success with user data' do

@@ -1,98 +1,29 @@
 # Chats API - Test Cases
 
 ## GET /chats (index)
-- when user is authenticated
-  - with no chats
-    - returns an empty array
-  - with chats as buyer
-    - returns all chats where user is buyer
-    - returns chats with correct attributes (id, product, seller, buyer, last_message, etc.)
-    - formats product data correctly
-    - formats seller data correctly
-    - formats buyer data correctly
-    - returns chats sorted by most recent first (descending updated_at)
-  - with chats as seller
-    - returns all chats where user is seller
-    - returns chats with correct attributes
-    - returns chats sorted by most recent first
-- when user is not authenticated
-  - requires authentication
-
-## POST /chats (create)
-- when buyer initiates chat on seller's product
-  - creates a new chat successfully
-  - returns created status with chat data
-  - returns chat with all required attributes
-  - returns first message with chat creation
-  - associates chat with correct product
-  - associates chat with correct seller and buyer
-- when seller initiates chat
-  - chat is created from seller perspective
-- when chat already exists
-  - prevents duplicate chat creation
-  - returns existing chat instead of creating new one
-- when seller tries to chat with themselves
-  - returns unprocessable entity error (Cannot chat with yourself)
-- with invalid parameters
-  - fails with missing product_id
-  - fails with missing message
-  - fails with empty message
-- authentication
-  - requires authentication to create chat
+- Authenticated user with no chats returns an empty array.
+- Authenticated buyer receives all buyer-side chats.
+- Authenticated seller receives all seller-side chats.
+- Results include expected fields (`id`, `product`, `seller`, `buyer`, `last_message`, `last_message_at`, timestamps).
+- Product and user payloads are validated for expected public attributes.
+- Chats are ordered by most recent `updated_at` descending.
+- Unauthenticated access returns `401` with `unauthenticated` error.
 
 ## GET /chats/:id (show)
-- when requesting own chat
-  - returns chat details
-  - returns all chat attributes
-  - returns formatted product, seller, and buyer data
-- when requesting chat of another user
-  - returns forbidden error
-- when chat does not exist
-  - returns 404 error
-- authentication
-  - requires authentication
+- Chat participant (buyer or seller) can fetch chat details.
+- Response includes chat metadata plus all messages.
+- Message payload fields are validated (`id`, `chat_id`, `message`, `sender`, timestamps).
+- Non-participants are blocked with `403`.
+- Unknown chat ID returns `404` with `Chat not found`.
 
-## PATCH /chats/:id (update)
-- when updating own chat
-  - updates chat attributes
-  - returns updated chat data
-- when updating chat of another user
-  - returns forbidden error
-- authentication
-  - requires authentication
+## POST /chats (create)
+- Buyer can create a new chat for a product and receives `201`.
+- Response includes expected chat data and correct seller/buyer/product mapping.
+- If chat already exists for the same product + seller + buyer, response is `200` and reuses existing chat.
+- Seller cannot create chat with own product (`422`, `Cannot chat with yourself`).
+- Missing or invalid `product_id` returns `404` (`Product not found`).
+- Validation failure branch is covered (`422` with errors payload).
 
-## DELETE /chats/:id (delete)
-- when deleting own chat
-  - deletes the chat successfully
-  - returns no content status
-- when deleting chat of another user
-  - returns forbidden error
-  - does not delete the chat
-- when chat does not exist
-  - returns 404 error
-- authentication
-  - requires authentication
-
-## Authentication and Authorization
-- GET /chats (index)
-  - allows only authenticated users
-  - only returns chats where user is participant
-- POST /chats (create)
-  - requires authentication
-  - only allows user to create chat as themselves
-- GET /chats/:id (show)
-  - requires authentication
-  - only allows viewing own chats
-- PATCH /chats/:id (update)
-  - requires authentication
-  - only allows updating own chats
-- DELETE /chats/:id (delete)
-  - requires authentication
-  - only allows deleting own chats
-
-## Chat Formatting and Data
-- returns chat with formatted product information
-- returns chat with seller profile data (excluding sensitive info)
-- returns chat with buyer profile data (excluding sensitive info)
-- includes last message in chat response
-- includes last message timestamp (last_message_at)
+## Data Exposure Checks
+- Seller and buyer payloads do not expose sensitive fields like `password_digest` and `verification_otp`.
+- Chat responses include expected contact fields (`email`, `name`, `profile_picture_url`) used by frontend chat UI.

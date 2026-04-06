@@ -3,7 +3,7 @@ class ProductsController < ApplicationController
   
   PRODUCT_JSON_ONLY = %i[id name description price seller_id buyer_id status category_id location contact condition created_at updated_at].freeze
 
-  before_action :set_product, only: %i[show update destroy price_history toggle_interest buy]
+  before_action :set_product, only: %i[show update destroy toggle_interest buy]
   before_action :authenticate_user!, only: %i[create update destroy selling toggle_interest buy]
   before_action :authorize_product_seller!, only: %i[update destroy]
 
@@ -107,13 +107,25 @@ class ProductsController < ApplicationController
 
   # GET /products/:id/price_history
   def price_history
+    product_id = params[:product_id].presence || params[:id].presence
+    unless product_id
+      render_error('product_id is required', status: :bad_request)
+      return
+    end
+
+    product = Product.with_attached_images.find_by(id: product_id)
+    unless product
+      render_error('Product not found', status: :not_found)
+      return
+    end
+
     points = (params[:points] || 10).to_i
     points = [[points, 1].max, 20].min
-    price_histories = @product.price_histories.order(date: :desc).limit(points)
+    price_histories = product.price_histories.order(date: :desc).limit(points)
 
-    render json: { 
-      product_id: @product.id, 
-      prices: price_histories.map(&:price)
+    render json: {
+      product_id: product.id,
+      prices: price_histories.map { |entry| entry.price.to_f }
     }, status: :ok
   end
 

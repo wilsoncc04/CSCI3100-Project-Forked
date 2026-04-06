@@ -1,15 +1,16 @@
 # Sessions API - Test Cases
 
+## GET /sessions (show login status)
+- returns `401` with `not_logged_in` when no active session exists
+- returns current user payload when session is active
+
 ## POST /sessions (login)
 - when credentials are valid and user is verified
   - returns success with user data
   - returns correct status (created/201)
-  - returns user data without sensitive information
   - returns user with correct attributes (id, email, name, cuhk_id, hostel, is_admin)
   - returns message 'logged_in'
   - does not expose sensitive information (password_digest, verification_otp, verification_sent_at)
-  - sets session cookie for authentication
-  - returns user profile data (profile_picture_url, etc.)
 - when user is verified
   - allows login with verified account
   - establishes authenticated session
@@ -30,20 +31,16 @@
   - returns unauthorized error when email is missing
   - returns unauthorized error when password is missing
   - does not create session
-- with case-insensitive email matching
-  - accepts email in different cases
-  - correctly validates credentials regardless of case
 - authentication
   - does not require authentication to login
   - allows unauthenticated users to access login endpoint
   - allows previously logged-in users to login again
 
-## DELETE /sessions/:id (logout)
+## DELETE /sessions/destroy (logout)
 - logout functionality
-  - returns no content status (204)
-  - returns empty response body
-  - clears session cookie
-  - invalidates authentication token
+  - returns ok status (200)
+  - returns response body message `logged_out`
+  - clears server session (`session[:user_id] = nil`)
 - authentication effects
   - user loses authentication after logout
   - subsequent requests without login are rejected
@@ -66,8 +63,7 @@
   - message field indicating success
   - no sensitive fields in response
 - logout response
-  - has no content body
-  - has empty response text
+  - includes `message` field with `logged_out`
 
 ## Error messages
 - returns appropriate error messages for failed login
