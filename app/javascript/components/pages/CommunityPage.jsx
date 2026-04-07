@@ -171,6 +171,7 @@ export default function CommunityPage() {
                     name={item.product.name}
                     price={item.product.price}
                     status={item.product.status}
+                    condition={item.product.condition}
                     images={item.product.image_url ? [item.product.image_url] : []}
                   />
                 </div>

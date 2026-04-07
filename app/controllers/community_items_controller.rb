@@ -95,6 +95,7 @@ class CommunityItemsController < ApplicationController
         name: item.product.name,
         price: item.product.price,
         status: item.product.status,
+        condition: item.product.condition, 
         image_url: item.product.images.attached? ? url_for(item.product.images.first) : nil
       }
     }

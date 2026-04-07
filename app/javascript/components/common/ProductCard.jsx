@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { AiOutlinePicture } from "react-icons/ai";
 
 export default function ProductCard({ id, name, price, condition, status, images }) {
-  const thumbnailUrl =
-    images && images.length > 0
-      ? images[0]
-      : "https://via.placeholder.com/300x300?text=No+Image";
+  const [imgError, setImgError] = useState(false);
+  const hasImage = images && images.length > 0;
 
   return (
     <div
@@ -25,26 +24,31 @@ export default function ProductCard({ id, name, price, condition, status, images
         <div
           style={{
             height: "180px",
-            backgroundColor: "#fcfcfc",
+            backgroundColor: "#f9f9f9",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            // borderBottom: "1px solid #f0f0f0"
           }}
         >
-          <img
-            src={thumbnailUrl}
-            alt={name}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-            // onError={(e) => {
-            //   e.target.src = "https://via.placeholder.com/300x300?text=Error";
-            // }}
-          />
+          {hasImage && !imgError ? (
+            <img
+              src={images[0]}
+              alt={name}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              onError={() => setImgError(true)}
+            />
+            ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#ccc' }}>
+              <AiOutlinePicture size={48} />
+              <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>No Image</span>
+            </div>
+          )}
+
         </div>
       </Link>
 
@@ -81,6 +85,7 @@ export default function ProductCard({ id, name, price, condition, status, images
               backgroundColor: "#f0f0f0",
               padding: "2px 8px",
               borderRadius: "4px",
+              textTransform: "capitalize",
             }}
           >
             {status}

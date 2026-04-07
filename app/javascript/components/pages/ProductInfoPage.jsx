@@ -7,72 +7,348 @@ import {
   AiOutlineShoppingCart,
   AiOutlineClose,
   AiOutlineUser,
+  AiOutlineLeft,
+  AiOutlineRight,
   AiOutlinePicture
 } from "react-icons/ai";
-import axios from "axios";
+import axios from "axios"; 
 
-// --- 1. 樣式定義 (採用 Stashed changes 的美化版本) ---
-const PageContainer = styled.div` max-width: 900px; margin: 2rem auto; font-family: sans-serif; padding: 0 1rem; `;
-const HeaderContainer = styled.div` display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; `;
-const PageTitle = styled.h2` margin: 0; color: #333; `;
+const ActionButton = styled.button`
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 8px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  /* 新增：處理禁用狀態的視覺反饋 */
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ActionButtonText = styled.span`
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #333;
+`;
+
+const PageContainer = styled.div`
+  max-width: 900px;
+  margin: 2rem auto;
+  font-family: sans-serif;
+  padding: 0 1rem;
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+`;
+
+const PageTitle = styled.h2`
+  margin: 0;
+  color: #333;
+`;
+
 const StatusBadge = styled.span`
-  padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
   background-color: ${(props) => (props.$isBrandNew ? "#e6f2ff" : "#f0f0f0")};
   color: ${(props) => (props.$isBrandNew ? "#0066cc" : "#666")};
 `;
 
 const SingleImageWrapper = styled.div`
-  width: 100%; height: 400px; margin-bottom: 2rem; background-color: #fff;
-  border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 1px solid #f0f0f0;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 400px;
+  margin-bottom: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: zoom-in;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
 `;
 
-const FullImage = styled.img` width: 100%; height: 100%; object-fit: cover; `;
-const GridContainer = styled.div` display: flex; gap: 1rem; margin-bottom: 2rem; height: 400px; `;
+const FullImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const GridContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  height: 400px;
+`;
+
 const MainGridBox = styled.div`
-  flex: 2; background-color: #fff; border-radius: 12px; overflow: hidden;
+  flex: 2;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
   cursor: ${(props) => (props.$hasImage ? "zoom-in" : "default")};
-  border: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-  &:hover { transform: translateY(-5px); }
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 8px 16px -8px rgba(0, 0, 0, 0.08);
+  }
 `;
 
-const SubGridColumn = styled.div` flex: 1; display: flex; flex-direction: column; gap: 1rem; `;
+const SubGridColumn = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
 const SubGridBox = styled.div`
-  flex: 1; background-color: #fff; border-radius: 8px; overflow: hidden;
+  flex: 1;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
   cursor: ${(props) => (props.$hasImage ? "zoom-in" : "default")};
-  border: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+  }
 `;
 
-const SubGridImage = styled.img` 
-  width: 100%; height: 100%; object-fit: cover; 
-  &:hover { transform: scale(1.1); filter: brightness(1.1); transition: all 0.3s; }
+const SubGridImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  ${SubGridBox}:hover & {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+  }
 `;
 
 const OverlayCount = styled.div`
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); color: white;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  font-size: 1.2rem; font-weight: bold; pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  pointer-events: none;
+`;
+
+const EmptyText = styled.span`
+  color: ${(props) => (props.$isMain ? "#aaa" : "#ddd")};
+  font-size: ${(props) => (props.$isMain ? "1rem" : "0.8rem")};
 `;
 
 const DetailsContainer = styled.div`
-  display: flex; justify-content: space-between; align-items: flex-start;
-  background-color: #fff; padding: 2rem; border-radius: 12px; border: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 `;
 
-const ActionButton = styled.button`
-  border: none; background: none; cursor: pointer; font-size: 24px; padding: 8px;
-  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+const InfoSection = styled.div`
+  flex: 1;
+  padding-right: 2rem;
 `;
 
-const ActionButtonText = styled.span` margin-top: 6px; font-size: 0.9rem; color: #333; font-weight: 500; `;
+const ProductName = styled.h1`
+  margin: 0 0 0.5rem 0;
+  color: #222;
+  font-size: 2rem;
+`;
 
-// --- 2. 子組件 (整合邏輯與樣式) ---
+const ProductPrice = styled.p`
+  font-size: 2rem;
+  color: #e60000;
+  font-weight: bold;
+  margin: 0 0 1.5rem 0;
+`;
+
+const ConditionWrapper = styled.p`
+  margin: 0 0 1.5rem 0;
+`;
+
+const ConditionTag = styled.span`
+  background-color: #f0f0f0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #555;
+  font-weight: bold;
+`;
+
+const DescriptionWrapper = styled.div`
+  margin-bottom: 1rem;
+`;
+
+const SectionTitle = styled.h4`
+  margin: 0 0 0.5rem 0;
+  color: #555;
+`;
+
+const DescriptionText = styled.p`
+  color: #444;
+  line-height: 1.6;
+  white-space: pre-wrap;
+`;
+
+const ContactSection = styled.div`
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+`;
+
+const SellerRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+`;
+
+const AvatarCircle = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 20px;
+`;
+
+const SellerNameText = styled.p`
+  margin: 0;
+  font-weight: normal;
+  color: #666;
+  font-size: 0.95rem;
+`;
+
+const ContactInfoList = styled.div`
+  font-size: 0.8rem;
+  color: #999;
+  line-height: 1.6;
+`;
+
+const ContactItem = styled.p`
+  margin: 0;
+`;
+
+const ButtonsColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const GraphWrapper = styled.div`
+  margin: 3rem 0;
+  padding: 2rem;
+  border: 1px solid #ddd;
+`;
+
+const GraphArea = styled.div`
+  height: 200px;
+  border-bottom: 2px solid #333;
+  border-left: 2px solid #333;
+  position: relative;
+`;
+
+const GraphPlaceholder = styled.p`
+  position: absolute;
+  bottom: 50%;
+  left: 40%;
+  color: #888;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  cursor: zoom-out;
+`;
+
+const ModalCloseButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  background: none;
+  border: none;
+  color: #f9f9f9;
+  font-size: 40px;
+  cursor: pointer;
+`;
+
+const ModalNavButton = styled.button`
+  position: absolute;
+  background: none;
+  border: none;
+  color: #f9f9f9;
+  font-size: 50px;
+  cursor: pointer;
+  z-index: 10000;
+  padding: 20px;
+  ${(props) => (props.$direction === "left" ? "left: 5%;" : "right: 5%;")}
+`;
+
+const ModalDisplayImage = styled.img`
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: cover;
+  border-radius: 8px;
+`;
+
+const LoadingErrorState = styled.div`
+  text-align: center;
+  margin-top: 50px;
+  color: ${(props) => (props.$isError ? "red" : "inherit")};
+`;
+
 
 function LikeButton({ productId, initialLiked }) {
   const [liked, setLiked] = useState(initialLiked);
@@ -101,6 +377,7 @@ function LikeButton({ productId, initialLiked }) {
 function BuyButton({ product }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
   const storedUser = (() => {
     try {
       return JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -110,21 +387,22 @@ function BuyButton({ product }) {
   })();
 
   const localUserId = storedUser?.id;
+  
   const isReserved = product?.status === 'reserved' || product?.status === 'sold';
-  const isOwnProduct =
-    !!product?.is_owner ||
+  
+  const isOwnProduct = 
+    !!product?.is_owner || 
     (localUserId != null && Number(localUserId) === Number(product?.seller_id));
+    
   const isDisabled = isReserved || isOwnProduct || loading;
 
   const handleBuyClick = async () => {
-    if (!product) return;
-    if (isOwnProduct) return;
+    if (!product || isOwnProduct) return;
     if (!window.confirm(`Confirm interest in buying "${product.name}"?`)) return;
 
     setLoading(true);
     try {
       const res = await axios.post(`/products/${product.id}/buy`);
-      // 跳轉至聊天室並帶入自動訊息參數
       navigate(`/chat?chat_id=${res.data.chat_id}&auto_send=true&product_name=${encodeURIComponent(product.name)}`);
     } catch (err) {
       alert(err.response?.data?.error || "Failed to initiate purchase.");
@@ -134,27 +412,30 @@ function BuyButton({ product }) {
   };
 
   return (
-    <ActionButton
-      onClick={handleBuyClick}
+    <ActionButton 
+      onClick={handleBuyClick} 
       disabled={isDisabled}
       title={isOwnProduct ? "You cannot buy your own product." : undefined}
     >
       <AiOutlineShoppingCart color={isDisabled ? "#ccc" : "#333"} />
-      <ActionButtonText>{isReserved ? "Reserved" : "Buy"}</ActionButtonText>
+      <ActionButtonText>
+        {isReserved ? "Reserved" : isOwnProduct ? "My Product" : "Buy"}
+      </ActionButtonText>
     </ActionButton>
   );
 }
 
-// --- 3. 主頁面組件 ---
 
 export default function ProductInfoPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [sellerName, setSellerName] = useState("Anonymous User");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); 
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -162,10 +443,11 @@ export default function ProductInfoPage() {
         const response = await axios.get(`/products/${id}`);
         const data = response.data;
         setProduct(data);
-
-        if (data.seller_id) {
+        
+        const sellerId = data.seller_id;
+        if (sellerId) {
           try {
-            const userResponse = await axios.get(`/users/${data.seller_id}`);
+            const userResponse = await axios.get(`/users/${sellerId}`);
             setSellerName(userResponse.data.name);
           } catch (userErr) {
             console.error("Failed to fetch seller name", userErr);
@@ -191,11 +473,21 @@ export default function ProductInfoPage() {
     document.body.style.overflow = "";
   };
 
-  const images = product?.images || [];
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((index) => (index === 0 ? images.length - 1 : index - 1));
+  };
 
-  if (isLoading) return <div style={{ textAlign: "center", marginTop: "50px" }}>Loading...</div>;
-  if (error) return <div style={{ textAlign: "center", marginTop: "50px", color: "red" }}>Error: {error}</div>;
-  if (!product) return null;
+  const nextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((index) => (index === images.length - 1 ? 0 : index + 1));
+  };
+
+  if (isLoading) return <LoadingErrorState>Loading Product...</LoadingErrorState>;
+  if (error) return <LoadingErrorState $isError>Error: {error}</LoadingErrorState>;
+  if (!product) return <LoadingErrorState>Product not found</LoadingErrorState>;
+
+  const images = product.images || [];
 
   return (
     <PageContainer>
@@ -205,74 +497,123 @@ export default function ProductInfoPage() {
           {product.status || "Available"}
         </StatusBadge>
       </HeaderContainer>
-
-      {/* 圖片展示區域 */}
-      {images.length === 1 ? (
-        <SingleImageWrapper onClick={() => openModal(0)}>
-          <FullImage src={images[0]} alt="Main Photo" />
-        </SingleImageWrapper>
-      ) : (
-        <GridContainer>
-          <MainGridBox onClick={() => openModal(0)} $hasImage={images.length > 0}>
-            {images[0] ? <FullImage src={images[0]} /> : <span>No Image</span>}
-          </MainGridBox>
-          <SubGridColumn>
-            {[1, 2, 3].map((index) => (
-              <SubGridBox key={index} onClick={() => images[index] && openModal(index)} $hasImage={!!images[index]}>
-                {images[index] && <SubGridImage src={images[index]} />}
-                {index === 3 && images.length > 4 && (
-                  <OverlayCount><AiOutlinePicture /> {images.length} images</OverlayCount>
+        {images.length >= 1 && (
+        <>
+          {images.length === 1 ? (
+            <SingleImageWrapper onClick={() => openModal(0)}>
+              <FullImage src={images[0]} alt="Main Photo" />
+            </SingleImageWrapper>
+          ) : (
+            <GridContainer>
+              <MainGridBox onClick={() => openModal(0)} $hasImage={images.length > 0}>
+                {images[0] ? (
+                  <FullImage src={images[0]} alt="Main Photo" />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#ccc' }}>
+                    <AiOutlinePicture size={64} />
+                    <span style={{ marginTop: '8px', fontSize: '0.9rem' }}>No Images Uploaded</span>
+                  </div>
                 )}
-              </SubGridBox>
-            ))}
-          </SubGridColumn>
-        </GridContainer>
+              </MainGridBox>
+
+              <SubGridColumn>
+                {[1, 2, 3].map((index) => {
+                  const isLastVisibleBox = index === 3;
+                  const hasMoreImages = images.length > 4;
+
+                  return (
+                    <SubGridBox
+                      key={index}
+                      onClick={() => images[index] && openModal(index)}
+                      $hasImage={!!images[index]}
+                    >
+                      {images[index] ? (
+                        <>
+                          <SubGridImage src={images[index]} alt={`Detail ${index}`} />
+                          {isLastVisibleBox && hasMoreImages && (
+                            <OverlayCount>
+                              <AiOutlinePicture size={24} /> {images.length} images
+                            </OverlayCount>
+                          )}
+                        </>
+                      ) : (
+                        <AiOutlinePicture size={32} color="#eee" />
+                      )}
+                    </SubGridBox>
+                  );
+                })}
+              </SubGridColumn>
+            </GridContainer>
+          )}
+        </>
       )}
 
-      {/* 詳細資訊區域 */}
       <DetailsContainer>
-        <div style={{ flex: 1, paddingRight: "2rem" }}>
-          <h1 style={{ margin: "0 0 0.5rem 0" }}>{product.name}</h1>
-          <p style={{ fontSize: "2rem", color: "#e60000", fontWeight: "bold", margin: "0 0 1.5rem 0" }}>
-            ${product.price} HKD
-          </p>
-          <div style={{ marginBottom: "1rem" }}>
-            <p><strong>Condition:</strong> {product.condition || "Not Specified"}</p>
-            <p style={{ whiteSpace: "pre-wrap", color: "#444" }}>{product.description}</p>
-          </div>
-          <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #eee" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
-              <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <AiOutlineUser />
-              </div>
-              <p style={{ margin: 0 }}>{sellerName}</p>
-            </div>
-            <p style={{ fontSize: "0.8rem", color: "#999", marginTop: "10px" }}>
-              Contact: {product.contact} | Location: {product.location || "CUHK"}
-            </p>
-          </div>
-        </div>
+        <InfoSection>
+          <ProductName>{product.name}</ProductName>
+          <ProductPrice>${product.price} HKD</ProductPrice>
+          <ConditionWrapper>
+            <ConditionTag>Condition: {product.condition || "Not Specified"}</ConditionTag>
+          </ConditionWrapper>
+          
+          <DescriptionWrapper>
+            <SectionTitle>Description</SectionTitle>
+            <DescriptionText>{product.description}</DescriptionText>
+          </DescriptionWrapper>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <ContactSection>
+            <SectionTitle>Contact Information</SectionTitle>
+            <SellerRow>
+              <AvatarCircle>
+                <AiOutlineUser />
+              </AvatarCircle>
+              <SellerNameText>{sellerName}</SellerNameText>
+            </SellerRow>
+
+            <ContactInfoList>
+              <ContactItem>
+                <strong>contact:</strong> {product.contact}
+              </ContactItem>
+              <ContactItem>
+                <strong>Location:</strong> {product.location || "CUHK"}
+              </ContactItem>
+            </ContactInfoList>
+          </ContactSection>
+        </InfoSection>
+
+        <ButtonsColumn>
           <LikeButton productId={product.id} initialLiked={product.is_liked} />
           <BuyButton product={product} />
-        </div>
+        </ButtonsColumn>
       </DetailsContainer>
 
-      {/* 燈箱視窗 */}
+      <GraphWrapper>
+        <h4>Price History Graph</h4>
+        <GraphArea>
+          <GraphPlaceholder>[ Line Chart Component: Date vs Price ]</GraphPlaceholder>
+        </GraphArea>
+      </GraphWrapper>
+
       {isModalOpen && (
         <ModalOverlay onClick={closeModal}>
-          <AiOutlineClose style={{ position: "absolute", top: "20px", right: "30px", color: "#fff", fontSize: "40px", cursor: "pointer" }} />
-          <img src={images[currentImageIndex]} style={{ maxWidth: "90%", maxHeight: "90%", borderRadius: "8px" }} alt="Product" />
+          <ModalCloseButton onClick={closeModal}>
+            <AiOutlineClose />
+          </ModalCloseButton>
+
+          {images.length > 1 && (
+            <>
+              <ModalNavButton $direction="left" onClick={prevImage}>
+                <AiOutlineLeft />
+              </ModalNavButton>
+              <ModalNavButton $direction="right" onClick={nextImage}>
+                <AiOutlineRight />
+              </ModalNavButton>
+            </>
+          )}
+
+          <ModalDisplayImage src={images[currentImageIndex]} alt="Full Screen product image" />
         </ModalOverlay>
       )}
     </PageContainer>
   );
 }
-
-// 燈箱背景樣式
-const ModalOverlay = styled.div`
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background-color: rgba(0, 0, 0, 0.9); display: flex; justify-content: center;
-  align-items: center; z-index: 9999;
-`;

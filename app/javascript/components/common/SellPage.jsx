@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { goodsTypes } from "../../common/productConstants";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineClose } from "react-icons/ai";
+import { MdAddPhotoAlternate } from "react-icons/md";
 import styled from "styled-components";
 
 const PageContainer = styled.div`
@@ -39,6 +40,8 @@ const UploadLabel = styled.label`
 const UploadText = styled.span`
   color: ${(props) => (props.$isDragging ? "#0066cc" : "#444")};
   font-weight: ${(props) => (props.$isDragging ? "bold" : "normal")};
+  width: 100%;
+  display: block;
 `;
 
 const HiddenInput = styled.input`
@@ -334,8 +337,21 @@ export default function SellPage() {
     payload.append("product[condition]", formData.condition);
     payload.append("product[contact]", formData.contact);
     payload.append("product[location]", formData.location || "CUHK");
-    const categoryId = goodsTypes.indexOf(formData.category_id) + 1;
-    payload.append("product[category_id]", categoryId);
+    // const categoryId = goodsTypes.indexOf(formData.category_id) + 1;
+    const categoryIndex = goodsTypes.indexOf(formData.category_id);
+  
+    // 動機：檢查使用者是否真的選擇了分類。
+    // 原因：indexOf 如果找不到對應項會回傳 -1。我們必須確保只有在 index >= 0 時才進行 +1 運算。
+    // 如果 categoryIndex 是 -1，我們就不 append 這個欄位，或是傳入空值，讓 Rails 的 optional: true 起作用。
+    if (categoryIndex !== -1) {
+      payload.append("product[category_id]", categoryIndex + 1);
+    } else {
+      // 這裡可以選擇不 append，或者 append 空字串
+      // 這樣後端收到的就會是 nil 而不是 0，避開外鍵錯誤
+      payload.append("product[category_id]", ""); 
+    }
+
+    // payload.append("product[category_id]", categoryId);
 
     if (formData.promote_to_community) {
       payload.append("promote_to_community", "true");
@@ -368,7 +384,7 @@ export default function SellPage() {
             price: "",
             contact: "",
             location: "",
-            category_id: 1,
+            category_id: "",
             condition: "Brand New",
           });
           setImages([]);
@@ -402,6 +418,7 @@ export default function SellPage() {
           $isDragging={isDragging}
         >
           <UploadLabel>
+            <MdAddPhotoAlternate size={36} />
             <UploadText $isDragging={isDragging}>
               {isDragging ? "Drop images here!" : "Upload Photos (Click or Drag & Drop)"}
             </UploadText>
