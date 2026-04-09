@@ -9,7 +9,8 @@ import {
   AiOutlineUser,
   AiOutlineLeft,
   AiOutlineRight,
-  AiOutlinePicture
+  AiOutlinePicture,
+  AiOutlineEdit 
 } from "react-icons/ai";
 import axios from "axios"; 
 import PriceHistoryChart from "../common/PriceHistoryChart";
@@ -402,7 +403,7 @@ function BuyButton({ product }) {
     !!product?.is_owner || 
     (localUserId != null && Number(localUserId) === Number(product?.seller_id));
     
-  const isDisabled = isReserved || isOwnProduct || loading;
+  const isDisabled = !isOwnProduct && (isReserved || loading);
 
   const handleBuyClick = async () => {
     if (!product || isOwnProduct) return;
@@ -419,15 +420,19 @@ function BuyButton({ product }) {
     }
   };
 
+  const handleEditClick = () => {
+    navigate(`/edit/${product.id}`);
+  }
+
   return (
     <ActionButton 
-      onClick={handleBuyClick} 
+      onClick= {isOwnProduct ? handleEditClick : handleBuyClick}
       disabled={isDisabled}
       title={isOwnProduct ? "You cannot buy your own product." : undefined}
     >
-      <AiOutlineShoppingCart color={isDisabled ? "#ccc" : "#333"} />
+      {isOwnProduct ? <AiOutlineEdit color= "#333" /> : <AiOutlineShoppingCart color={isDisabled ? "#ccc" : "#333"} />}
       <ActionButtonText>
-        {isReserved ? "Reserved" : isOwnProduct ? "My Product" : "Buy"}
+        {isReserved ? "Reserved" : isOwnProduct ? "Edit" : "Buy"}
       </ActionButtonText>
     </ActionButton>
   );
@@ -446,11 +451,15 @@ export default function ProductInfoPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0); 
 
   useEffect(() => {
+    let isMounted = true;
     const fetchProductDetails = async () => {
+      setProduct(null); 
+      setIsLoading(true);
+      setError(null);
       try {
         const response = await axios.get(`/products/${id}`);
         const data = response.data;
-        setProduct(data);
+        if (isMounted) setProduct(data);
         
         const sellerId = data.seller_id;
         if (sellerId) {

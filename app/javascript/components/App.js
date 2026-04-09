@@ -178,6 +178,7 @@ export default function App() {
             <Route path="/Account" element={<AccountPage setUser={setUser} />} />
             <Route path="/product/:id" element={<ProductInfoPage />} />
             <Route path="/sell" element={<SellPage />} />
+            <Route path="/edit/:id" element={<SellPage />} />
             <Route path="/notifications" element={<NotificationPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/community" element={<CommunityPage />} />

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { goodsTypes } from "../../common/productConstants";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AiOutlineClose } from "react-icons/ai";
 import { MdAddPhotoAlternate } from "react-icons/md";
 import styled from "styled-components";
@@ -259,6 +259,41 @@ const ConfirmButton = styled.button`
 `;
 
 export default function SellPage() {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchProduct = async () => {
+        try {
+          const response = await fetch(`/products/${id}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            const categoryName = data.category_id ? goodsTypes[data.category_id - 1] : "";
+
+            setFormData({
+              name: data.name || "",
+              description: data.description || "",
+              price: data.price || "",
+              contact: data.contact || "",
+              location: data.location || "CUHK",
+              category_id: categoryName,
+              condition: data.condition || "Brand New",
+              status: data.status || "available",
+              promote_to_community: data.promote_to_community || false,
+              community_description: data.community_description || "",
+            });
+            setExistingImages(data.images || []);
+          }
+        } catch (error) {
+          console.error("Fetch error:", error);
+        }
+      };
+      fetchProduct();
+    }
+  }, [id, isEditMode]);
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -267,12 +302,13 @@ export default function SellPage() {
     location: "",
     category_id: "",
     condition: "Brand New",
-    status: "available",
+    status: "Available",
     promote_to_community: false,
     community_description: "",
   });
 
   const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
 
   const conditionOptions = [
@@ -329,6 +365,8 @@ export default function SellPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const url = isEditMode ? `/products/${id}` : "/products";
+    const method = isEditMode ? "PATCH" : "POST";
     const payload = new FormData();
     payload.append("product[name]", formData.name);
     payload.append("product[description]", formData.description);
@@ -337,17 +375,15 @@ export default function SellPage() {
     payload.append("product[condition]", formData.condition);
     payload.append("product[contact]", formData.contact);
     payload.append("product[location]", formData.location || "CUHK");
-    // const categoryId = goodsTypes.indexOf(formData.category_id) + 1;
+
+    existingImages.forEach((imgUrl) => {
+      payload.append("keep_images[]", imgUrl);
+    });
+    
     const categoryIndex = goodsTypes.indexOf(formData.category_id);
-  
-    // 動機：檢查使用者是否真的選擇了分類。
-    // 原因：indexOf 如果找不到對應項會回傳 -1。我們必須確保只有在 index >= 0 時才進行 +1 運算。
-    // 如果 categoryIndex 是 -1，我們就不 append 這個欄位，或是傳入空值，讓 Rails 的 optional: true 起作用。
     if (categoryIndex !== -1) {
       payload.append("product[category_id]", categoryIndex + 1);
     } else {
-      // 這裡可以選擇不 append，或者 append 空字串
-      // 這樣後端收到的就會是 nil 而不是 0，避開外鍵錯誤
       payload.append("product[category_id]", ""); 
     }
 
@@ -361,9 +397,10 @@ export default function SellPage() {
     images.forEach((image, index) => {
       payload.append("images[]", image);
     });
+
     try {
-      const response = await fetch("/products", {
-        method: "POST",
+      const response = await fetch(url, {
+        method: method,
         headers: {
           Accept: "application/json",
           "X-CSRF-Token": csrfToken,
@@ -377,8 +414,11 @@ export default function SellPage() {
         const data = await response.json();
 
         if (response.ok) {
-          alert("Product listed successfully!");
-          setFormData({
+          alert(isEditMode ? "Product updated successfully!" : "Product listed successfully!");
+          if (isEditMode) {
+          navigate(`/product/${id}`);
+          } else 
+          {setFormData({
             name: "",
             description: "",
             price: "",
@@ -386,8 +426,9 @@ export default function SellPage() {
             location: "",
             category_id: "",
             condition: "Brand New",
+            status: "Available",
           });
-          setImages([]);
+          setImages([]);}
         } else if (response.status === 422) {
           alert(`Validation Error: ${data.errors.join(", ")}`);
           {
@@ -409,7 +450,7 @@ export default function SellPage() {
 
   return (
     <PageContainer>
-      <PageTitle>Sell an Item</PageTitle>
+      <PageTitle>{isEditMode ? "Update Your Item" : "Sell an Item"}</PageTitle>
       <StyledForm onSubmit={handleSubmit}>
         <UploadDropzone
           onDragOver={handleDragOver}
@@ -434,21 +475,31 @@ export default function SellPage() {
           )}
         </UploadDropzone>
 
-        {images.length > 0 && (
+        {(images.length > 0 || existingImages.length > 0) && (
           <PreviewGrid>
-            {images.map((file, index) => (
-              <PreviewBox key={index}>
-                <PreviewImage src={URL.createObjectURL(file)} alt={`preview-${index}`} />
-                <RemoveImageButton
-                  type="button"
-                  onClick={() => {
-                    setImages(images.filter((_, i) => i !== index));
-                  }}
-                >
-                  <AiOutlineClose size={16} />
-                </RemoveImageButton>
-              </PreviewBox>
-            ))}
+            {[...existingImages, ...images].map((img, index) => {
+              const isFile = img instanceof File;
+              const previewUrl = isFile ? URL.createObjectURL(img) : img;
+
+              return (
+                <PreviewBox key={index}>
+                  <PreviewImage src={previewUrl} alt={`preview-${index}`} />
+                  <RemoveImageButton 
+                    type="button" 
+                    onClick={() => {
+                      if (index < existingImages.length) {
+                        setExistingImages(existingImages.filter((_, i) => i !== index));
+                      } else {
+                        const newIndex = index - existingImages.length;
+                        setImages(images.filter((_, i) => i !== newIndex));
+                      }
+                    }}
+                  >
+                    <AiOutlineClose size={16} />
+                  </RemoveImageButton>
+                </PreviewBox>
+              );
+            })}
           </PreviewGrid>
         )}
 
@@ -588,7 +639,7 @@ export default function SellPage() {
             Cancel
           </CancelButton>
           <ConfirmButton type="submit">
-            Confirm
+            {isEditMode ? "Save Changes" : "Confirm Listing"}
           </ConfirmButton>
         </ActionGroup>
       </StyledForm>
