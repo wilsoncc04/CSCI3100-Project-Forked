@@ -1,17 +1,63 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import styled from "styled-components";
 import ProductCard from "../common/ProductCard";
 import FiltersAndSearch from "../common/FiltersAndSearch"; 
+import SortDropdown from "../common/SortDropDown";
+
+const PageContainer = styled.div`
+  padding: 1rem;
+`;
+
+const FilterSection = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const ResultsHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const Title = styled.h2`
+  margin: 0;
+`;
+
+const ResultsContent = styled.div`
+  min-height: 60vh;
+  position: relative;
+  
+  opacity: ${props => (props.$isLoading ? 0.5 : 1)};
+  transition: opacity 0.3s ease;
+`;
+
+const LoadingOverlay = styled.p`
+  position: absolute;
+  top: -20px;
+  left: 0;
+  color: #2563eb;
+  font-weight: 500;
+  margin: 0;
+`;
+
+const ResultsList = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+`;
+
+const ErrorText = styled.p`
+  color: red;
+`;
 
 function parseSearchApiError(response, data) {
   if (data && typeof data.error === "string" && data.error.trim()) {
     return data.error;
   }
-
   if (data && Array.isArray(data.errors) && data.errors.length > 0) {
     return data.errors.join(", ");
   }
-
   return `Failed to fetch search results (${response.status}).`;
 }
 
@@ -47,17 +93,12 @@ export default function SearchResults() {
           throw new Error(parseSearchApiError(response, data));
         }
 
-        if (!isActive) {
-          return;
+        if (isActive) {
+          setProducts(Array.isArray(data?.data) ? data.data : []);
         }
-
-        setProducts(Array.isArray(data?.data) ? data.data : []);
       } catch (error) {
-        if (error.name === "AbortError") {
-          return;
-        }
-
-        console.error("Some errors occurred:", error);
+        if (error.name === "AbortError") return;
+        console.error("Search error:", error);
         if (isActive) {
           setProducts([]);
           setError(error.message || "Failed to fetch search results.");
@@ -78,33 +119,34 @@ export default function SearchResults() {
   }, [searchParams]);
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <div style={{ marginBottom: "2rem" }}>
+    <PageContainer>
+      <FilterSection>
         <FiltersAndSearch />
-      </div>
-      <h2>Search Results</h2>
-      {isLoading ? <p>Loading...</p> : null}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      </FilterSection>
+      
+      <ResultsHeader>
+        <Title>Search Results</Title>
+        <SortDropdown />
+      </ResultsHeader>
+      
+      <ResultsContent $isLoading={isLoading}>
+        {isLoading && <LoadingOverlay>Updating results...</LoadingOverlay>}
+        
+        {error && <ErrorText>{error}</ErrorText>}
 
-      {!isLoading && !error && (
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-          {products.length === 0 ? (
+        <ResultsList>
+          {products.length === 0 && !isLoading ? (
             <p>No products match your criteria. Try different filters!</p>
           ) : (
             products.map((product) => (
               <ProductCard
                 key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                condition={product.condition}
-                status={product.status || "Available"}
-                images={product.images}
+                {...product}
               />
             ))
           )}
-        </div>
-      )}
-    </div>
+        </ResultsList>
+      </ResultsContent>
+    </PageContainer>
   );
 }

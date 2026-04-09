@@ -1,15 +1,123 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import styled from "styled-components";
 import ProductCard from "../common/ProductCard";
 import FiltersAndSearch from "../common/FiltersAndSearch";
 import MarketStatChart from "../common/MarketStatChart";
+import SortDropdown from "../common/SortDropDown";
+
+const PageContainer = styled.div`
+  padding: 1rem;
+`;
+
+const ChartSection = styled.div`
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: #fff;
+  border: 1px dashed #eee;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+`;
+
+const ChartTitle = styled.h3`
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const SectionTitle = styled.div`
+  font-size: 1.5rem;
+  font-weight: bold;
+`;
+
+const ProductSection = styled.div`
+  min-height: 60vh; 
+  position: relative;
+  transition: opacity 0.3s ease;
+  
+  opacity: ${props => (props.$isLoading ? 0.5 : 1)};
+`;
+
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 0.9rem;
+  color: #2563eb;
+  font-weight: 500;
+`;
+
+const ProductGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-bottom: 2rem;
+`;
+
+const PageInfo = styled.span`
+  font-weight: bold;
+  color: #555;
+`;
+
+const PaginationButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: ${props => (props.disabled ? "not-allowed" : "pointer")};
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+
+  ${props => props.$isPrimary 
+    ? `
+      border: 1px solid #0066cc;
+      background-color: ${props.disabled ? "#e6f2ff" : "#0066cc"};
+      color: ${props.disabled ? "#99c2ff" : "#fff"};
+    `
+    : `
+      border: 1px solid #ccc;
+      background-color: ${props.disabled ? "#f0f0f0" : "#fff"};
+      color: ${props.disabled ? "#999" : "#333"};
+    `
+  }
+
+  &:hover {
+    ${props => !props.disabled && "opacity: 0.8;"}
+  }
+`;
+
+const ErrorText = styled.p`
+  color: red;
+`;
 
 export default function IndexPage() {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [chartProducts, setChartProducts] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const currentPage = parseInt(searchParams.get("page") || "1");
+  const sortOption = searchParams.get("sort_by") || "default";
+
+  const handlePageChange = (newPage) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", newPage.toString());
+    setSearchParams(newParams);
+  };
 
   useEffect(() => {
     const fetchAllForChart = async () => {
@@ -30,11 +138,8 @@ export default function IndexPage() {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/products?page=${currentPage}`);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
+        const response = await fetch(`/products?page=${currentPage}&sort_by=${sortOption}`);
+        if (!response.ok) throw new Error("Failed to fetch products");
 
         const jsonResponse = await response.json();
         setProducts(jsonResponse.data);
@@ -48,104 +153,62 @@ export default function IndexPage() {
         setIsLoading(false);
       }
     };
-
     fetchProducts();
-  }, [currentPage]);
+  }, [currentPage, sortOption]);
 
   return (
-    <div className="Index-page-container" style={{ padding: "1rem" }}>
-      <div
-        style={{
-          margin: "2rem 0",
-          padding: "1rem",
-          backgroundColor: "#fff",
-          border: "1px dashed #eee",
-          borderRadius: "12px",
-          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.02)"
-        }}
-      >
-        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.2rem" }}>Market Statistics</h3>
+    <PageContainer>
+      <ChartSection>
+        <ChartTitle>Market Statistics</ChartTitle>
         <MarketStatChart products={chartProducts} />
-      </div>
+      </ChartSection>
+
       <FiltersAndSearch />
-      <br />
-      <br />
-      <div
-        style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}
-      >
-        Products
-      </div>
-      {isLoading && <p>Loading products...</p>}
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-      {!isLoading && !error && (
-        <>
-          <div style={{ display: "grid", 
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", 
-            gap: "1.5rem" }}>
-            {products.length === 0 ? (
+      
+      <br /><br />
+
+      <SectionHeader>
+        <SectionTitle>Products</SectionTitle>
+        <SortDropdown />
+      </SectionHeader>
+
+      <ProductSection $isLoading={isLoading}>
+        {isLoading && <LoadingOverlay>Loading products...</LoadingOverlay>}
+        {error && <ErrorText>Error: {error}</ErrorText>}
+
+          <ProductGrid>
+            {products.length === 0 && !isLoading ? (
               <p>No products found.</p>
             ) : (
               products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  price={product.price}
-                  condition={product.condition}
-                  status={product.status || "Available"}
-                  images={product.images}
-                />
+                <ProductCard key={product.id} {...product} />
               ))
-            )}</div>
-            {totalPages > 1 && (
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "1rem",
-                marginTop: "3rem",
-                paddingBottom: "2rem"
-              }}>
-                <button
-                  onClick={() => {
-                    setCurrentPage(p => p - 1);
-                  }}
-                  disabled={currentPage === 1}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    backgroundColor: currentPage === 1 ? "#f0f0f0" : "#fff",
-                    color: currentPage === 1 ? "#999" : "#333",
-                    cursor: currentPage === 1 ? "not-allowed" : "pointer"
-                  }}
-                >
-                  Previous
-                </button>
-                <span style={{ fontWeight: "bold", color: "#555" }}>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() => {
-                    setCurrentPage(p => p + 1);
-                  }}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    border: "1px solid #0066cc",
-                    backgroundColor: (currentPage === totalPages || totalPages === 0) ? "#e6f2ff" : "#0066cc",
-                    color: (currentPage === totalPages || totalPages === 0) ? "#99c2ff" : "#fff",
-                    cursor: (currentPage === totalPages || totalPages === 0) ? "not-allowed" : "pointer"
-                  }}
-                >
-                  Next
-                </button>
-              </div>
             )}
-        </>
+          </ProductGrid>
+      </ProductSection>
+
+      {totalPages > 1 && (
+        <PaginationContainer>
+          <PaginationButton
+            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+          >
+            Previous
+          </PaginationButton>
+          
+          <PageInfo>
+            Page {currentPage} of {totalPages}
+          </PageInfo>
+          
+          <PaginationButton
+            $isPrimary
+            disabled={currentPage === totalPages || totalPages === 0}
+            onClick={() => handlePageChange(currentPage + 1)}
+          >
+            Next
+          </PaginationButton>
+        </PaginationContainer>
       )}
-      
-    </div>
+    </PageContainer>
   );
 }

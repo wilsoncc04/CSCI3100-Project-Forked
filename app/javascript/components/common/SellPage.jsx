@@ -460,8 +460,8 @@ export default function SellPage() {
           $isDragging={isDragging}
         >
           <UploadLabel>
-            <MdAddPhotoAlternate size={36} />
             <UploadText $isDragging={isDragging}>
+              <MdAddPhotoAlternate size={36} />
               {isDragging ? "Drop images here!" : "Upload Photos (Click or Drag & Drop)"}
             </UploadText>
             <HiddenInput

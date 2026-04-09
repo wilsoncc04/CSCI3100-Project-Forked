@@ -19,6 +19,17 @@ class ProductsController < ApplicationController
       products = products.where(users: { college: params[:college] }) if params[:college].present?
       products = products.where(users: { hostel: params[:hall] }) if params[:hall].present?
     end
+
+    case params[:sort_by]
+    when 'price_asc'
+      products = products.reorder(price: :asc)
+    when 'price_desc'
+      products = products.reorder(price: :desc)
+    when 'date_asc'
+      products = products.reorder(created_at: :asc)
+    when 'date_desc'
+      products = products.reorder(created_at: :desc)
+    end
     
     total_count = products.count
     

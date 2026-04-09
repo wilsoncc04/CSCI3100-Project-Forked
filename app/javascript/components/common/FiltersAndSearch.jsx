@@ -71,7 +71,7 @@ const OptionButton = styled.button`
   cursor: pointer;
   text-align: left;
   width: 100%;
-  padding: ${(props) => (props.$isHall ? "4px 0 4px 18px" : "4px 0")};
+  padding: ${(props) => (props.$isHall ? "6px 16px 6px 18px" : "8px 16px")};
   font-size: ${(props) => (props.$isHall ? "0.9rem" : "0.95rem")};
   color: ${(props) => {
     if (props.$isActive) return "#9e0ebb";
@@ -79,6 +79,12 @@ const OptionButton = styled.button`
     return "#333";
   }};
   font-weight: ${(props) => (props.$isActive ? "bold" : "normal")};
+  border-radius: 20px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
 `;
 
 const ResetButton = styled.button`
@@ -177,6 +183,11 @@ export default function FiltersAndSearch() {
     if (selectedHall) params.set("hall", selectedHall);
     if (selectedType) params.set("type", selectedType);
     if (searchKeywords.trim()) params.set("keywords", searchKeywords.trim());
+    params.set("page", "1");
+    const currentSort = searchParams.get("sort_by");
+    if (currentSort) {
+      params.set("sort_by", currentSort);
+    }
     const query = params.toString();
     return `/search${query ? `?${query}` : ""}`;
   };
