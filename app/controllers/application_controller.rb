@@ -11,6 +11,10 @@ class ApplicationController < ActionController::Base
     @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
   end
 
+  def current_user_admin?
+    current_user&.is_admin == true
+  end
+
   def is_json_request?
     request.format.json? || request.content_type.to_s.include?('application/json')
   end
@@ -48,13 +52,17 @@ class ApplicationController < ActionController::Base
     if error.is_a?(StandardError)
       logger.error("#{self.class.name} error: #{error.class} - #{error.message}")
       logger.error(error.backtrace.first(5).join("\n")) if error.backtrace
-      render json: { error: error.message }, status: :internal_server_error
+      message = error.message.presence || 'internal_server_error'
+      render json: { error: message, errors: [message] }, status: :internal_server_error
     elsif error.respond_to?(:full_messages)
-      render json: { errors: error.full_messages }, status: status
+      messages = error.full_messages
+      render json: { error: messages.first, errors: messages }, status: status
     elsif error.is_a?(Array)
-      render json: { errors: error }, status: status
+      messages = error.map(&:to_s)
+      render json: { error: messages.first, errors: messages }, status: status
     else
-      render json: { error: error.to_s }, status: status
+      message = error.to_s
+      render json: { error: message, errors: [message] }, status: status
     end
   end
 

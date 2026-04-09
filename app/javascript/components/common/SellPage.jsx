@@ -430,12 +430,13 @@ export default function SellPage() {
           });
           setImages([]);}
         } else if (response.status === 422) {
-          alert(`Validation Error: ${data.errors.join(", ")}`);
-          {
-            const errorData = await response.json();
-          }
+          const validationMessages = Array.isArray(data.errors) && data.errors.length > 0
+            ? data.errors
+            : [data.error || "Validation failed"];
+          alert(`Validation Error: ${validationMessages.join(", ")}`);
         } else {
-          alert(`Error ${response.status}: ${data.error || "Unknown error"}`);
+          const message = data.error || (Array.isArray(data.errors) ? data.errors.join(", ") : "Unknown error");
+          alert(`Error ${response.status}: ${message}`);
         }
       } else {
         const text = await response.text();

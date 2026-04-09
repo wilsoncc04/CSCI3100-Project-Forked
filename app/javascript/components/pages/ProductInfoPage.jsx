@@ -10,7 +10,8 @@ import {
   AiOutlineLeft,
   AiOutlineRight,
   AiOutlinePicture,
-  AiOutlineEdit 
+  AiOutlineEdit,
+  AiOutlineDelete
 } from "react-icons/ai";
 import axios from "axios"; 
 import PriceHistoryChart from "../common/PriceHistoryChart";
@@ -358,6 +359,19 @@ const LoadingErrorState = styled.div`
   color: ${(props) => (props.$isError ? "red" : "inherit")};
 `;
 
+function extractApiErrorMessage(err, fallback) {
+  const data = err?.response?.data;
+  if (data && typeof data.error === "string" && data.error.trim()) {
+    return data.error;
+  }
+
+  if (data && Array.isArray(data.errors) && data.errors.length > 0) {
+    return data.errors.join(", ");
+  }
+
+  return err?.message || fallback;
+}
+
 
 function LikeButton({ productId, initialLiked }) {
   const [liked, setLiked] = useState(initialLiked);
@@ -441,9 +455,13 @@ function BuyButton({ product }) {
 
 export default function ProductInfoPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [sellerName, setSellerName] = useState("Anonymous User");
 
@@ -452,31 +470,79 @@ export default function ProductInfoPage() {
 
   useEffect(() => {
     let isMounted = true;
+
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await axios.get("/sessions");
+        if (isMounted) {
+          setCurrentUser(response.data);
+        }
+      } catch (_error) {
+        if (isMounted) {
+          setCurrentUser(null);
+        }
+      }
+    };
+
+    fetchCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchProductDetails = async () => {
       setProduct(null); 
       setIsLoading(true);
       setError(null);
+      setSellerName("Anonymous User");
+
       try {
-        const response = await axios.get(`/products/${id}`);
+        const response = await axios.get(`/products/${id}`, { signal: controller.signal });
         const data = response.data;
-        if (isMounted) setProduct(data);
+        if (isMounted) {
+          setProduct(data);
+        }
         
         const sellerId = data.seller_id;
         if (sellerId) {
           try {
-            const userResponse = await axios.get(`/users/${sellerId}`);
-            setSellerName(userResponse.data.name);
+            const userResponse = await axios.get(`/users/${sellerId}`, { signal: controller.signal });
+            if (isMounted) {
+              setSellerName(userResponse.data.name);
+            }
           } catch (userErr) {
+            if (userErr?.code === "ERR_CANCELED") {
+              return;
+            }
             console.error("Failed to fetch seller name", userErr);
           }
         }
       } catch (err) {
-        setError(err.response?.data?.error || err.message);
+        if (err?.code === "ERR_CANCELED") {
+          return;
+        }
+
+        if (isMounted) {
+          setError(extractApiErrorMessage(err, "Failed to load product details."));
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
+
     fetchProductDetails();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [id]);
 
   const openModal = (index) => {
@@ -498,6 +564,33 @@ export default function ProductInfoPage() {
   const nextImage = (e) => {
     e.stopPropagation();
     setCurrentImageIndex((index) => (index === images.length - 1 ? 0 : index + 1));
+  };
+
+  const canManageProduct = Boolean(
+    product?.can_delete ||
+    currentUser?.is_admin === true ||
+    (currentUser?.id != null && Number(currentUser.id) === Number(product?.seller_id))
+  );
+
+  const handleDeleteProduct = async () => {
+    if (!product || isDeleting) {
+      return;
+    }
+
+    if (!window.confirm(`Delete "${product.name}" permanently?`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await axios.delete(`/products/${product.id}`);
+      alert("Product deleted successfully.");
+      navigate("/", { replace: true });
+    } catch (err) {
+      alert(extractApiErrorMessage(err, "Failed to delete product."));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) return <LoadingErrorState>Loading Product...</LoadingErrorState>;
@@ -601,6 +694,12 @@ export default function ProductInfoPage() {
         <ButtonsColumn>
           <LikeButton productId={product.id} initialLiked={product.is_liked} />
           <BuyButton product={product} />
+          {canManageProduct && (
+            <ActionButton onClick={handleDeleteProduct} disabled={isDeleting}>
+              <AiOutlineDelete color={isDeleting ? "#f3a4a4" : "#dc3545"} />
+              <ActionButtonText>{isDeleting ? "Deleting..." : "Delete"}</ActionButtonText>
+            </ActionButton>
+          )}
         </ButtonsColumn>
       </DetailsContainer>
 

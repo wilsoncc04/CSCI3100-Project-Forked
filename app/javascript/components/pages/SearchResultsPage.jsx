@@ -3,6 +3,18 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "../common/ProductCard";
 import FiltersAndSearch from "../common/FiltersAndSearch"; 
 
+function parseSearchApiError(response, data) {
+  if (data && typeof data.error === "string" && data.error.trim()) {
+    return data.error;
+  }
+
+  if (data && Array.isArray(data.errors) && data.errors.length > 0) {
+    return data.errors.join(", ");
+  }
+
+  return `Failed to fetch search results (${response.status}).`;
+}
+
 export default function SearchResults() {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -10,6 +22,9 @@ export default function SearchResults() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    let isActive = true;
+
     const fetchSearchResults = async () => {
       setIsLoading(true);
       setError(null);
@@ -17,24 +32,49 @@ export default function SearchResults() {
       try {
         const queryStr = searchParams.toString();
         const url = `/products${queryStr ? `?${queryStr}` : ""}`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          signal: controller.signal,
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        const isJson = (response.headers.get("content-type") || "").includes("application/json");
+        const data = isJson ? await response.json() : null;
 
         if (!response.ok) {
-          throw new Error("Failed to fetch search results.");
+          throw new Error(parseSearchApiError(response, data));
         }
 
-        const products = await response.json();
+        if (!isActive) {
+          return;
+        }
 
-        setProducts(products.data || []);
+        setProducts(Array.isArray(data?.data) ? data.data : []);
       } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
         console.error("Some errors occurred:", error);
-        setError("Failed to fetch search results.");
+        if (isActive) {
+          setProducts([]);
+          setError(error.message || "Failed to fetch search results.");
+        }
       } finally {
-        setIsLoading(false);
+        if (isActive) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchSearchResults();
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
   }, [searchParams]);
 
   return (

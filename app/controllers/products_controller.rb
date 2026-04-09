@@ -5,7 +5,8 @@ class ProductsController < ApplicationController
 
   before_action :set_product, only: %i[show update destroy toggle_interest buy]
   before_action :authenticate_user!, only: %i[create update destroy selling toggle_interest buy]
-  before_action :authorize_product_seller!, only: %i[update destroy]
+  before_action :authorize_product_seller!, only: %i[update]
+  before_action :authorize_product_destroy!, only: %i[destroy]
 
   # GET /products
   def index
@@ -53,14 +54,17 @@ class ProductsController < ApplicationController
   def show
     is_liked = false
     is_owner = false
+    can_delete = false
     if current_user
       is_liked = Interest.exists?(interested_id: current_user.id, item_id: @product.id)
       is_owner = current_user.id == @product.seller_id
+      can_delete = is_owner || current_user_admin?
     end
     community_info = CommunityItem.find_by(product_id: @product.id)
     render json: format_product(@product).merge(
       is_liked: is_liked, 
       is_owner: is_owner,
+      can_delete: can_delete,
       promote_to_community: community_info.present?,
       community_description: community_info&.description || ""
       )
@@ -250,6 +254,12 @@ class ProductsController < ApplicationController
 
   def authorize_product_seller!
     render_unauthorized unless @product.seller_id == current_user.id
+  end
+
+  def authorize_product_destroy!
+    return if @product.seller_id == current_user.id || current_user_admin?
+
+    render_unauthorized
   end
 
   def product_params
