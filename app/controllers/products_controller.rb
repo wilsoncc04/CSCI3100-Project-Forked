@@ -57,7 +57,13 @@ class ProductsController < ApplicationController
       is_liked = Interest.exists?(interested_id: current_user.id, item_id: @product.id)
       is_owner = current_user.id == @product.seller_id
     end
-    render json: format_product(@product).merge(is_liked: is_liked, is_owner: is_owner)
+    community_info = CommunityItem.find_by(product_id: @product.id)
+    render json: format_product(@product).merge(
+      is_liked: is_liked, 
+      is_owner: is_owner,
+      promote_to_community: community_info.present?,
+      community_description: community_info&.description || ""
+      )
   end
 
   # POST /products
@@ -87,11 +93,23 @@ class ProductsController < ApplicationController
       end
     end
 
-    if params[:images].present?
-      @product.images.purge
-      attach_images(@product, params[:images])
-      @product.reload
+    if @product.images.attached?
+      keep_urls = params[:keep_images] || []
+      @product.images.each do |img|
+        img_path = rails_blob_path(img, only_path: true)
+        
+        unless keep_urls.include?(img_path)
+          img.purge
+        end
+      end
     end
+
+    if params[:images].present?
+      attach_images(@product, params[:images])
+    end
+    
+    @product.reload
+    handle_community_promotion(@product)
 
     render json: format_product(@product), status: :ok
   rescue StandardError => e
@@ -237,7 +255,7 @@ class ProductsController < ApplicationController
 
   def format_product(product)
     product.as_json(only: PRODUCT_JSON_ONLY).merge(
-      "images" => product.image_urls
+      "images" => product.images.map { |img| rails_blob_path(img, only_path: true) }
     )
   end
 
@@ -247,14 +265,18 @@ class ProductsController < ApplicationController
     end
   end
 
-  def promote_to_community(product)
-    return unless params[:community_description].present?
-    CommunityItem.create!(
-      user: current_user,
-      product: product,
-      description: params[:community_description],
-      college: current_user.college || "Unknown"
-    )
+  def handle_community_promotion(product)
+    if params[:promote_to_community] == 'true' && params[:community_description].present?
+      item = CommunityItem.find_or_initialize_by(product: product)
+      item.assign_attributes(
+        user: current_user,
+        description: params[:community_description],
+        college: current_user.college || "Unknown"
+      )
+      item.save!
+    else
+      CommunityItem.find_by(product: product)&.destroy
+    end
   rescue => e
     logger.error "CommunityItem creation failed: #{e.message}"
   end
