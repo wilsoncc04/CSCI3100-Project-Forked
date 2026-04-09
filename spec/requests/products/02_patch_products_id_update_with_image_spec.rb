@@ -321,6 +321,66 @@ RSpec.describe 'Products API', type: :request do
         expect(product.price_histories.last.price).to eq(200.0)
       end
     end
+
+    context 'with community promotion updates' do
+      it 'creates community item when update enables promotion' do
+        post products_path, params: {
+          product: {
+            name: 'Promoted Product',
+            description: 'Description',
+            price: 100.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          }
+        }
+        product = Product.last
+
+        expect {
+          patch product_path(product.id), params: {
+            promote_to_community: 'true',
+            community_description: 'Great condition and negotiable'
+          }
+        }.to change(CommunityItem, :count).by(1)
+
+        community_item = CommunityItem.find_by(product: product)
+        expect(response).to have_http_status(:ok)
+        expect(community_item).to be_present
+        expect(community_item.description).to eq('Great condition and negotiable')
+      end
+
+      it 'removes existing community item when promotion is disabled' do
+        post products_path, params: {
+          product: {
+            name: 'Product With Community Post',
+            description: 'Description',
+            price: 100.0,
+            seller_id: seller.id,
+            buyer_id: buyer.id,
+            category_id: category.id,
+            status: 'available',
+            location: 'Dorm',
+            contact: 'contact@example.com'
+          },
+          promote_to_community: 'true',
+          community_description: 'Initial community post'
+        }
+        product = Product.last
+        expect(CommunityItem.find_by(product: product)).to be_present
+
+        expect {
+          patch product_path(product.id), params: {
+            promote_to_community: 'false'
+          }
+        }.to change(CommunityItem, :count).by(-1)
+
+        expect(response).to have_http_status(:ok)
+        expect(CommunityItem.find_by(product: product)).to be_nil
+      end
+    end
   end
 
 end

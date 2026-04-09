@@ -172,6 +172,54 @@ RSpec.describe 'Products API', type: :request do
         expect(response_data['pagination']['total_count']).to eq(0)
       end
     end
+
+    context 'type and seller filters' do
+      let!(:electronics) { create(:category, category_name: 'Electronics') }
+      let!(:books) { create(:category, category_name: 'Books') }
+      let!(:on_campus_seller) { create(:user, verified_at: Time.current, college: 'New Asia College', hostel: 'On-campus') }
+      let!(:off_campus_seller) { create(:user, verified_at: Time.current, college: 'United College', hostel: 'Off-campus') }
+
+      let!(:electronics_product) do
+        create(:product, name: 'Gaming Mouse', seller_id: on_campus_seller.id, buyer_id: buyer.id, category_id: electronics.id)
+      end
+
+      let!(:book_product) do
+        create(:product, name: 'Economics Textbook', seller_id: off_campus_seller.id, buyer_id: buyer.id, category_id: books.id)
+      end
+
+      it 'filters by type' do
+        get products_path, params: { type: 'Electronics', fetch_all: 'true' }
+        response_data = JSON.parse(response.body)
+
+        expect(response).to have_http_status(:ok)
+        expect(response_data['data'].map { |product| product['id'] }).to contain_exactly(electronics_product.id)
+      end
+
+      it 'filters by college' do
+        get products_path, params: { college: 'United College', fetch_all: 'true' }
+        response_data = JSON.parse(response.body)
+
+        expect(response).to have_http_status(:ok)
+        expect(response_data['data'].map { |product| product['id'] }).to contain_exactly(book_product.id)
+      end
+
+      it 'filters by hall using seller hostel' do
+        get products_path, params: { hall: 'On-campus', fetch_all: 'true' }
+        response_data = JSON.parse(response.body)
+
+        expect(response).to have_http_status(:ok)
+        expect(response_data['data'].map { |product| product['id'] }).to contain_exactly(electronics_product.id)
+      end
+
+      it 'returns all products when fetch_all is true' do
+        get products_path, params: { fetch_all: 'true', limit: 1 }
+        response_data = JSON.parse(response.body)
+
+        expect(response).to have_http_status(:ok)
+        expect(response_data['data'].length).to eq(2)
+        expect(response_data['pagination']['total_count']).to eq(2)
+      end
+    end
   end
 
 end

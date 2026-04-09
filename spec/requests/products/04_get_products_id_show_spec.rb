@@ -26,32 +26,74 @@ RSpec.describe 'Products API', type: :request do
   end
 
   describe 'GET /products/:id (show)' do
-    context 'with product containing images' do
-      before do
-        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
-          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
-        end
-        post products_path, params: {
-          product: {
-            name: 'Show Test Product',
-            description: 'Test product',
-            price: 100.0,
-            seller_id: seller.id,
-            buyer_id: buyer.id,
-            category_id: category.id,
-            status: 'available',
-            location: 'Dorm',
-            contact: 'contact@example.com'
-          },
-          images: create_multiple_test_images(2)
-        }
-      end
+    let!(:product) do
+      create(
+        :product,
+        name: 'Show Test Product',
+        description: 'Test product',
+        price: 100.0,
+        seller_id: seller.id,
+        buyer_id: buyer.id,
+        category_id: category.id,
+        status: 'available',
+        location: 'Dorm',
+        contact: 'contact@example.com'
+      )
+    end
 
-      it 'returns product details' do
-        product = Product.last
-        get product_path(product.id)
-        expect(response).to have_http_status(:ok)
-      end
+    before do
+      product.images.attach(create_multiple_test_images(2))
+    end
+
+    it 'returns product details with image URLs' do
+      get product_path(product.id)
+      response_data = JSON.parse(response.body)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data['id']).to eq(product.id)
+      expect(response_data['name']).to eq('Show Test Product')
+      expect(response_data['images']).to be_an(Array)
+      expect(response_data['images'].count).to eq(2)
+    end
+
+    it 'returns is_owner true when current user is seller' do
+      allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+
+      get product_path(product.id)
+      response_data = JSON.parse(response.body)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data['is_owner']).to eq(true)
+    end
+
+    it 'returns is_liked true when current user has liked the product' do
+      create(:interest, interested_id: buyer.id, item_id: product.id)
+      allow_any_instance_of(ProductsController).to receive(:current_user).and_return(buyer)
+
+      get product_path(product.id)
+      response_data = JSON.parse(response.body)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data['is_liked']).to eq(true)
+    end
+
+    it 'returns community promotion fields when product is promoted' do
+      create(:community_item, product: product, user: seller, description: 'Featured in community', college: seller.college)
+
+      get product_path(product.id)
+      response_data = JSON.parse(response.body)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data['promote_to_community']).to eq(true)
+      expect(response_data['community_description']).to eq('Featured in community')
+    end
+
+    it 'returns not found for unknown product' do
+      get product_path(-1)
+
+      expect(response).to have_http_status(:not_found)
+      response_data = JSON.parse(response.body)
+      expect(response_data['error']).to eq('Product not found')
     end
   end
 

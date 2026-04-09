@@ -14,6 +14,9 @@
   - creates product without images
   - returns empty images array
   - creates price history record even without images
+- with community promotion
+  - creates community item when promote_to_community is true
+  - does not create community item when promote_to_community is false
 - with invalid parameters
   - fails with missing required fields
   - ignores non-UploadedFile objects in images
@@ -32,6 +35,9 @@
 - with other attribute updates and images
   - updates both attributes and images
   - creates price history record when price is updated
+- with community promotion updates
+  - creates community item when update enables promotion
+  - removes existing community item when promotion is disabled
 
 ## Price History Tracking
 - Product creation
@@ -63,10 +69,23 @@
   - applies pagination to search results
   - returns correct total count for filtered results
   - returns empty results when no matches found
+- type and seller filters
+  - filters products by category type
+  - filters products by seller college
+  - filters products by hall parameter mapped to seller hostel
+  - returns all products when fetch_all is true
 
 ## GET /products/:id (show)
 - with product containing images
   - returns product details
+  - returns image URL list in response
+- ownership and interest state
+  - returns `is_owner` true for product seller
+  - returns `is_liked` true for users who liked the product
+- community promotion state
+  - returns `promote_to_community` and `community_description` when promoted
+- error handling
+  - returns not found for unknown product ID
 
 ## GET /products/price_history
 - successful requests
@@ -76,6 +95,7 @@
   - allows unauthenticated access
   - allows authenticated access
   - returns numeric `prices` values from `PriceHistory`
+  - returns category average history when product category has historical prices
 - points parameter validation
   - limits points to maximum 20
   - handles zero and negative points gracefully
@@ -98,6 +118,8 @@
 - updates product status to `reserved` and sets `buyer_id`
 - creates chat and initial system message for first purchase request
 - reuses existing chat when buyer already has chat for the product
+- blocks seller from buying their own product (`cannot_buy_own_product`)
+- blocks buying unavailable products in `reserved`/`sold` state (`product_unavailable`)
 
 ## DELETE /products/:id
 - deletes product and its images

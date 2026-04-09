@@ -275,6 +275,20 @@ RSpec.describe 'Products API', type: :request do
         # product_id parameter should take precedence
         expect(response_data['product_id']).to eq(product.id)
       end
+
+      it 'returns category average history when product has category data' do
+        category = create(:category, category_name: 'Electronics')
+        category_product = create(:product, seller_id: seller.id, buyer_id: buyer.id, category_id: category.id, price: 100.0)
+        create(:product, seller_id: seller.id, buyer_id: buyer.id, category_id: category.id, price: 300.0)
+
+        get price_history_products_path, params: { product_id: category_product.id, points: 1 }
+        response_data = JSON.parse(response.body)
+
+        expect(response).to have_http_status(:ok)
+        expect(response_data['type']).to eq('category')
+        expect(response_data['category_name']).to eq('Electronics')
+        expect(response_data['prices']).to eq([200.0])
+      end
     end
 
     context 'POST /products/:id/interest' do
@@ -352,6 +366,35 @@ RSpec.describe 'Products API', type: :request do
         response_data = JSON.parse(response.body)
         expect(response).to have_http_status(:ok)
         expect(response_data['chat_id']).to eq(existing_chat.id)
+      end
+
+      it 'rejects seller attempting to buy their own product' do
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(seller)
+        end
+
+        expect {
+          post buy_product_path(product.id), headers: json_headers
+        }.to change(Chat, :count).by(0).and change(Message, :count).by(0)
+
+        response_data = JSON.parse(response.body)
+        expect(response).to have_http_status(:forbidden)
+        expect(response_data['error']).to eq('cannot_buy_own_product')
+      end
+
+      it 'rejects buying a reserved product' do
+        reserved_product = create(:product, seller_id: seller.id, buyer_id: buyer.id, status: 'reserved')
+        allow_any_instance_of(ProductsController).to receive(:authenticate_user!) do
+          allow_any_instance_of(ProductsController).to receive(:current_user).and_return(other_seller)
+        end
+
+        expect {
+          post buy_product_path(reserved_product.id), headers: json_headers
+        }.to change(Chat, :count).by(0).and change(Message, :count).by(0)
+
+        response_data = JSON.parse(response.body)
+        expect(response).to have_http_status(422)
+        expect(response_data['error']).to eq('product_unavailable')
       end
     end
   end

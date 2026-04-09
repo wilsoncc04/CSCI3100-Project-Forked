@@ -16,7 +16,7 @@ class ProductsController < ApplicationController
     if params[:college].present? || params[:hall].present?
       products = products.joins(:seller)
       products = products.where(users: { college: params[:college] }) if params[:college].present?
-      products = products.where(users: { hall: params[:hall] }) if params[:hall].present?
+      products = products.where(users: { hostel: params[:hall] }) if params[:hall].present?
     end
     
     total_count = products.count
@@ -73,7 +73,7 @@ class ProductsController < ApplicationController
     attach_images(product, params[:images]) if params[:images].present?
 
     if product.save
-      promote_to_community(product) if params[:promote_to_community] == 'true'
+      handle_community_promotion(product)
       render json: format_product(product.reload), status: :created
     else
       render_error(product.errors, status: :unprocessable_content)
@@ -93,7 +93,7 @@ class ProductsController < ApplicationController
       end
     end
 
-    if @product.images.attached?
+    if @product.images.attached? && (params.key?(:keep_images) || params[:images].present?)
       keep_urls = params[:keep_images] || []
       @product.images.each do |img|
         img_path = rails_blob_path(img, only_path: true)
@@ -144,8 +144,9 @@ class ProductsController < ApplicationController
       return
     end
 
-    points = (params[:points] || 10).to_i
-    points = [[points, 1].max, 20].min
+    points = params[:points].to_i
+    points = 10 if points <= 0
+    points = [ points, 20 ].min
     if product.category_id.present?
       category_histories = PriceHistory.joins(:product)
                                        .where(products: { category_id: product.category_id })
@@ -158,18 +159,22 @@ class ProductsController < ApplicationController
 
         render json: {
           type: 'category',
+          product_id: product.id,
           category_name: product.category&.category_name || "Category",
-          history: daily_averages
+          history: daily_averages,
+          prices: daily_averages.map { |entry| entry[:price] }
         }, status: :ok
         return
       end
     end
 
     price_histories = product.price_histories.order(date: :desc).limit(points)
+    history = price_histories.map { |entry| { date: entry.date, price: entry.price.to_f } }
     render json: {
       type: 'product',
       product_id: product.id,
-      history: price_histories.map { |entry| { date: entry.date, price: entry.price.to_f } }
+      history: history,
+      prices: history.map { |entry| entry[:price] }
     }, status: :ok
   end
 
