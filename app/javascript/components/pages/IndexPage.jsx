@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ProductCard from "../common/ProductCard";
 import FiltersAndSearch from "../common/FiltersAndSearch";
-import MarketTrendsChart from "../common/MarketTrendsChart";
+import MarketStatChart from "../common/MarketStatChart";
 
 export default function IndexPage() {
   const [products, setProducts] = useState([]);
@@ -64,8 +64,8 @@ export default function IndexPage() {
           boxShadow: "0 2px 10px rgba(0, 0, 0, 0.02)"
         }}
       >
-        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.2rem" }}>Market Trends</h3>
-        <MarketTrendsChart products={chartProducts} />
+        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.2rem" }}>Market Statistics</h3>
+        <MarketStatChart products={chartProducts} />
       </div>
       <FiltersAndSearch />
       <br />
