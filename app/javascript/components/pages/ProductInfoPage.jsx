@@ -66,6 +66,7 @@ const StatusBadge = styled.span`
   font-weight: bold;
   background-color: ${(props) => (props.$isBrandNew ? "#e6f2ff" : "#f0f0f0")};
   color: ${(props) => (props.$isBrandNew ? "#0066cc" : "#666")};
+  text-transform: capitalize;
 `;
 
 const SingleImageWrapper = styled.div`

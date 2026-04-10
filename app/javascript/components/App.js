@@ -18,7 +18,7 @@ import {
 import IndexPage from "./pages/IndexPage";
 import AccountPage from "./pages/AccountPage";
 import ProductInfoPage from "./pages/ProductInfoPage";
-import SellPage from "./common/SellPage";
+import SellPage from "./pages/SellPage";
 import NotificationPage from "./pages/NotificationPage";
 import ChatPage from "./pages/ChatPage";
 import LoginPage from "./pages/LoginPage";

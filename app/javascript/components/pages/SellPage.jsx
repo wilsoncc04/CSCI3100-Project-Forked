@@ -41,7 +41,11 @@ const UploadText = styled.span`
   color: ${(props) => (props.$isDragging ? "#0066cc" : "#444")};
   font-weight: ${(props) => (props.$isDragging ? "bold" : "normal")};
   width: 100%;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
 `;
 
 const HiddenInput = styled.input`
@@ -302,7 +306,7 @@ export default function SellPage() {
     location: "",
     category_id: "",
     condition: "Brand New",
-    status: "Available",
+    status: "available",
     promote_to_community: false,
     community_description: "",
   });
@@ -376,6 +380,10 @@ export default function SellPage() {
     payload.append("product[contact]", formData.contact);
     payload.append("product[location]", formData.location || "CUHK");
 
+    if (isEditMode && existingImages.length === 0) {
+      payload.append("keep_images[]", ""); 
+    }
+
     existingImages.forEach((imgUrl) => {
       payload.append("keep_images[]", imgUrl);
     });
@@ -415,20 +423,10 @@ export default function SellPage() {
 
         if (response.ok) {
           alert(isEditMode ? "Product updated successfully!" : "Product listed successfully!");
-          if (isEditMode) {
-          navigate(`/product/${id}`);
-          } else 
-          {setFormData({
-            name: "",
-            description: "",
-            price: "",
-            contact: "",
-            location: "",
-            category_id: "",
-            condition: "Brand New",
-            status: "Available",
-          });
-          setImages([]);}
+          const productId = data.id || id;
+          if (productId) {
+            navigate(`/product/${productId}`);
+          }
         } else if (response.status === 422) {
           const validationMessages = Array.isArray(data.errors) && data.errors.length > 0
             ? data.errors
@@ -636,7 +634,7 @@ export default function SellPage() {
         </PromoSection>
 
         <ActionGroup>
-          <CancelButton type="button" onClick={() => navigate("/")}>
+          <CancelButton type="button" onClick={() => {isEditMode ? navigate(`/product/${id}`) : navigate("/")}}>
             Cancel
           </CancelButton>
           <ConfirmButton type="submit">
