@@ -393,7 +393,7 @@ RSpec.describe 'Products API', type: :request do
         }.to change(Chat, :count).by(0).and change(Message, :count).by(0)
 
         response_data = JSON.parse(response.body)
-        expect(response).to have_http_status(422)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response_data['error']).to eq('product_unavailable')
       end
     end

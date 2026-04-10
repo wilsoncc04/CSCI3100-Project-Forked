@@ -25,7 +25,7 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     def array_error_response
-      render_error([ 'first_error', 'second_error' ], status: :unprocessable_entity)
+      render_error([ 'first_error', 'second_error' ], status: :unprocessable_content)
     end
   end
 
@@ -98,7 +98,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'renders provided status and messages for array errors' do
       get :array_error_response, format: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       body = JSON.parse(response.body)
       expect(body['error']).to eq('first_error')
       expect(body['errors']).to eq([ 'first_error', 'second_error' ])

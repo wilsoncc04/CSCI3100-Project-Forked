@@ -101,26 +101,25 @@ class ProductsController < ApplicationController
 
   # PATCH/PUT /products/:id
   def update
-    # --- 邏輯 A: 處理取消聊天 (買家或賣家皆可操作) ---
+    # Handle chat cancellation from either participant.
     if params[:action_type] == 'cancel_chat'
       chat = Chat.find_by(id: params[:chat_id])
-      
+
       if chat && (chat.seller_id == current_user.id || chat.interested_id == current_user.id)
         product_id = chat.item_id
         chat.destroy
-        
-        # 如果沒人排隊了，變回 available
+
+        # If no one is queued, return product to available state.
         unless Chat.exists?(item_id: product_id)
           Product.find(product_id).update(status: 'available', buyer_id: nil)
         end
-        
+
         render json: { message: 'Chat closed successfully' }, status: :ok and return
       else
         render json: { error: 'Unauthorized or Chat not found' }, status: :unauthorized and return
       end
     end
 
-    # --- 邏輯 B: 正常的產品更新 (嚴格限制只有賣家可以操作) ---
     unless @product.seller_id == current_user.id
       render_unauthorized and return
     end
@@ -136,10 +135,9 @@ class ProductsController < ApplicationController
         render json: format_product(@product), status: :ok and return
       end
 
-      # 處理圖片與其他參數更新
-      if @product.update(product_params)
+      if @product.update(update_product_params)
         if params[:images].present? || params.key?(:keep_images)
-          keep_urls = params[:keep_images] || []
+          keep_urls = Array(params[:keep_images])
           @product.images.each do |img|
             img_path = rails_blob_path(img, only_path: true)
             img.purge unless keep_urls.include?(img_path)
@@ -151,11 +149,11 @@ class ProductsController < ApplicationController
         handle_community_promotion(@product)
         render json: format_product(@product), status: :ok
       else
-        render json: { error: @product.errors.full_messages }, status: :unprocessable_entity
+        render json: { error: @product.errors.full_messages }, status: :unprocessable_content
       end
     end
-  rescue => e
-    render json: { error: e.message }, status: :unprocessable_entity
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_content
   end
 
   # DELETE /products/:id
@@ -179,8 +177,7 @@ class ProductsController < ApplicationController
       return
     end
 
-    # 只有狀態是 sold 時才真正擋下
-    if @product.status.to_s.downcase == 'sold'
+    if %w[sold reserved].include?(@product.status.to_s.downcase)
       render_error("product_unavailable", status: :unprocessable_entity)
       return
     end
@@ -235,10 +232,14 @@ class ProductsController < ApplicationController
   # GET /products/:id/price_history
   def price_history
     product_id = params[:product_id].presence || params[:id].presence
+    return render_error("product_id is required", status: :bad_request) if product_id.blank?
+
     product = Product.find_by(id: product_id)
     return render_error("Product not found", status: :not_found) unless product
 
-    points = [ (params[:points] || 10).to_i, 20 ].min
+    points = (params[:points] || 10).to_i
+    points = 10 if points <= 0
+    points = [ points, 20 ].min
     
     if product.category_id.present?
       category_histories = PriceHistory.joins(:product)
@@ -272,15 +273,14 @@ class ProductsController < ApplicationController
   end
 
   def authorize_product_seller!
-  # 如果是取消聊天動作，只要是聊天室的參與者（買家或賣家）都放行
-  if params[:action_type] == 'cancel_chat'
-    chat = Chat.find_by(id: params[:chat_id])
-    return if chat && (chat.seller_id == current_user.id || chat.interested_id == current_user.id)
-  end
+    # For chat cancellation, allow either chat participant.
+    if params[:action_type] == 'cancel_chat'
+      chat = Chat.find_by(id: params[:chat_id])
+      return if chat && (chat.seller_id == current_user.id || chat.interested_id == current_user.id)
+    end
 
-  # 否則，嚴格檢查是否為產品賣家
-  render_unauthorized unless @product.seller_id == current_user.id
-end
+    render_unauthorized unless @product.seller_id == current_user.id
+  end
 
   def authorize_product_destroy!
     return if @product.seller_id == current_user.id || current_user_admin?
@@ -289,6 +289,12 @@ end
 
   def product_params
     params.require(:product).permit(%i[name description price seller_id category_id location contact status condition buyer_id])
+  end
+
+  def update_product_params
+    return {} unless params[:product].present?
+
+    product_params
   end
 
   def format_product(product)
@@ -304,9 +310,13 @@ end
   end
 
   def handle_community_promotion(product)
-    if params[:promote_to_community] == "true" && params[:community_description].present?
+    promote_to_community = params[:promote_to_community]
+    description = params[:community_description]
+    return if promote_to_community.nil? && description.nil?
+
+    if ActiveModel::Type::Boolean.new.cast(promote_to_community) && description.present?
       item = CommunityItem.find_or_initialize_by(product: product)
-      item.assign_attributes(user: current_user, description: params[:community_description], college: current_user.college || "Unknown")
+      item.assign_attributes(user: current_user, description: description, college: current_user.college || "Unknown")
       item.save!
     else
       CommunityItem.find_by(product: product)&.destroy
