@@ -1,11 +1,11 @@
 class CommunityItemsController < ApplicationController
-  before_action :authenticate_user!, except: [:index]
-  before_action :set_community_item, only: [:update, :destroy]
-  before_action :authorize_owner!, only: [:update, :destroy]
+  before_action :authenticate_user!, except: [ :index ]
+  before_action :set_community_item, only: [ :update, :destroy ]
+  before_action :authorize_owner!, only: [ :update, :destroy ]
 
   def index
     @community_items = CommunityItem.all.includes(:user, :product)
-    
+
     if params[:college].present?
       @community_items = @community_items.where(college: params[:college])
     end
@@ -19,7 +19,7 @@ class CommunityItemsController < ApplicationController
 
   def create
     @community_item = current_user.community_items.build(community_item_params)
-    
+
     # Auto-fill college from user if not provided
     @community_item.college ||= current_user.college
 
@@ -27,7 +27,7 @@ class CommunityItemsController < ApplicationController
       if is_json_request?
         render json: format_community_item(@community_item), status: :created
       else
-        redirect_to community_items_path, notice: 'Community item was successfully created.'
+        redirect_to community_items_path, notice: "Community item was successfully created."
       end
     else
       if is_json_request?
@@ -43,7 +43,7 @@ class CommunityItemsController < ApplicationController
       if is_json_request?
         render json: format_community_item(@community_item)
       else
-        redirect_to community_items_path, notice: 'Community item was successfully updated.'
+        redirect_to community_items_path, notice: "Community item was successfully updated."
       end
     else
       if is_json_request?
@@ -59,7 +59,7 @@ class CommunityItemsController < ApplicationController
     if is_json_request?
       head :no_content
     else
-      redirect_to community_items_path, notice: 'Community item was successfully deleted.'
+      redirect_to community_items_path, notice: "Community item was successfully deleted."
     end
   end
 
@@ -95,7 +95,7 @@ class CommunityItemsController < ApplicationController
         name: item.product.name,
         price: item.product.price,
         status: item.product.status,
-        condition: item.product.condition, 
+        condition: item.product.condition,
         image_url: item.product.images.attached? ? url_for(item.product.images.first) : nil
       }
     }

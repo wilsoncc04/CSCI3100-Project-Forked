@@ -17,10 +17,10 @@ categories = [
   "Others"
 ]
 
-#create all categories
+# create all categories
 categories.each { |name| Category.find_or_create_by!(category_name: name) }
 
-#create an admin user
+# create an admin user
 User.find_or_create_by!(email: '1155000000@link.cuhk.edu.hk') do |user|
   user.id = 100
   user.cuhk_id = '1155000000'
@@ -31,7 +31,7 @@ User.find_or_create_by!(email: '1155000000@link.cuhk.edu.hk') do |user|
 end
 
 5.times do |i|
-  student_id = "115500000#{i+1}" 
+  student_id = "115500000#{i+1}"
   User.find_or_create_by!(cuhk_id: student_id) do |user|
     user.name = "Student #{i}"
     user.email = "#{student_id}@link.cuhk.edu.hk"
@@ -56,14 +56,14 @@ puts "--- Step 3: Seeding Products ---"
       price: base_price,
       seller_id: seller.id,
       category_id: Category.find_by(category_name: category).id,
-      condition: ["Brand New", "Like New", "Used - Good", "Heavily Used"].sample,
-      status: ["available", "reserved", "available"].sample,
+      condition: [ "Brand New", "Like New", "Used - Good", "Heavily Used" ].sample,
+      status: [ "available", "reserved", "available" ].sample,
       contact: "WhatsApp: 6#{rand(1000000..9999999)}",
       location: "CUHK Campus"
     )
 
     # 動機：建立歷史價格點
-    [1, 3, 5].sample(rand(2..3)).each do |days_ago|
+    [ 1, 3, 5 ].sample(rand(2..3)).each do |days_ago|
       product.price_histories.create!(
         price: base_price + rand(-50..50),
         date: Time.current - days_ago.days

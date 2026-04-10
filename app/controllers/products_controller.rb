@@ -1,6 +1,6 @@
 class ProductsController < ApplicationController
   skip_before_action :verify_authenticity_token
-  
+
   PRODUCT_JSON_ONLY = %i[id name description price seller_id buyer_id status category_id location contact condition created_at updated_at].freeze
 
   before_action :set_product, only: %i[show update destroy toggle_interest buy]
@@ -21,33 +21,33 @@ class ProductsController < ApplicationController
     end
 
     case params[:sort_by]
-    when 'price_asc'
+    when "price_asc"
       products = products.reorder(price: :asc)
-    when 'price_desc'
+    when "price_desc"
       products = products.reorder(price: :desc)
-    when 'date_asc'
+    when "date_asc"
       products = products.reorder(created_at: :asc)
-    when 'date_desc'
+    when "date_desc"
       products = products.reorder(created_at: :desc)
     end
-    
+
     total_count = products.count
-    
-    if params[:fetch_all] == 'true'
+
+    if params[:fetch_all] == "true"
       paginated_products = products
       page = 1
       limit = total_count
     else
       limit = (params[:limit] || 15).to_i
       limit = 15 if limit <= 0
-      
+
       page = (params[:page] || 1).to_i
       page = 1 if page <= 0
       offset = (page - 1) * limit
 
       paginated_products = products.limit(limit).offset(offset)
     end
-    
+
     render json: {
       data: paginated_products.map { |p| format_product(p) },
       pagination: {
@@ -73,7 +73,7 @@ class ProductsController < ApplicationController
     end
     community_info = CommunityItem.find_by(product_id: @product.id)
     render json: format_product(@product).merge(
-      is_liked: is_liked, 
+      is_liked: is_liked,
       is_owner: is_owner,
       can_delete: can_delete,
       promote_to_community: community_info.present?,
@@ -112,7 +112,7 @@ class ProductsController < ApplicationController
       keep_urls = params[:keep_images] || []
       @product.images.each do |img|
         img_path = rails_blob_path(img, only_path: true)
-        
+
         unless keep_urls.include?(img_path)
           img.purge
         end
@@ -122,7 +122,7 @@ class ProductsController < ApplicationController
     if params[:images].present?
       attach_images(@product, params[:images])
     end
-    
+
     @product.reload
     handle_community_promotion(@product)
 
@@ -149,13 +149,13 @@ class ProductsController < ApplicationController
   def price_history
     product_id = params[:product_id].presence || params[:id].presence
     unless product_id
-      render_error('product_id is required', status: :bad_request)
+      render_error("product_id is required", status: :bad_request)
       return
     end
 
     product = Product.with_attached_images.find_by(id: product_id)
     unless product
-      render_error('Product not found', status: :not_found)
+      render_error("Product not found", status: :not_found)
       return
     end
 
@@ -173,7 +173,7 @@ class ProductsController < ApplicationController
         end.take(points)
 
         render json: {
-          type: 'category',
+          type: "category",
           product_id: product.id,
           category_name: product.category&.category_name || "Category",
           history: daily_averages,
@@ -186,7 +186,7 @@ class ProductsController < ApplicationController
     price_histories = product.price_histories.order(date: :desc).limit(points)
     history = price_histories.map { |entry| { date: entry.date, price: entry.price.to_f } }
     render json: {
-      type: 'product',
+      type: "product",
       product_id: product.id,
       history: history,
       prices: history.map { |entry| entry[:price] }
@@ -198,28 +198,28 @@ class ProductsController < ApplicationController
     interest = Interest.find_by(interested_id: current_user.id, item_id: @product.id)
     if interest
       interest.destroy
-      render json: { status: 'unliked', message: 'Removed from interests' }, status: :ok
+      render json: { status: "unliked", message: "Removed from interests" }, status: :ok
     else
       Interest.create!(interested_id: current_user.id, item_id: @product.id)
-      render json: { status: 'liked', message: 'Added to interests' }, status: :ok
+      render json: { status: "liked", message: "Added to interests" }, status: :ok
     end
   end
 
   # POST /products/:id/buy
   def buy
     if @product.seller_id == current_user.id
-      render_error('cannot_buy_own_product', status: :forbidden)
+      render_error("cannot_buy_own_product", status: :forbidden)
       return
     end
 
     if %w[reserved sold].include?(@product.status.to_s.downcase)
-      render_error('product_unavailable', status: :unprocessable_entity)
+      render_error("product_unavailable", status: :unprocessable_entity)
       return
     end
 
     ActiveRecord::Base.transaction do
       # 1. 更新產品狀態
-      @product.update!(status: 'reserved', buyer_id: current_user.id)
+      @product.update!(status: "reserved", buyer_id: current_user.id)
 
       # 2. 建立或尋找聊天室
       chat = Chat.find_by(item_id: @product.id, interested_id: current_user.id)
@@ -243,7 +243,7 @@ class ProductsController < ApplicationController
       render json: {
         chat_id: chat.id,
         product_name: @product.name,
-        message: 'Purchase request sent via chat'
+        message: "Purchase request sent via chat"
       }, status: :ok
     end
   rescue ActiveRecord::RecordInvalid => e
@@ -260,7 +260,7 @@ class ProductsController < ApplicationController
   def set_product
     @product = Product.with_attached_images.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render_error('Product not found', status: :not_found)
+    render_error("Product not found", status: :not_found)
   end
 
   def authorize_product_seller!
@@ -275,7 +275,7 @@ class ProductsController < ApplicationController
 
   def product_params
     params.require(:product).permit(
-      %i[name description price seller_id category_id location 
+      %i[name description price seller_id category_id location
       contact status condition buyer_id])
   end
 
@@ -292,7 +292,7 @@ class ProductsController < ApplicationController
   end
 
   def handle_community_promotion(product)
-    if params[:promote_to_community] == 'true' && params[:community_description].present?
+    if params[:promote_to_community] == "true" && params[:community_description].present?
       item = CommunityItem.find_or_initialize_by(product: product)
       item.assign_attributes(
         user: current_user,

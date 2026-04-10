@@ -23,7 +23,7 @@ RSpec.describe 'Chats API', type: :request do
       chat_data = JSON.parse(response.body)
       seller_data = chat_data['seller']
       buyer_data = chat_data['buyer']
-      
+
       expect(seller_data).not_to include('password_digest', 'verification_otp')
       expect(buyer_data).not_to include('password_digest', 'verification_otp')
     end
@@ -32,7 +32,7 @@ RSpec.describe 'Chats API', type: :request do
       get chat_path(chat.id), headers: json_headers
       chat_data = JSON.parse(response.body)
       seller_data = chat_data['seller']
-      
+
       expect(seller_data).to include('email', 'name', 'profile_picture_url')
     end
 

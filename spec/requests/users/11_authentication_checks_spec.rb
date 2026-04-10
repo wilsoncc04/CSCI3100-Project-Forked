@@ -73,5 +73,4 @@ RSpec.describe 'Users API', type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
   end
-
 end

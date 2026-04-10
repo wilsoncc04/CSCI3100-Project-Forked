@@ -31,7 +31,7 @@ RSpec.describe 'Sessions API', type: :request do
       it 'returns success with user data' do
         post sessions_path, params: { email: user.email, password: 'password123' }
         expect(response).to have_http_status(:created)
-        
+
         response_data = JSON.parse(response.body)
         expect(response_data['message']).to eq('logged_in')
         expect(response_data).to have_key('user')
@@ -41,14 +41,14 @@ RSpec.describe 'Sessions API', type: :request do
       it 'returns user with correct attributes' do
         post sessions_path, params: { email: user.email, password: 'password123' }
         user_data = JSON.parse(response.body)['user']
-        
+
         expect(user_data).to include('id', 'email', 'name', 'cuhk_id', 'hostel', 'is_admin')
       end
 
       it 'does not expose sensitive information' do
         post sessions_path, params: { email: user.email, password: 'password123' }
         user_data = JSON.parse(response.body)['user']
-        
+
         expect(user_data).not_to include('password_digest', 'verification_otp', 'verification_sent_at')
       end
     end
@@ -57,7 +57,7 @@ RSpec.describe 'Sessions API', type: :request do
       it 'returns forbidden error' do
         post sessions_path, params: { email: unverified_user.email, password: 'password123' }
         expect(response).to have_http_status(:forbidden)
-        
+
         response_data = JSON.parse(response.body)
         expect(response_data['error']).to eq('email_not_verified')
       end
@@ -67,7 +67,7 @@ RSpec.describe 'Sessions API', type: :request do
       it 'returns unauthorized error' do
         post sessions_path, params: { email: user.email, password: 'wrongpassword' }
         expect(response).to have_http_status(:unauthorized)
-        
+
         response_data = JSON.parse(response.body)
         expect(response_data['error']).to eq('invalid_credentials')
       end
@@ -77,7 +77,7 @@ RSpec.describe 'Sessions API', type: :request do
       it 'returns unauthorized error' do
         post sessions_path, params: { email: 'nonexistent@link.cuhk.edu.hk', password: 'password123' }
         expect(response).to have_http_status(:unauthorized)
-        
+
         response_data = JSON.parse(response.body)
         expect(response_data['error']).to eq('invalid_credentials')
       end
@@ -136,7 +136,7 @@ RSpec.describe 'Sessions API', type: :request do
         # First login
         post sessions_path, params: { email: user.email, password: 'password123' }
         expect(response).to have_http_status(:created)
-        
+
         # Then logout
         delete sessions_path
         expect(response).to have_http_status(:ok)

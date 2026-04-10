@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
-  root 'pages#index'
+  root "pages#index"
   # ===== API ROUTES =====
-  resources :users, only: [:index, :show, :create, :update, :destroy] do
+  resources :users, only: [ :index, :show, :create, :update, :destroy ] do
     collection do
       get :admins                   # GET /users/admins - list all admins
       post :register                # POST /users/register - alias for create (user registration)
@@ -18,27 +18,27 @@ Rails.application.routes.draw do
       get :selling                 # GET /products/selling - list current user's selling products
     end
     member do
-    post :interest, to: 'products#toggle_interest'
+    post :interest, to: "products#toggle_interest"
     post :buy
   end
   end
 
-  resources :community_items, only: [:index, :create, :update, :destroy]
+  resources :community_items, only: [ :index, :create, :update, :destroy ]
 
-  resources :chats, only: [:index, :show, :create] do
-    resources :messages, only: [:index, :create, :show, :destroy]
+  resources :chats, only: [ :index, :show, :create ] do
+    resources :messages, only: [ :index, :create, :show, :destroy ]
   end
 
   # Login session
-  get '/sessions', to: 'sessions#show'
-  resources :sessions, only: [:create] do
+  get "/sessions", to: "sessions#show"
+  resources :sessions, only: [ :create ] do
     collection do
       delete :destroy # DELETE /sessions/destroy - logout
     end
   end
 
   # handle all other routes with React Router (for client-side routing)
-  post '/users/register', to: 'users#register'
-  post '/users/verify', to: 'users#verify'
-  get '*path', to: 'pages#index', constraints: ->(req) { !req.xhr? && req.format.html? }
+  post "/users/register", to: "users#register"
+  post "/users/verify", to: "users#verify"
+  get "*path", to: "pages#index", constraints: ->(req) { !req.xhr? && req.format.html? }
 end

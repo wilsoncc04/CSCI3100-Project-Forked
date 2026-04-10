@@ -6,10 +6,10 @@ gem "rails", "~> 8.1.2"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 
-# Use postgresql as the database for Active Record 
+# Use postgresql as the database for Active Record
 # ** remove comment if using postgresql **
 gem "pg", "~> 1.1"
-gem 'pg_search'
+gem "pg_search"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
@@ -40,7 +40,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 # cloudinary for image upload
-gem 'cloudinary'
+gem "cloudinary"
 
 # figaro for easy yml editing
 gem "figaro"
@@ -59,14 +59,13 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 
   # RSpec (https://github.com/rspec/rspec-rails)
-  gem 'rspec-rails', '~> 8.0.0'
+  gem "rspec-rails", "~> 8.0.0"
   # FactoryBot for fixtures
-  gem 'factory_bot_rails'
+  gem "factory_bot_rails"
   # shoulda-matchers for concise model specs
-  gem 'shoulda-matchers'
+  gem "shoulda-matchers"
   # SimpleCov for coverage metrics
-  gem 'simplecov', require: false
-
+  gem "simplecov", require: false
 end
 
 group :development do
@@ -82,11 +81,9 @@ group :test do
   gem "selenium-webdriver", "~> 4.11"
 
   # cucumber (https://cucumber.io/docs/installation/ruby)
-  gem 'cucumber-rails', require: false
+  gem "cucumber-rails", require: false
   # Use the ActiveRecord-specific DatabaseCleaner adapter
-  gem 'database_cleaner-active_record'
+  gem "database_cleaner-active_record"
 end
 
 gem "jsbundling-rails", "~> 1.3"
-
-

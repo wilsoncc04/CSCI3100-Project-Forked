@@ -50,12 +50,12 @@ RSpec.describe 'Messages API', type: :request do
         it 'returns messages in chronological order' do
           # Delete pre-existing messages from this chat to ensure consistent test
           chat.messages.destroy_all
-          
-          msg1 = create(:message, chat_id: chat.id, sender: buyer, 
+
+          msg1 = create(:message, chat_id: chat.id, sender: buyer,
                                  created_at: 2.hours.ago, message: 'First message')
-          msg2 = create(:message, chat_id: chat.id, sender: seller, 
+          msg2 = create(:message, chat_id: chat.id, sender: seller,
                                  created_at: 1.hour.ago, message: 'Second message')
-          msg3 = create(:message, chat_id: chat.id, sender: buyer, 
+          msg3 = create(:message, chat_id: chat.id, sender: buyer,
                                  created_at: Time.current, message: 'Third message')
 
           get chat_messages_path(chat.id), headers: json_headers
@@ -169,8 +169,8 @@ RSpec.describe 'Messages API', type: :request do
       end
 
       it 'returns unprocessable entity error' do
-        post chat_messages_path(chat.id), 
-             params: { message: { message: '' } }, 
+        post chat_messages_path(chat.id),
+             params: { message: { message: '' } },
              headers: json_headers
         expect(response).to have_http_status(:unprocessable_content)
       end
@@ -226,8 +226,8 @@ RSpec.describe 'Messages API', type: :request do
 
       it 'accepts special characters' do
         special_message = 'Price: $50! Really?! #trending'
-        post chat_messages_path(chat.id), 
-             params: { message: { message: special_message } }, 
+        post chat_messages_path(chat.id),
+             params: { message: { message: special_message } },
              headers: json_headers
         message_data = JSON.parse(response.body)
         expect(message_data['message']).to eq(special_message)
@@ -235,8 +235,8 @@ RSpec.describe 'Messages API', type: :request do
 
       it 'accepts unicode characters' do
         unicode_message = 'Hello 世界! Привет 🌍'
-        post chat_messages_path(chat.id), 
-             params: { message: { message: unicode_message } }, 
+        post chat_messages_path(chat.id),
+             params: { message: { message: unicode_message } },
              headers: json_headers
         message_data = JSON.parse(response.body)
         expect(message_data['message']).to eq(unicode_message)
@@ -244,8 +244,8 @@ RSpec.describe 'Messages API', type: :request do
 
       it 'accepts long messages' do
         long_message = 'A' * 500
-        post chat_messages_path(chat.id), 
-             params: { message: { message: long_message } }, 
+        post chat_messages_path(chat.id),
+             params: { message: { message: long_message } },
              headers: json_headers
         expect(response).to have_http_status(:created)
       end
@@ -270,7 +270,7 @@ RSpec.describe 'Messages API', type: :request do
         original_id = message.id
         delete chat_message_path(chat.id, message.id), headers: json_headers
         expect(response).to have_http_status(:no_content)
-        
+
         # Check the message still exists in database
         expect(Message.find_by(id: original_id)).to be_present
       end
@@ -335,7 +335,7 @@ RSpec.describe 'Messages API', type: :request do
       get chat_messages_path(chat.id), headers: json_headers
       messages_data = JSON.parse(response.body)
 
-      expect(messages_data.map { |m| m['message'] }).to eq(['First', 'Second', 'Third'])
+      expect(messages_data.map { |m| m['message'] }).to eq([ 'First', 'Second', 'Third' ])
     end
 
     it 'shows different senders correctly' do

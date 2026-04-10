@@ -7,7 +7,7 @@ class SessionsController < ApplicationController
     if current_user
       render json: format_user(current_user), status: :ok
     else
-      render json: { error: 'not_logged_in' }, status: :unauthorized
+      render json: { error: "not_logged_in" }, status: :unauthorized
     end
   end
 
@@ -16,27 +16,27 @@ class SessionsController < ApplicationController
     login_params = params[:session] || params
     user = User.find_by(email: login_params[:email])
     if user && user.authenticate(login_params[:password])
-      if user.verified_at.present?   #ensure the DB record is correctly updated after email verification
+      if user.verified_at.present?   # ensure the DB record is correctly updated after email verification
         # establish server-side session
         session[:user_id] = user.id
-        render json: { message: 'logged_in', user: format_user(user) }, status: :created
+        render json: { message: "logged_in", user: format_user(user) }, status: :created
       else
-        render_error('email_not_verified', status: :forbidden)
+        render_error("email_not_verified", status: :forbidden)
       end
     else
       # invalid password or email
-      render_error('invalid_credentials', status: :unauthorized)
+      render_error("invalid_credentials", status: :unauthorized)
     end
   end
 
   # DELETE /sessions/:id (logout)
   def destroy
     session[:user_id] = nil
-    render json: { message: 'logged_out' }, status: :ok
+    render json: { message: "logged_out" }, status: :ok
   end
   def format_user(user)
   user.as_json(
-    only: [:id, :name, :email, :cuhk_id, :hostel, :college, :is_admin, :verified_at, :created_at, :bio]
+    only: [ :id, :name, :email, :cuhk_id, :hostel, :college, :is_admin, :verified_at, :created_at, :bio ]
   ).merge(
     profile_picture_url: user.profile_picture.attached? ? url_for(user.profile_picture) : nil
   )

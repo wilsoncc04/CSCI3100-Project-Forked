@@ -12,7 +12,7 @@ RSpec.describe 'Products API', type: :request do
   # Helper method to create test image files in memory
   def create_test_image
     # Create a temporary file that persists for the duration of the test
-    file = Tempfile.new(['test_image', '.jpg'], encoding: 'ASCII-8BIT')
+    file = Tempfile.new([ 'test_image', '.jpg' ], encoding: 'ASCII-8BIT')
     file.write("fake JPEG content for testing")
     file.flush
     file.rewind
@@ -48,14 +48,14 @@ RSpec.describe 'Products API', type: :request do
             location: 'Dorm',
             contact: 'contact@example.com'
           },
-          images: [initial_image]
+          images: [ initial_image ]
         }
         product = Product.last
 
         # Update with new image
         new_image = create_test_image
         patch product_path(product.id), params: {
-          images: [new_image]
+          images: [ new_image ]
         }
 
         product.reload
@@ -76,14 +76,14 @@ RSpec.describe 'Products API', type: :request do
             location: 'Dorm',
             contact: 'contact@example.com'
           },
-          images: [create_test_image]
+          images: [ create_test_image ]
         }
         product = Product.last
 
         # Update
         new_image = create_test_image
         patch product_path(product.id), params: {
-          images: [new_image]
+          images: [ new_image ]
         }
 
         expect(response).to have_http_status(:ok)
@@ -105,14 +105,14 @@ RSpec.describe 'Products API', type: :request do
             location: 'Dorm',
             contact: 'contact@example.com'
           },
-          images: [create_test_image]
+          images: [ create_test_image ]
         }
         product = Product.last
         initial_price_history_count = product.price_histories.count
 
         # Update only images, not price
         patch product_path(product.id), params: {
-          images: [create_test_image]
+          images: [ create_test_image ]
         }
 
         product.reload
@@ -205,7 +205,7 @@ RSpec.describe 'Products API', type: :request do
             location: 'Dorm',
             contact: 'contact@example.com'
           },
-          images: [create_test_image]
+          images: [ create_test_image ]
         }
         product = Product.last
         initial_count = product.images.count
@@ -236,7 +236,7 @@ RSpec.describe 'Products API', type: :request do
             location: 'Dorm',
             contact: 'contact@example.com'
           },
-          images: [create_test_image]
+          images: [ create_test_image ]
         }
         product = Product.last
         initial_price_history_count = product.price_histories.count
@@ -268,7 +268,7 @@ RSpec.describe 'Products API', type: :request do
             location: 'Dorm',
             contact: 'contact@example.com'
           },
-          images: [create_test_image]
+          images: [ create_test_image ]
         }
         product = Product.last
 
@@ -301,7 +301,7 @@ RSpec.describe 'Products API', type: :request do
             location: 'Dorm',
             contact: 'contact@example.com'
           },
-          images: [create_test_image]
+          images: [ create_test_image ]
         }
         product = Product.last
         initial_price_history_count = product.price_histories.count
@@ -382,5 +382,4 @@ RSpec.describe 'Products API', type: :request do
       end
     end
   end
-
 end

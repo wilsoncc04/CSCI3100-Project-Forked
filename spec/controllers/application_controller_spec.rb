@@ -20,12 +20,12 @@ RSpec.describe ApplicationController, type: :controller do
 
     def standard_error_response
       error = StandardError.new('boom')
-      error.set_backtrace(['spec/backtrace_line.rb:1'])
+      error.set_backtrace([ 'spec/backtrace_line.rb:1' ])
       render_error(error)
     end
 
     def array_error_response
-      render_error(['first_error', 'second_error'], status: :unprocessable_entity)
+      render_error([ 'first_error', 'second_error' ], status: :unprocessable_entity)
     end
   end
 
@@ -48,7 +48,7 @@ RSpec.describe ApplicationController, type: :controller do
       expect(response).to have_http_status(:unauthorized)
       body = JSON.parse(response.body)
       expect(body['error']).to eq('unauthenticated')
-      expect(body['errors']).to eq(['unauthenticated'])
+      expect(body['errors']).to eq([ 'unauthenticated' ])
     end
 
     it 'redirects html requests to root when unauthenticated' do
@@ -92,7 +92,7 @@ RSpec.describe ApplicationController, type: :controller do
       expect(response).to have_http_status(:internal_server_error)
       body = JSON.parse(response.body)
       expect(body['error']).to eq('boom')
-      expect(body['errors']).to eq(['boom'])
+      expect(body['errors']).to eq([ 'boom' ])
     end
 
     it 'renders provided status and messages for array errors' do
@@ -101,7 +101,7 @@ RSpec.describe ApplicationController, type: :controller do
       expect(response).to have_http_status(:unprocessable_entity)
       body = JSON.parse(response.body)
       expect(body['error']).to eq('first_error')
-      expect(body['errors']).to eq(['first_error', 'second_error'])
+      expect(body['errors']).to eq([ 'first_error', 'second_error' ])
     end
   end
 end

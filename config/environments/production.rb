@@ -23,7 +23,7 @@ Rails.application.configure do
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :cloudinary
-  #config.active_storage.service = :local
+  # config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   # config.assume_ssl = true
@@ -65,13 +65,13 @@ Rails.application.configure do
   # Example SMTP settings using environment variables / credentials. Configure as appropriate.
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    address:              ENV['MAILGUN_SMTP_SERVER'],
-    port:                 ENV['MAILGUN_SMTP_PORT'].to_i,
-    user_name:            ENV['MAILGUN_SMTP_NAME'],
-    password:             ENV['MAILGUN_SMTP_PASSWORD'],
-    authentication:       'plain',
+    address:              ENV["MAILGUN_SMTP_SERVER"],
+    port:                 ENV["MAILGUN_SMTP_PORT"].to_i,
+    user_name:            ENV["MAILGUN_SMTP_NAME"],
+    password:             ENV["MAILGUN_SMTP_PASSWORD"],
+    authentication:       "plain",
     enable_starttls_auto: true,
-    domain:               'csci3100-project-25spring-d069c5b80a72.herokuapp.com'
+    domain:               "csci3100-project-25spring-d069c5b80a72.herokuapp.com"
   }
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = true

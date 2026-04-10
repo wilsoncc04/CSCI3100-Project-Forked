@@ -2,7 +2,7 @@ require 'uri'
 require 'cgi'
 
 Given(/^(?:|I )am on the profile page$/) do
-  visit '/profile' 
+  visit '/profile'
 end
 
 When(/^(?:|I )click on the "(.*)" sidebar link$/) do |link_text|

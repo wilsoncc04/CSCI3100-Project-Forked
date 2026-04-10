@@ -1,8 +1,8 @@
 class UsersController < ApplicationController
   skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
-  before_action :set_user, only: [:show, :update, :destroy]
-  before_action :authenticate_user!, only: [:update, :destroy, :change_password, :interests]
-  before_action :authorize_user_owner!, only: [:update, :destroy]
+  before_action :set_user, only: [ :show, :update, :destroy ]
+  before_action :authenticate_user!, only: [ :update, :destroy, :change_password, :interests ]
+  before_action :authorize_user_owner!, only: [ :update, :destroy ]
 
   # GET /users
   # should be used for admin dashboard, not public API
@@ -37,7 +37,7 @@ class UsersController < ApplicationController
       begin
         mail = UserMailer.verification_email(user)
         Rails.logger.info "Attempting to deliver email to: #{user.email} | From: #{mail.from} | Delivery method: #{ActionMailer::Base.delivery_method}"
-    
+
         mail.deliver_now!   # note the !  (this forces raise on failure)
 
         Rails.logger.info "Email delivery completed successfully"
@@ -47,8 +47,8 @@ class UsersController < ApplicationController
         # Optionally still return success to user, or return error
       end
       # UserMailer.verification_email(user).deliver_now # app/mailers/user_mailer.rb, async (temporarily changing to deliver_now to test mailing capability)
-      render json: { user: user.as_json(except: [:password_digest, 
-      :verification_otp, :verification_sent_at, :verification_token]), message: 'verification_email_sent' }, status: :created
+      render json: { user: user.as_json(except: [ :password_digest,
+      :verification_otp, :verification_sent_at, :verification_token ]), message: "verification_email_sent" }, status: :created
     else
       render_error(user.errors, status: :unprocessable_content)
     end
@@ -63,37 +63,37 @@ class UsersController < ApplicationController
   # POST /users/verify?otp=...&email=... (or POST with { email, otp })
   def verify
     # Support OTP verification: accept email+otp
-    otp = params[:otp] 
+    otp = params[:otp]
     email = params[:email]
 
     if otp.blank?
-      render_error('otp_missing', status: :bad_request)
+      render_error("otp_missing", status: :bad_request)
       return
     end
 
     user = if email.present?
              User.find_by(email: email)
-           else
+    else
              # fallback: find by otp
              User.find_by(verification_otp: otp)
-           end
+    end
 
     if user.nil?
-      render_error('invalid_otp_or_email', status: :not_found)
+      render_error("invalid_otp_or_email", status: :not_found)
       return
     end
 
     if user.verify_otp!(otp)
     # 關鍵：驗證成功後自動登入，這樣跳轉到 Account 頁面才拿得到資料
-    session[:user_id] = user.id 
-    
-    render json: { 
-      message: 'verified', 
+    session[:user_id] = user.id
+
+    render json: {
+      message: "verified",
       user: format_user(user) # 把 user 資料傳回去，方便前端立刻 setUser
     }, status: :ok
-  else
-    render_error('verification_failed_or_expired', status: :unprocessable_content)
-  end
+    else
+    render_error("verification_failed_or_expired", status: :unprocessable_content)
+    end
 end
 
   # POST /users/resend_verification
@@ -101,7 +101,7 @@ end
     # Accepts { email: "..." }
     email = params[:email].to_s.downcase
     if email.blank?
-      render json: { message: 'verification_email_sent_if_needed' }, status: :ok
+      render json: { message: "verification_email_sent_if_needed" }, status: :ok
       return
     end
 
@@ -114,12 +114,12 @@ end
     end
 
     # Generic response to avoid account enumeration
-    render json: { message: 'verification_email_sent_if_needed' }, status: :ok
+    render json: { message: "verification_email_sent_if_needed" }, status: :ok
   end
 
-  # ====== register section end ======
+ # ====== register section end ======
 
-  # PATCH/PUT /users/:id
+ # PATCH/PUT /users/:id
  def update
   # 1. 處理圖片上傳 (你原本的邏輯)
   if params[:profile_picture].present?
@@ -143,12 +143,12 @@ end
     user = User.find_by(email: params[:email])
     if user && user.authenticate(params[:current_password])
       if user.update(password: params[:new_password])
-        render json: { message: 'password_changed' }, status: :ok
+        render json: { message: "password_changed" }, status: :ok
       else
         render_error(user.errors, status: :unprocessable_content)
       end
     else
-      render_error('invalid_credentials', status: :unauthorized)
+      render_error("invalid_credentials", status: :unauthorized)
     end
   end
 
@@ -171,7 +171,7 @@ end
       name: product.name,
       price: product.price,
       status: product.status,
-      images: product.image_urls 
+      images: product.image_urls
     }
   }.compact, status: :ok
 end
@@ -185,7 +185,7 @@ end
 end
 
   def format_user(user)
-  user.as_json(except: [:password_digest, :verification_otp]).merge(
+  user.as_json(except: [ :password_digest, :verification_otp ]).merge(
     # 增加圖片網址回傳
     profile_picture_url: user.profile_picture.attached? ? url_for(user.profile_picture) : nil
   )
@@ -197,12 +197,12 @@ end
     @user = if id_param.match?(/^\d+$/) && id_param.to_i < 1000000
               # Looks like a database ID
               User.find_by!(id: id_param.to_i)
-            else
+    else
               # Treat as CUHK ID
               User.find_by!(cuhk_id: id_param)
-            end
+    end
   rescue ActiveRecord::RecordNotFound
-    render_error('User not found', status: :not_found)
+    render_error("User not found", status: :not_found)
   end
 
   def authorize_user_owner!
@@ -210,5 +210,4 @@ end
       render_unauthorized
     end
   end
-
 end

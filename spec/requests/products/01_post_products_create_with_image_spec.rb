@@ -12,7 +12,7 @@ RSpec.describe 'Products API', type: :request do
   # Helper method to create test image files in memory
   def create_test_image
     # Create a temporary file that persists for the duration of the test
-    file = Tempfile.new(['test_image', '.jpg'], encoding: 'ASCII-8BIT')
+    file = Tempfile.new([ 'test_image', '.jpg' ], encoding: 'ASCII-8BIT')
     file.write("fake JPEG content for testing")
     file.flush
     file.rewind
@@ -50,21 +50,21 @@ RSpec.describe 'Products API', type: :request do
 
     context 'with single image upload' do
       it 'creates product with image successfully' do
-        params = valid_params.merge(images: [create_test_image])
+        params = valid_params.merge(images: [ create_test_image ])
         expect {
           post products_path, params: params
         }.to change(Product, :count).by(1)
       end
 
       it 'attaches image to product' do
-        params = valid_params.merge(images: [create_test_image])
+        params = valid_params.merge(images: [ create_test_image ])
         post products_path, params: params
         created_product = Product.last
         expect(created_product.images).to be_attached
       end
 
       it 'returns created status with image URL' do
-        params = valid_params.merge(images: [create_test_image])
+        params = valid_params.merge(images: [ create_test_image ])
         post products_path, params: params
         expect(response).to have_http_status(:created)
         response_data = JSON.parse(response.body)
@@ -74,7 +74,7 @@ RSpec.describe 'Products API', type: :request do
       end
 
       it 'creates price history record when product is created' do
-        params = valid_params.merge(images: [create_test_image])
+        params = valid_params.merge(images: [ create_test_image ])
         expect {
           post products_path, params: params
         }.to change(PriceHistory, :count).by(1)
@@ -157,17 +157,16 @@ RSpec.describe 'Products API', type: :request do
         invalid_params = valid_params.deep_dup
         invalid_params[:product].delete(:name)
         post products_path, params: invalid_params
-        expect(response.status).to satisfy { |status| [400, 422].include?(status) }
+        expect(response.status).to satisfy { |status| [ 400, 422 ].include?(status) }
       end
 
       it 'ignores non-UploadedFile objects in images' do
         # Pass string instead of file - should be ignored
-        params = valid_params.merge(images: ['not_a_file'])
+        params = valid_params.merge(images: [ 'not_a_file' ])
         post products_path, params: params
         created_product = Product.last
         expect(created_product.images.count).to eq(0)
       end
     end
   end
-
 end

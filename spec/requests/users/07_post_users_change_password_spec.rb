@@ -19,7 +19,7 @@ RSpec.describe 'Users API', type: :request do
 
   describe 'POST /users/change_password' do
     context 'with authentication' do
-      # Prevent the controller authenticate_user! 
+      # Prevent the controller authenticate_user!
       # before_action from stopping requests in tests.
       # Make current_user return the test user,
       # so requests run as that authenticated user.
@@ -95,5 +95,4 @@ RSpec.describe 'Users API', type: :request do
       end
     end
   end
-
 end

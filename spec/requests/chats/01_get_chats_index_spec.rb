@@ -26,7 +26,7 @@ RSpec.describe 'Chats API', type: :request do
 
       context 'with chats as buyer' do
         before do
-          @chat1 = create(:chat, seller_id: seller.id, interested_id: buyer.id, 
+          @chat1 = create(:chat, seller_id: seller.id, interested_id: buyer.id,
                                   item_id: product.id)
           @chat2 = create(:chat, seller_id: another_user.id, interested_id: buyer.id,
                                   item_id: product.id)
@@ -43,9 +43,9 @@ RSpec.describe 'Chats API', type: :request do
           get chats_path, headers: json_headers
           chats_data = JSON.parse(response.body)
           chat_data = chats_data.first
-          
+
           expect(chat_data).to include(
-            'id', 'product', 'seller', 'buyer', 'last_message', 
+            'id', 'product', 'seller', 'buyer', 'last_message',
             'last_message_at', 'created_at', 'updated_at'
           )
         end
@@ -54,7 +54,7 @@ RSpec.describe 'Chats API', type: :request do
           get chats_path, headers: json_headers
           chats_data = JSON.parse(response.body)
           product_data = chats_data.first['product']
-          
+
           expect(product_data).to include('id', 'name', 'price', 'images')
         end
 
@@ -62,9 +62,9 @@ RSpec.describe 'Chats API', type: :request do
           get chats_path, headers: json_headers
           chats_data = JSON.parse(response.body)
           seller_data = chats_data.first['seller']
-          
+
           expect(seller_data).to include(
-            'id', 'cuhk_id', 'email', 'name', 'profile_picture_url', 
+            'id', 'cuhk_id', 'email', 'name', 'profile_picture_url',
             'is_admin', 'seller_rating'
           )
         end
@@ -73,9 +73,9 @@ RSpec.describe 'Chats API', type: :request do
           get chats_path, headers: json_headers
           chats_data = JSON.parse(response.body)
           buyer_data = chats_data.first['buyer']
-          
+
           expect(buyer_data).to include(
-            'id', 'cuhk_id', 'email', 'name', 'profile_picture_url', 
+            'id', 'cuhk_id', 'email', 'name', 'profile_picture_url',
             'is_admin', 'seller_rating'
           )
         end
@@ -89,10 +89,10 @@ RSpec.describe 'Chats API', type: :request do
           newer_chat = create(:chat, seller_id: another_user.id, interested_id: buyer.id,
                                      item_id: newer_product.id,
                                      updated_at: Time.current)
-          
+
           get chats_path, headers: json_headers
           chats_data = JSON.parse(response.body)
-          
+
           # Newest should be first
           expect(chats_data.first['id']).to eq(newer_chat.id)
           expect(chats_data.last['id']).to eq(older_chat.id)
@@ -122,10 +122,10 @@ RSpec.describe 'Chats API', type: :request do
         it 'returns unique chats only' do
           chat1 = create(:chat, seller_id: seller.id, interested_id: buyer.id,
                                 item_id: product.id)
-          
+
           get chats_path, headers: json_headers
           chats_data = JSON.parse(response.body)
-          
+
           # Should only appear once in results
           matching_chats = chats_data.select { |c| c['id'] == chat1.id }
           expect(matching_chats.length).to eq(1)
@@ -142,5 +142,4 @@ RSpec.describe 'Chats API', type: :request do
       end
     end
   end
-
 end

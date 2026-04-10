@@ -23,7 +23,7 @@ RSpec.describe "CommunityItems", type: :request do
     it "filters by college" do
       CommunityItem.create!(user: user, product: product, description: "CC Ad", college: "Chung Chi College")
       CommunityItem.create!(user: other_user, product: other_product, description: "NA Ad", college: "New Asia College")
-      
+
       get "/community_items", params: { college: "Chung Chi College" }, headers: { "Accept": "application/json" }
       json = JSON.parse(response.body)
       expect(json.length).to eq(1)
@@ -65,7 +65,7 @@ RSpec.describe "CommunityItems", type: :request do
       # Switch to other user
       delete "/sessions/destroy"
       post "/sessions", params: { session: { email: other_user.email, password: "password" } }, headers: { "Accept": "application/json" }
-      
+
       patch "/community_items/#{item.id}", params: { community_item: { description: "Hacked" } }, headers: { "Accept": "application/json" }
       expect(response).to have_http_status(:forbidden)
     end

@@ -16,15 +16,15 @@ class ApplicationController < ActionController::Base
   end
 
   def is_json_request?
-    request.format.json? || request.content_type.to_s.include?('application/json')
+    request.format.json? || request.content_type.to_s.include?("application/json")
   end
 
   def authenticate_user!
     return if current_user
     if is_json_request?
-      render_error('unauthenticated', status: :unauthorized)
+      render_error("unauthenticated", status: :unauthorized)
     else
-      redirect_to root_path, alert: 'Please log in'
+      redirect_to root_path, alert: "Please log in"
     end
   end
 
@@ -37,9 +37,9 @@ class ApplicationController < ActionController::Base
 
   def render_unauthorized
     if is_json_request?
-      render_error('unauthorized', status: :forbidden)
+      render_error("unauthorized", status: :forbidden)
     else
-      redirect_to root_path, alert: 'You do not have permission to access this resource'
+      redirect_to root_path, alert: "You do not have permission to access this resource"
     end
   end
 
@@ -52,8 +52,8 @@ class ApplicationController < ActionController::Base
     if error.is_a?(StandardError)
       logger.error("#{self.class.name} error: #{error.class} - #{error.message}")
       logger.error(error.backtrace.first(5).join("\n")) if error.backtrace
-      message = error.message.presence || 'internal_server_error'
-      render json: { error: message, errors: [message] }, status: :internal_server_error
+      message = error.message.presence || "internal_server_error"
+      render json: { error: message, errors: [ message ] }, status: :internal_server_error
     elsif error.respond_to?(:full_messages)
       messages = error.full_messages
       render json: { error: messages.first, errors: messages }, status: status
@@ -62,7 +62,7 @@ class ApplicationController < ActionController::Base
       render json: { error: messages.first, errors: messages }, status: status
     else
       message = error.to_s
-      render json: { error: message, errors: [message] }, status: status
+      render json: { error: message, errors: [ message ] }, status: status
     end
   end
 

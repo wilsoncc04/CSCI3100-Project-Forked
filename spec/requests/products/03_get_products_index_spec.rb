@@ -12,7 +12,7 @@ RSpec.describe 'Products API', type: :request do
   # Helper method to create test image files in memory
   def create_test_image
     # Create a temporary file that persists for the duration of the test
-    file = Tempfile.new(['test_image', '.jpg'], encoding: 'ASCII-8BIT')
+    file = Tempfile.new([ 'test_image', '.jpg' ], encoding: 'ASCII-8BIT')
     file.write("fake JPEG content for testing")
     file.flush
     file.rewind
@@ -42,7 +42,7 @@ RSpec.describe 'Products API', type: :request do
               location: 'Dorm',
               contact: 'contact@example.com'
             },
-            images: [create_test_image]
+            images: [ create_test_image ]
           }
         end
       end
@@ -221,5 +221,4 @@ RSpec.describe 'Products API', type: :request do
       end
     end
   end
-
 end

@@ -1,9 +1,9 @@
 class MessagesController < ApplicationController
   skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
-  before_action :set_chat, only: [:index, :create, :show, :destroy]
-  before_action :set_message, only: [:show, :destroy]
+  before_action :set_chat, only: [ :index, :create, :show, :destroy ]
+  before_action :set_message, only: [ :show, :destroy ]
   before_action :authenticate_user!
-  before_action :authorize_chat_participant!, only: [:index, :create, :show, :destroy]
+  before_action :authorize_chat_participant!, only: [ :index, :create, :show, :destroy ]
   # before_action :authorize_message_owner!, only: [:destroy]
 
   # GET /chats/:chat_id/messages
@@ -50,14 +50,14 @@ class MessagesController < ApplicationController
   def set_chat
     @chat = Chat.find_by(id: params[:chat_id])
     unless @chat
-      render_error('Chat not found', status: :not_found)
+      render_error("Chat not found", status: :not_found)
     end
   end
 
   def set_message
     @message = Message.find_by(id: params[:id])
     unless @message
-      render_error('Message not found', status: :not_found)
+      render_error("Message not found", status: :not_found)
     end
   end
 

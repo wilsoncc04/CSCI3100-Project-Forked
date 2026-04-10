@@ -12,7 +12,7 @@ RSpec.describe 'Products API', type: :request do
   # Helper method to create test image files in memory
   def create_test_image
     # Create a temporary file that persists for the duration of the test
-    file = Tempfile.new(['test_image', '.jpg'], encoding: 'ASCII-8BIT')
+    file = Tempfile.new([ 'test_image', '.jpg' ], encoding: 'ASCII-8BIT')
     file.write("fake JPEG content for testing")
     file.flush
     file.rewind
@@ -37,12 +37,11 @@ RSpec.describe 'Products API', type: :request do
           seller_id: seller.id,
           buyer_id: buyer.id
         },
-        images: [create_test_image]
+        images: [ create_test_image ]
       }
       post products_path, params: params
       # Accept either bad request or unprocessable entity
-      expect(response.status).to satisfy { |status| [400, 422, 500].include?(status) }
+      expect(response.status).to satisfy { |status| [ 400, 422, 500 ].include?(status) }
     end
   end
-
 end

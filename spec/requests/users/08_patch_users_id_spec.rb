@@ -64,7 +64,7 @@ RSpec.describe 'Users API', type: :request do
       context 'with profile picture upload' do
         # Helper to create a test image file
         def create_test_image
-          file = Tempfile.new(['test', '.jpg'])
+          file = Tempfile.new([ 'test', '.jpg' ])
           file.write("fake JPEG content for testing")
           file.rewind
           Rack::Test::UploadedFile.new(file.path, 'image/jpeg')
@@ -189,5 +189,4 @@ RSpec.describe 'Users API', type: :request do
       end
     end
   end
-
 end

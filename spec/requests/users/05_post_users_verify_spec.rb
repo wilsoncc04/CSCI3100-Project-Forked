@@ -34,7 +34,7 @@ RSpec.describe 'Users API', type: :request do
       it 'clears the OTP after verification' do
         post verify_users_path, params: {
           email: unverified_user.email,
-          otp: unverified_user.verification_otp  
+          otp: unverified_user.verification_otp
           # refer to itself (ok in backend, but not frontend)
         }
         unverified_user.reload
@@ -89,5 +89,4 @@ RSpec.describe 'Users API', type: :request do
       end
     end
   end
-
 end

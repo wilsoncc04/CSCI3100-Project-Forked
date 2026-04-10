@@ -38,7 +38,7 @@ RSpec.describe Product, type: :model do
         .to receive(:rails_blob_url)
         .and_return('/rails/active_storage/blobs/test_image.jpg')
 
-      expect(product.image_urls).to eq(['/rails/active_storage/blobs/test_image.jpg'])
+      expect(product.image_urls).to eq([ '/rails/active_storage/blobs/test_image.jpg' ])
     end
 
     it 'returns direct image url when storage service supports cloudinary_url' do
@@ -56,7 +56,7 @@ RSpec.describe Product, type: :model do
       allow(blob).to receive(:service).and_return(fake_service)
       allow(blob).to receive(:url).and_return('https://res.cloudinary.com/demo/image/upload/sample.jpg')
 
-      expect(product.image_urls).to eq(['https://res.cloudinary.com/demo/image/upload/sample.jpg'])
+      expect(product.image_urls).to eq([ 'https://res.cloudinary.com/demo/image/upload/sample.jpg' ])
     end
   end
 end

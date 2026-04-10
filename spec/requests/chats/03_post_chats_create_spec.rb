@@ -34,7 +34,7 @@ RSpec.describe 'Chats API', type: :request do
       it 'returns chat data with correct attributes' do
         post chats_path, params: valid_params, headers: json_headers
         chat_data = JSON.parse(response.body)
-        
+
         expect(chat_data).to include(
           'id', 'product', 'seller', 'buyer', 'created_at', 'updated_at'
         )
@@ -43,7 +43,7 @@ RSpec.describe 'Chats API', type: :request do
       it 'sets correct seller and buyer' do
         post chats_path, params: valid_params, headers: json_headers
         chat_data = JSON.parse(response.body)
-        
+
         expect(chat_data['seller']['id']).to eq(seller.id)
         expect(chat_data['buyer']['id']).to eq(buyer.id)
       end
@@ -51,7 +51,7 @@ RSpec.describe 'Chats API', type: :request do
       it 'associates chat with correct product' do
         post chats_path, params: valid_params, headers: json_headers
         chat_data = JSON.parse(response.body)
-        
+
         expect(chat_data['product']['id']).to eq(product.id)
       end
     end
@@ -97,12 +97,12 @@ RSpec.describe 'Chats API', type: :request do
       end
 
       it 'returns the existing chat' do
-        existing_chat = Chat.find_by(item_id: product.id, seller_id: seller.id, 
+        existing_chat = Chat.find_by(item_id: product.id, seller_id: seller.id,
                                      interested_id: buyer.id)
-        
+
         post chats_path, params: valid_params, headers: json_headers
         chat_data = JSON.parse(response.body)
-        
+
         expect(chat_data['id']).to eq(existing_chat.id)
       end
     end
@@ -112,9 +112,9 @@ RSpec.describe 'Chats API', type: :request do
         # Create a chat with nil seller_id which should fail validation
         allow_any_instance_of(Chat).to receive(:save).and_return(false)
         allow_any_instance_of(Chat).to receive(:errors).and_return(
-          double(full_messages: ['Product can\'t be blank'])
+          double(full_messages: [ 'Product can\'t be blank' ])
         )
-        
+
         post chats_path, params: valid_params, headers: json_headers
         expect(response).to have_http_status(:unprocessable_content)
         response_data = JSON.parse(response.body)
@@ -131,5 +131,4 @@ RSpec.describe 'Chats API', type: :request do
       end
     end
   end
-
 end

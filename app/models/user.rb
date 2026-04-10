@@ -1,12 +1,12 @@
 class User < ApplicationRecord
     # Associations
-    has_many :bought_products, class_name: 'Product', foreign_key: 'buyer_id', dependent: :nullify
-    has_many :selling_products, class_name: 'Product', foreign_key: 'seller_id', dependent: :nullify
+    has_many :bought_products, class_name: "Product", foreign_key: "buyer_id", dependent: :nullify
+    has_many :selling_products, class_name: "Product", foreign_key: "seller_id", dependent: :nullify
 
-    has_many :seller_chats, class_name: 'Chat', foreign_key: 'seller_id', dependent: :destroy
-    has_many :buyer_chats, class_name: 'Chat', foreign_key: 'interested_id', dependent: :destroy
+    has_many :seller_chats, class_name: "Chat", foreign_key: "seller_id", dependent: :destroy
+    has_many :buyer_chats, class_name: "Chat", foreign_key: "interested_id", dependent: :destroy
 
-    has_many :interests, class_name: 'Interest', foreign_key: 'interested_id', dependent: :destroy
+    has_many :interests, class_name: "Interest", foreign_key: "interested_id", dependent: :destroy
     has_many :community_items, dependent: :destroy
 
     has_one_attached :profile_picture
@@ -30,7 +30,7 @@ class User < ApplicationRecord
 
     def generate_verification_otp!
         # 6-digit numeric OTP (zero-padded)
-        self.verification_otp = rand(0..999999).to_s.rjust(6, '0')
+        self.verification_otp = rand(0..999999).to_s.rjust(6, "0")
         self.verification_sent_at = Time.current
     end
 

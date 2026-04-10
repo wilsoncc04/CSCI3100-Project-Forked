@@ -3,8 +3,8 @@
 class ChatsController < ApplicationController
   skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
   before_action :authenticate_user!
-  before_action :set_chat, only: [:show]
-  before_action :authorize_chat_participant!, only: [:show]
+  before_action :set_chat, only: [ :show ]
+  before_action :authorize_chat_participant!, only: [ :show ]
 
   # GET /chats
   # List all chats for the current user (as seller or buyer)
@@ -32,7 +32,7 @@ class ChatsController < ApplicationController
   def create
     product = Product.find_by(id: params[:product_id])
     unless product
-      render_error('Product not found', status: :not_found)
+      render_error("Product not found", status: :not_found)
       return
     end
 
@@ -41,7 +41,7 @@ class ChatsController < ApplicationController
 
     # Prevent seller from chatting with themselves
     if seller.id == buyer.id
-      render_error('Cannot chat with yourself', status: :unprocessable_content)
+      render_error("Cannot chat with yourself", status: :unprocessable_content)
       return
     end
 
@@ -76,7 +76,7 @@ class ChatsController < ApplicationController
   def set_chat
     @chat = Chat.find_by(id: params[:id])
     unless @chat
-      render_error('Chat not found', status: :not_found)
+      render_error("Chat not found", status: :not_found)
     end
   end
 

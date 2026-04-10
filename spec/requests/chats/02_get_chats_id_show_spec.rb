@@ -21,11 +21,11 @@ RSpec.describe 'Chats API', type: :request do
       context 'when chat exists' do
         it 'returns chat with all messages' do
           create_list(:message, 3, chat_id: chat.id, sender: buyer)
-          
+
           get chat_path(chat.id), headers: json_headers
           expect(response).to have_http_status(:ok)
           chat_data = JSON.parse(response.body)
-          
+
           expect(chat_data).to include('id', 'messages')
           expect(chat_data['messages']).to be_an(Array)
           expect(chat_data['messages'].length).to eq(3)
@@ -33,11 +33,11 @@ RSpec.describe 'Chats API', type: :request do
 
         it 'returns messages with correct attributes' do
           message = create(:message, chat_id: chat.id, sender: buyer)
-          
+
           get chat_path(chat.id), headers: json_headers
           chat_data = JSON.parse(response.body)
           message_data = chat_data['messages'].first
-          
+
           expect(message_data).to include(
             'id', 'chat_id', 'message', 'sender', 'created_at', 'updated_at'
           )
@@ -45,15 +45,15 @@ RSpec.describe 'Chats API', type: :request do
         end
 
         it 'returns messages in chronological order' do
-          message1 = create(:message, chat_id: chat.id, sender: buyer, 
+          message1 = create(:message, chat_id: chat.id, sender: buyer,
                                      created_at: 1.hour.ago)
-          message2 = create(:message, chat_id: chat.id, sender: seller, 
+          message2 = create(:message, chat_id: chat.id, sender: seller,
                                      created_at: Time.current)
-          
+
           get chat_path(chat.id), headers: json_headers
           chat_data = JSON.parse(response.body)
           messages = chat_data['messages']
-          
+
           expect(messages.first['id']).to eq(message1.id)
           expect(messages.last['id']).to eq(message2.id)
         end
@@ -61,7 +61,7 @@ RSpec.describe 'Chats API', type: :request do
         it 'includes chat metadata with messages' do
           get chat_path(chat.id), headers: json_headers
           chat_data = JSON.parse(response.body)
-          
+
           expect(chat_data).to include(
             'product', 'seller', 'buyer', 'last_message', 'last_message_at'
           )
@@ -114,5 +114,4 @@ RSpec.describe 'Chats API', type: :request do
       end
     end
   end
-
 end
