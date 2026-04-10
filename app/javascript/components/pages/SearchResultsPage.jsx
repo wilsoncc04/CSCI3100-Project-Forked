@@ -94,7 +94,10 @@ export default function SearchResults() {
         }
 
         if (isActive) {
-          setProducts(Array.isArray(data?.data) ? data.data : []);
+          const searchResults = (Array.isArray(data?.data) ? data.data : []).filter(
+            p => p.status?.toLowerCase() !== 'sold'
+          );
+          setProducts(searchResults);
         }
       } catch (error) {
         if (error.name === "AbortError") return;

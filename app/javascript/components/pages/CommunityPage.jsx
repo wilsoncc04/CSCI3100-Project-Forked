@@ -119,7 +119,10 @@ export default function CommunityPage() {
         ? "/community_items" 
         : `/community_items?college=${encodeURIComponent(selectedCollege)}`;
       const res = await axios.get(url);
-      setItems(Array.isArray(res.data) ? res.data : []);
+      const activeItems = (Array.isArray(res.data) ? res.data : []).filter(
+      item => item.product?.status?.toLowerCase() !== 'sold'
+    );
+      setItems(activeItems);
     } catch (err) {
       console.error("Failed to fetch community items", err);
       setItems([]);
@@ -173,6 +176,7 @@ export default function CommunityPage() {
                     status={item.product.status}
                     condition={item.product.condition}
                     images={item.product.image_url ? [item.product.image_url] : []}
+                    created_at={item.product.created_at}
                   />
                 </div>
               </CommunityItemCard>

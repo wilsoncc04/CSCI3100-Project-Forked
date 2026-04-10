@@ -124,7 +124,7 @@ class ProductsController < ApplicationController
       render_unauthorized and return
     end
 
-    # 1. 處理售出邏輯 (保留 Transaction 確保資料庫一致性，但不包含圖片)
+    # handling status update to sold
     if params[:product] && params[:product][:status] == 'sold'
       ActiveRecord::Base.transaction do
         @product.update!(status: 'sold', buyer_id: params[:product][:buyer_id])
@@ -133,31 +133,26 @@ class ProductsController < ApplicationController
       render json: format_product(@product), status: :ok and return
     end
 
-    # 2. 處理基本資料更新 (移出 Transaction，防止因驗證失敗導致圖片也無法更新)
+    # handling normal updates
     if params[:product].present?
       unless @product.update(product_params)
         render json: { error: @product.errors.full_messages }, status: :unprocessable_content and return
       end
     end
 
-    # 3. 核心修復：處理圖片刪除 (使用 .to_a 解決刪不乾淨的問題)
-    # 動機：只要有傳入圖片相關參數(即使是空陣列)，就代表使用者想要「同步」圖片狀態
+    # handle product images update
     if params.key?(:keep_images) || params[:images].present?
-      # 1. 取得保留清單，並強制轉為陣列處理
       keep_list = Array(params[:keep_images]) 
-      
-      # 2. 執行清理：將「不在保留清單」的所有舊圖片刪除
+
       @product.images.to_a.each do |img|
-        # 動機：使用 signed_id 或 path 進行比對。若 keep_list 為空，則會 purge 所有圖片
         path = rails_blob_path(img, only_path: true)
         img.purge unless keep_list.include?(path)
       end
     end
 
-    # 4. 處理新圖片上傳
+    # handle new images
     attach_images(@product, params[:images]) if params[:images].present?
 
-    # 5. 結束並回傳
     @product.reload
     handle_community_promotion(@product)
     render json: format_product(@product), status: :ok

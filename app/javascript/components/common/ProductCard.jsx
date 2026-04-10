@@ -1,10 +1,23 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { AiOutlinePicture } from "react-icons/ai";
+import getTimesAgo from "../../common/getTimesAgo";
+import styled from "styled-components";
+import { StatusBadge, ConditionTag } from "../../common/style";
 
-export default function ProductCard({ id, name, price, condition, status, images }) {
+export default function ProductCard({ id, name, price, condition, status, images, created_at }) {
   const [imgError, setImgError] = useState(false);
   const hasImage = images && images.length > 0;
+
+  const getStatusStyle = (status) => {
+    const s = status?.toLowerCase();
+    let bg = "#d4edda", color = "#155724";
+    if (s === "sold") { bg = "#e9ecef"; color = "#6c757d"; }
+    if (s === "reserved") { bg = "#fff3cd"; color = "#856404"; }
+    return { backgroundColor: bg, color: color };
+  };
+
+  const statusStyle = getStatusStyle(status);
 
   return (
     <div
@@ -18,8 +31,26 @@ export default function ProductCard({ id, name, price, condition, status, images
         boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
         display: "inline-block",
         margin: "10px",
+        position: "relative",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "8px",
+          right: "8px",
+          backgroundColor: "rgba(34, 34, 34, 0.44)",
+          color: "#fff",
+          padding: "2px 6px",
+          borderRadius: "4px",
+          fontSize: "0.7rem",
+          zIndex: "10", 
+          pointerEvents: "none", 
+        }}
+      >
+        {getTimesAgo(created_at)}
+      </div>
+
       <Link to={`/product/${id}`} style={{ textDecoration: "none" }}>
         <div
           style={{
@@ -86,22 +117,18 @@ export default function ProductCard({ id, name, price, condition, status, images
               padding: "2px 8px",
               borderRadius: "4px",
               textTransform: "capitalize",
+              ...statusStyle,
             }}
           >
             {status}
           </span>
           {condition ? (
-            <span
-              style={{
-                fontSize: "0.8rem",
-                color: "#666",
-                backgroundColor: "#f0f0f0",
-                padding: "2px 8px",
-                borderRadius: "4px",
-              }}
+            <ConditionTag
+              $condition={condition}
+              style={{ fontSize: "0.8rem", padding: "2px 8px", borderRadius: "4px" }}
             >
               {condition}
-            </span>
+            </ConditionTag>
           ) : (
             <div style={{ height: "20px" }}></div>
           )}

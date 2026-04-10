@@ -142,7 +142,10 @@ export default function IndexPage() {
         if (!response.ok) throw new Error("Failed to fetch products");
 
         const jsonResponse = await response.json();
-        setProducts(jsonResponse.data);
+          const availableProducts = (jsonResponse.data || []).filter(
+        p => p.status?.toLowerCase() !== 'sold'
+      );
+        setProducts(availableProducts);
         if (jsonResponse.pagination) {
           setTotalPages(jsonResponse.pagination.total_pages);
         }

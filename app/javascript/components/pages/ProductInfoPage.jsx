@@ -15,6 +15,7 @@ import {
 } from "react-icons/ai";
 import axios from "axios"; 
 import PriceHistoryChart from "../common/PriceHistoryChart";
+import { StatusBadge, ConditionTag } from "../../common/style";
 
 const ActionButton = styled.button`
   border: none;
@@ -57,16 +58,6 @@ const HeaderContainer = styled.div`
 const PageTitle = styled.h2`
   margin: 0;
   color: #333;
-`;
-
-const StatusBadge = styled.span`
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: bold;
-  background-color: ${(props) => (props.$isBrandNew ? "#e6f2ff" : "#f0f0f0")};
-  color: ${(props) => (props.$isBrandNew ? "#0066cc" : "#666")};
-  text-transform: capitalize;
 `;
 
 const SingleImageWrapper = styled.div`
@@ -209,15 +200,6 @@ const ProductPrice = styled.p`
 
 const ConditionWrapper = styled.p`
   margin: 0 0 1.5rem 0;
-`;
-
-const ConditionTag = styled.span`
-  background-color: #f0f0f0;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: #555;
-  font-weight: bold;
 `;
 
 const DescriptionWrapper = styled.div`
@@ -623,7 +605,7 @@ export default function ProductInfoPage() {
     <PageContainer>
       <HeaderContainer>
         <PageTitle>Product Details</PageTitle>
-        <StatusBadge $isBrandNew={product.status === "Brand New"}>
+        <StatusBadge $status={product.status}>
           {product.status || "Available"}
         </StatusBadge>
       </HeaderContainer>
@@ -683,12 +665,15 @@ export default function ProductInfoPage() {
           <ProductName>{product.name}</ProductName>
           <ProductPrice>${product.price} HKD</ProductPrice>
           <ConditionWrapper>
-            <ConditionTag>Condition: {product.condition || "Not Specified"}</ConditionTag>
+            <ConditionTag $condition={product.condition}>Condition: {product.condition || "Not Specified"}</ConditionTag>
           </ConditionWrapper>
           
           <DescriptionWrapper>
             <SectionTitle>Description</SectionTitle>
             <DescriptionText>{product.description}</DescriptionText>
+            <DescriptionText style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
+              Posted on {new Date(product.created_at).toLocaleString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </DescriptionText>
           </DescriptionWrapper>
 
           <ContactSection>
