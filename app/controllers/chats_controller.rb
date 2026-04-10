@@ -94,6 +94,7 @@ class ChatsController < ApplicationController
         id: chat.product.id,
         name: chat.product.name,
         price: chat.product.price,
+        status: chat.product.status,
         images: chat.product.images.map { |img| url_for(img) }
       },
       seller: format_user(chat.seller),
