@@ -411,17 +411,29 @@ function BuyButton({ product }) {
 
   const localUserId = storedUser?.id;
   
-  const isReserved = product?.status === 'reserved' || product?.status === 'sold';
+  // 修改 1：判斷是否為「已售出」狀態
+  const isSold = product?.status === 'sold';
+  
+  // 修改 2：判斷是否為「預約中」狀態
+  const isReserved = product?.status === 'reserved';
   
   const isOwnProduct = 
     !!product?.is_owner || 
     (localUserId != null && Number(localUserId) === Number(product?.seller_id));
     
-  const isDisabled = !isOwnProduct && (isReserved || loading);
+  // 修改 3：僅在已售出、或是讀取中、且非本人產品時禁用
+  // 按照你的要求：reserved 狀態下按鈕依然要是 open 的
+  const isDisabled = !isOwnProduct && (isSold || loading);
 
   const handleBuyClick = async () => {
     if (!product || isOwnProduct) return;
-    if (!window.confirm(`Confirm interest in buying "${product.name}"?`)) return;
+    
+    // 如果已經有人預約，可以換個提示語
+    const confirmMsg = isReserved 
+      ? `This item is currently reserved. Do you still want to message the seller about "${product.name}"?`
+      : `Confirm interest in buying "${product.name}"?`;
+
+    if (!window.confirm(confirmMsg)) return;
 
     setLoading(true);
     try {
@@ -440,13 +452,20 @@ function BuyButton({ product }) {
 
   return (
     <ActionButton 
-      onClick= {isOwnProduct ? handleEditClick : handleBuyClick}
+      onClick={isOwnProduct ? handleEditClick : handleBuyClick}
       disabled={isDisabled}
       title={isOwnProduct ? "You cannot buy your own product." : undefined}
     >
-      {isOwnProduct ? <AiOutlineEdit color= "#333" /> : <AiOutlineShoppingCart color={isDisabled ? "#ccc" : "#333"} />}
+      {/* 圖示邏輯：如果是本人顯示編輯，如果是售出顯示灰色購物車，其餘顯示正常購物車 */}
+      {isOwnProduct ? (
+        <AiOutlineEdit color="#333" />
+      ) : (
+        <AiOutlineShoppingCart color={isDisabled ? "#ccc" : "#333"} />
+      )}
+      
       <ActionButtonText>
-        {isReserved ? "Reserved" : isOwnProduct ? "Edit" : "Buy"}
+        {/* 文字邏輯：本人顯示 Edit，售出顯示 Sold，其餘顯示 Buy */}
+        {isOwnProduct ? "Edit" : isSold ? "Sold" : "Buy"}
       </ActionButtonText>
     </ActionButton>
   );

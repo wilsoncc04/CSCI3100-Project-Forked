@@ -8,6 +8,7 @@ export default function AccountInfo({ user, setUser }) {
   if (!user) {
     return <div style={{ padding: "20px" }}>Loading user information...</div>;
   }
+
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -25,31 +26,31 @@ export default function AccountInfo({ user, setUser }) {
 
   const [tempProfile, setTempProfile] = useState({ ...profile });
   const availableHalls = colleges.find(c => c.name === tempProfile.college)?.halls || [];
- useEffect(() => {
-  if (user) {
-    const newProfile = {
-      username: user.name || "",
-      email: user.email || "",
-      bio: user.bio || "",
-      college: user.college || "",
-      hostel: user.hostel || "",
-      // 加上安全檢查：如果沒有 created_at，給予一個預設值
-      memberSince: user.created_at 
-        ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
-        : "N/A",
-      avatarUrl: user.profile_picture_url || null
-    };
-    setProfile(newProfile);
-    setTempProfile(newProfile);
-    if (!user.college) setIsEditing(true);
-  }
-}, [user]);
+
+  useEffect(() => {
+    if (user) {
+      const newProfile = {
+        username: user.name || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        college: user.college || "",
+        hostel: user.hostel || "",
+        memberSince: user.created_at 
+          ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
+          : "N/A",
+        avatarUrl: user.profile_picture_url || null
+      };
+      setProfile(newProfile);
+      setTempProfile(newProfile);
+      // 如果用戶尚未設置 College，強制進入編輯模式
+      if (!user.college) setIsEditing(true);
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setTempProfile((prev) => {
       const newState = { ...prev, [name]: value };
-      // 重點：如果更換了 College，就把原本選的 Hostel 清空，避免書院與宿舍不匹配
       if (name === "college") {
         newState.hostel = "";
       }
@@ -66,8 +67,9 @@ export default function AccountInfo({ user, setUser }) {
   };
 
   const handleSave = async () => {
-    if (!tempProfile.college) {
-      alert("Please select your College.");
+    // 需求 2: 強制檢查必須選擇 College
+    if (!tempProfile.college || tempProfile.college === "") {
+      alert("Please select your College before saving.");
       return;
     }
 
@@ -87,6 +89,7 @@ export default function AccountInfo({ user, setUser }) {
         setProfile({ ...tempProfile, avatarUrl: response.data.profile_picture_url || tempProfile.avatarUrl });
         if (setUser) setUser(response.data);
         setIsEditing(false);
+        setPreviewUrl(null);
         alert("Profile updated successfully!");
       }
     } catch (error) {
@@ -105,8 +108,13 @@ export default function AccountInfo({ user, setUser }) {
             <button onClick={handleSave} style={styles.saveBtn} disabled={loading}>
               <FaSave style={styles.btnIcon} /> {loading ? "Saving..." : "Save"}
             </button>
+            {/* 只有在已有 College 的情況下才允許取消編輯 */}
             {profile.college && (
-              <button onClick={() => setIsEditing(false)} style={styles.cancelBtn}>
+              <button onClick={() => {
+                setIsEditing(false);
+                setTempProfile({...profile});
+                setPreviewUrl(null);
+              }} style={styles.cancelBtn}>
                 <FaTimes style={styles.btnIcon} /> Cancel
               </button>
             )}
@@ -120,7 +128,8 @@ export default function AccountInfo({ user, setUser }) {
 
       <div style={styles.infoContainer}>
         <div style={styles.avatarRow}>
-          <div style={{ position: "relative" }}>
+          {/* 需求 1: 頭像圓形邊界與上傳遮罩優化 */}
+          <div style={styles.avatarWrapper}>
             {previewUrl || profile.avatarUrl ? (
               <img src={previewUrl || profile.avatarUrl} alt="Avatar" style={styles.avatarImage} />
             ) : (
@@ -128,14 +137,14 @@ export default function AccountInfo({ user, setUser }) {
             )}
             {isEditing && (
               <label style={styles.uploadOverlay}>
-                <FaCamera />
+                <FaCamera style={{ color: "#fff", fontSize: "20px" }} />
                 <input type="file" hidden onChange={handleFileChange} accept="image/*" />
               </label>
             )}
           </div>
           <div>
             {isEditing ? (
-              <input style={styles.inputUsername} name="username" value={tempProfile.username} onChange={handleChange} />
+              <input style={styles.inputUsername} name="username" value={tempProfile.username} onChange={handleChange} placeholder="Enter name" />
             ) : (
               <p style={styles.valueUsername}>{profile.username}</p>
             )}
@@ -155,14 +164,19 @@ export default function AccountInfo({ user, setUser }) {
           </div>
         </div>
 
-        {/* College Dropdown */}
+        {/* College Dropdown - 需求 3: 刪除 (Must) */}
         <div style={styles.fieldRow}>
           <div style={styles.iconColumn}><FaUniversity style={styles.fieldIcon} /></div>
           <div style={styles.contentColumn}>
-            <label style={styles.label}>College (Must)</label>
+            <label style={styles.label}>College</label>
             {isEditing ? (
-              <select style={styles.input} name="college" value={tempProfile.college} onChange={handleChange}>
-                <option value="">Select College</option>
+              <select 
+                style={{...styles.input, borderColor: !tempProfile.college ? "#dc3545" : "#ddd"}} 
+                name="college" 
+                value={tempProfile.college} 
+                onChange={handleChange}
+              >
+                <option value="">-- Select College --</option>
                 {colleges.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
             ) : (
@@ -171,18 +185,18 @@ export default function AccountInfo({ user, setUser }) {
           </div>
         </div>
 
-        {/* Hostel Dropdown (依據 College 變動) */}
+        {/* Hostel Dropdown - 需求 3: 刪除 (Optional) */}
         <div style={styles.fieldRow}>
           <div style={styles.iconColumn}><FaBuilding style={styles.fieldIcon} /></div>
           <div style={styles.contentColumn}>
-            <label style={styles.label}>Hostel (Optional)</label>
+            <label style={styles.label}>Hostel</label>
             {isEditing ? (
               <select 
                 style={styles.input} 
                 name="hostel" 
                 value={tempProfile.hostel} 
                 onChange={handleChange}
-                disabled={!tempProfile.college} // 沒選書院前不能選宿舍
+                disabled={!tempProfile.college}
               >
                 <option value="">Select Hostel</option>
                 {availableHalls.map(hall => <option key={hall} value={hall}>{hall}</option>)}
@@ -195,21 +209,22 @@ export default function AccountInfo({ user, setUser }) {
 
         <div style={styles.fieldRow}>
           <div style={styles.iconColumn}><FaPenNib style={styles.fieldIcon} /></div>
-            <div style={styles.contentColumn}>
-             <label style={styles.label}>Bio</label>
-              {isEditing ? (
-               <textarea style={{ ...styles.input, height: "80px", resize: "none" }} name="bio" value={tempProfile.bio} onChange={handleChange} />
-               ) : (
-               <p style={{ ...styles.valueBio, fontStyle: profile.bio ? "normal" : "italic" }}>
-                 {profile.bio || "No bio yet."}
-               </p>
-                )}
+          <div style={styles.contentColumn}>
+            <label style={styles.label}>Bio</label>
+            {isEditing ? (
+              <textarea style={{ ...styles.input, height: "80px", resize: "none" }} name="bio" value={tempProfile.bio} onChange={handleChange} placeholder="Tell us about yourself..." />
+            ) : (
+              <p style={{ ...styles.valueBio, fontStyle: profile.bio ? "normal" : "italic" }}>
+                {profile.bio || "No bio yet."}
+              </p>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+
 const styles = {
   card: {
     padding: "30px",
@@ -239,9 +254,39 @@ const styles = {
     alignItems: "center",
     gap: "20px",
   },
+  // 修正 1: 頭像容器與圓形裁切
+  avatarWrapper: {
+    position: "relative",
+    width: "100px",
+    height: "100px",
+    borderRadius: "50%",
+    overflow: "hidden", // 確保圖片不超出圓形
+    border: "3px solid #702082", // 加入書院主題色邊框
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover", // 確保圖片填充且不變形
+  },
   avatarIcon: {
-    fontSize: "70px",
+    fontSize: "80px",
     color: "#ccc",
+  },
+  uploadOverlay: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: "35%", // 只佔底部一部分
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
   },
   valueUsername: {
     fontSize: "22px",
@@ -302,11 +347,11 @@ const styles = {
     padding: "5px 0",
   },
   valueBio: {
-  fontSize: "15px",
-  color: "#555",
-  margin: 0,
-  lineHeight: "1.6",
-},
+    fontSize: "15px",
+    color: "#555",
+    margin: 0,
+    lineHeight: "1.6",
+  },
   smallIcon: {
     fontSize: "16px",
   },
@@ -316,10 +361,6 @@ const styles = {
     borderRadius: "6px",
     border: "1px solid #ddd",
     outline: "none",
-    transition: "border-color 0.2s",
-    "&:focus": {
-      borderColor: "#702082",
-    },
   },
   headerBtnGroup: {
     display: "flex",

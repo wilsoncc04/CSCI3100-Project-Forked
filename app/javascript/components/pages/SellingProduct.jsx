@@ -1,29 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function SellingProducts() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const [products, setProducts] = useState([
-    { id: 1, name: "Textbook: CS101", amount: 1, price: 150, status: "Available" },
-    { id: 2, name: "iPhone 13 Case", amount: 5, price: 20, status: "Reserved" },
-    { id: 3, name: "Desk Lamp", amount: 1, price: 50, status: "Available" },
-  ]);
+  useEffect(() => {
+    fetchMyProducts();
+  }, []);
 
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-
-  const startEdit = (product) => {
-    setEditingId(product.id);
-    setEditForm({ ...product });
+  const fetchMyProducts = async () => {
+    try {
+      const response = await axios.get("/products/selling", {
+        withCredentials: true
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSave = (id) => {
-    setProducts(products.map(p => p.id === id ? editForm : p));
-    setEditingId(null);
-    console.log("Saving product:", editForm);
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      await axios.delete(`/products/${id}`, {
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+        }
+      });
+      // 從 UI 中移除
+      setProducts(products.filter(p => p.id !== id));
+      alert("Product deleted.");
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Failed to delete product.");
+    }
   };
+
+  if (loading) return <div style={{ padding: "20px" }}>Loading your items...</div>;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
+    <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
       <h2 style={{ color: "#702082", borderBottom: "2px solid #702082", paddingBottom: "10px" }}>
         On-Selling Products
       </h2>
@@ -32,77 +54,67 @@ export default function SellingProducts() {
         <thead>
           <tr style={{ backgroundColor: "#f8f9fa", textAlign: "left" }}>
             <th style={thStyle}>Item Name</th>
-            <th style={thStyle}>Amount</th>
             <th style={thStyle}>Price (HKD)</th>
             <th style={thStyle}>Status</th>
             <th style={thStyle}>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
-            <tr key={product.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={tdStyle}>{product.name}</td>
-              
-              {/* 數量單元格 */}
-              <td style={tdStyle}>
-                {editingId === product.id ? (
-                  <input 
-                    type="number" 
-                    style={inputStyle}
-                    value={editForm.amount} 
-                    onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
-                  />
-                ) : product.amount}
-              </td>
-
-              {/* 價格單元格 */}
-              <td style={tdStyle}>
-                {editingId === product.id ? (
-                  <input 
-                    type="number" 
-                    style={inputStyle}
-                    value={editForm.price} 
-                    onChange={(e) => setEditForm({...editForm, price: e.target.value})}
-                  />
-                ) : `$${product.price}`}
-              </td>
-
-              {/* 狀態單元格 */}
-              <td style={tdStyle}>
-                {editingId === product.id ? (
-                  <select 
-                    style={inputStyle}
-                    value={editForm.status}
-                    onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                  >
-                    <option value={product.status}>{product.status} (Current)</option>
-                    <option value="Sold">Sold</option>
-                  </select>
-                ) : (
-                  <span style={statusBadge(product.status)}>{product.status}</span>
-                )}
-              </td>
-
-              {/* 操作按鈕 */}
-              <td style={tdStyle}>
-                {editingId === product.id ? (
-                  <button onClick={() => handleSave(product.id)} style={saveButtonStyle}>Save</button>
-                ) : (
-                  <button onClick={() => startEdit(product)} style={editButtonStyle}>Edit</button>
-                )}
+          {products.length === 0 ? (
+            <tr>
+              <td colSpan="4" style={{ padding: "20px", textAlign: "center", color: "#888" }}>
+                You haven't listed any products yet.
               </td>
             </tr>
-          ))}
+          ) : (
+            products.map((product) => (
+              <tr key={product.id} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={tdStyle}>
+                  <div style={{ fontWeight: "bold" }}>{product.name}</div>
+                  {product.images && product.images.length > 0 && (
+                    <img 
+                      src={product.images[0]} 
+                      alt="thumb" 
+                      style={{ width: "50px", height: "50px", objectFit: "cover", marginTop: "5px", borderRadius: "4px" }} 
+                    />
+                  )}
+                </td>
+
+                <td style={tdStyle}>${product.price}</td>
+
+                <td style={tdStyle}>
+                  <span style={statusBadge(product.status)}>{product.status}</span>
+                </td>
+
+                <td style={tdStyle}>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    {/* 隊友建議：直接跳轉到 SellPage 的編輯模式 */}
+                    <button 
+                      onClick={() => navigate(`/edit/${product.id}`)} 
+                      style={editButtonStyle}
+                    >
+                      Edit
+                    </button>
+                    
+                    <button 
+                      onClick={() => handleDelete(product.id)} 
+                      style={deleteButtonStyle}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
   );
 }
 
-// --- Styles ---
 const thStyle = { padding: "15px", borderBottom: "2px solid #ddd", color: "#555" };
 const tdStyle = { padding: "15px" };
-const inputStyle = { width: "70px", padding: "5px", borderRadius: "4px", border: "1px solid #ccc" };
 
 const editButtonStyle = {
   padding: "6px 12px",
@@ -110,23 +122,33 @@ const editButtonStyle = {
   color: "#702082",
   border: "1px solid #702082",
   borderRadius: "4px",
-  cursor: "pointer"
+  cursor: "pointer",
+  fontWeight: "bold"
 };
 
-const saveButtonStyle = {
+const deleteButtonStyle = {
   padding: "6px 12px",
-  backgroundColor: "#28a745",
+  backgroundColor: "#dc3545",
   color: "white",
   border: "none",
   borderRadius: "4px",
-  cursor: "pointer"
+  cursor: "pointer",
+  fontWeight: "bold"
 };
 
-const statusBadge = (status) => ({
-  padding: "4px 8px",
-  borderRadius: "12px",
-  fontSize: "0.85rem",
-  fontWeight: "bold",
-  backgroundColor: status === "Sold" ? "#e9ecef" : status === "Reserved" ? "#fff3cd" : "#d4edda",
-  color: status === "Sold" ? "#6c757d" : status === "Reserved" ? "#856404" : "#155724"
-});
+const statusBadge = (status) => {
+  const s = status?.toLowerCase();
+  let bg = "#d4edda", color = "#155724";
+  if (s === "sold") { bg = "#e9ecef"; color = "#6c757d"; }
+  if (s === "reserved") { bg = "#fff3cd"; color = "#856404"; }
+  
+  return {
+    padding: "4px 10px",
+    borderRadius: "12px",
+    fontSize: "0.85rem",
+    fontWeight: "bold",
+    backgroundColor: bg,
+    color: color,
+    textTransform: "capitalize"
+  };
+};

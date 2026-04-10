@@ -78,7 +78,7 @@ class ProductsController < ApplicationController
       can_delete: can_delete,
       promote_to_community: community_info.present?,
       community_description: community_info&.description || ""
-      )
+    )
   end
 
   # POST /products
@@ -101,34 +101,61 @@ class ProductsController < ApplicationController
 
   # PATCH/PUT /products/:id
   def update
-    if params[:product].present?
-      unless @product.update(product_params)
-        render_error(@product.errors, status: :unprocessable_content)
-        return
-      end
-    end
-
-    if @product.images.attached? && (params.key?(:keep_images) || params[:images].present?)
-      keep_urls = params[:keep_images] || []
-      @product.images.each do |img|
-        img_path = rails_blob_path(img, only_path: true)
-
-        unless keep_urls.include?(img_path)
-          img.purge
+    # --- 邏輯 A: 處理取消聊天 (買家或賣家皆可操作) ---
+    if params[:action_type] == 'cancel_chat'
+      chat = Chat.find_by(id: params[:chat_id])
+      
+      if chat && (chat.seller_id == current_user.id || chat.interested_id == current_user.id)
+        product_id = chat.item_id
+        chat.destroy
+        
+        # 如果沒人排隊了，變回 available
+        unless Chat.exists?(item_id: product_id)
+          Product.find(product_id).update(status: 'available', buyer_id: nil)
         end
+        
+        render json: { message: 'Chat closed successfully' }, status: :ok and return
+      else
+        render json: { error: 'Unauthorized or Chat not found' }, status: :unauthorized and return
       end
     end
 
-    if params[:images].present?
-      attach_images(@product, params[:images])
+    # --- 邏輯 B: 正常的產品更新 (嚴格限制只有賣家可以操作) ---
+    unless @product.seller_id == current_user.id
+      render_unauthorized and return
     end
 
-    @product.reload
-    handle_community_promotion(@product)
+    ActiveRecord::Base.transaction do
+      if params[:product] && params[:product][:status] == 'sold'
+        # 1. 更新產品狀態與最終買家
+        @product.update!(status: 'sold', buyer_id: params[:product][:buyer_id])
+        
+        # 2. 自動刪除「除了最終買家以外」的所有相關聊天室
+        Chat.where(item_id: @product.id).where.not(interested_id: params[:product][:buyer_id]).destroy_all
+        
+        render json: format_product(@product), status: :ok and return
+      end
 
-    render json: format_product(@product), status: :ok
-  rescue StandardError => e
-    render_error(e)
+      # 處理圖片與其他參數更新
+      if @product.update(product_params)
+        if params[:images].present? || params.key?(:keep_images)
+          keep_urls = params[:keep_images] || []
+          @product.images.each do |img|
+            img_path = rails_blob_path(img, only_path: true)
+            img.purge unless keep_urls.include?(img_path)
+          end
+          attach_images(@product, params[:images]) if params[:images].present?
+        end
+
+        @product.reload
+        handle_community_promotion(@product)
+        render json: format_product(@product), status: :ok
+      else
+        render json: { error: @product.errors.full_messages }, status: :unprocessable_entity
+      end
+    end
+  rescue => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   # DELETE /products/:id
@@ -145,55 +172,55 @@ class ProductsController < ApplicationController
     render json: products.map { |p| format_product(p) }, status: :ok
   end
 
-  # GET /products/:id/price_history
-  def price_history
-    product_id = params[:product_id].presence || params[:id].presence
-    unless product_id
-      render_error("product_id is required", status: :bad_request)
+  # POST /products/:id/buy
+  def buy
+    if @product.seller_id == current_user.id
+      render_error("cannot_buy_own_product", status: :forbidden)
       return
     end
 
-    product = Product.with_attached_images.find_by(id: product_id)
-    unless product
-      render_error("Product not found", status: :not_found)
+    # 只有狀態是 sold 時才真正擋下
+    if @product.status.to_s.downcase == 'sold'
+      render_error("product_unavailable", status: :unprocessable_entity)
       return
     end
 
-    points = params[:points].to_i
-    points = 10 if points <= 0
-    points = [ points, 20 ].min
-    if product.category_id.present?
-      category_histories = PriceHistory.joins(:product)
-                                       .where(products: { category_id: product.category_id })
-                                       .order(date: :desc)
-
-      if category_histories.any?
-        daily_averages = category_histories.group_by { |h| h.date.to_date }.map do |date, records|
-          { date: date, price: (records.sum(&:price).to_f / records.size).round(2) }
-        end.take(points)
-
-        render json: {
-          type: "category",
-          product_id: product.id,
-          category_name: product.category&.category_name || "Category",
-          history: daily_averages,
-          prices: daily_averages.map { |entry| entry[:price] }
-        }, status: :ok
-        return
+    ActiveRecord::Base.transaction do
+      # 如果原本是 available，改為 reserved 但不鎖定 buyer_id
+      if @product.status == 'available'
+        @product.update!(status: "reserved")
       end
-    end
 
-    price_histories = product.price_histories.order(date: :desc).limit(points)
-    history = price_histories.map { |entry| { date: entry.date, price: entry.price.to_f } }
-    render json: {
-      type: "product",
-      product_id: product.id,
-      history: history,
-      prices: history.map { |entry| entry[:price] }
-    }, status: :ok
+      # 建立或尋找聊天室
+      chat = Chat.find_or_create_by!(
+        item_id: @product.id,
+        seller_id: @product.seller_id,
+        interested_id: current_user.id
+      )
+
+      # 建立系統訊息（若還未發送過）
+      unless chat.messages.exists?(sender_id: current_user.id)
+        Message.create!(
+          chat_id: chat.id,
+          sender_id: current_user.id,
+          message: "I want to buy \"#{@product.name}\". (System: Request sent)"
+        )
+      end
+
+      render json: {
+        chat_id: chat.id,
+        product_name: @product.name,
+        message: "Purchase request sent via chat"
+      }, status: :ok
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: "Validation failed: #{e.record.errors.full_messages.join(', ')}" }, status: :unprocessable_entity
+  rescue => e
+    Rails.logger.error "Purchase Error: #{e.message}"
+    render json: { error: "Something went wrong." }, status: :internal_server_error
   end
 
-  # POST /products/:id/interest
+  # POST /products/:id/interest (Toggle Liked)
   def toggle_interest
     interest = Interest.find_by(interested_id: current_user.id, item_id: @product.id)
     if interest
@@ -205,54 +232,35 @@ class ProductsController < ApplicationController
     end
   end
 
-  # POST /products/:id/buy
-  def buy
-    if @product.seller_id == current_user.id
-      render_error("cannot_buy_own_product", status: :forbidden)
-      return
-    end
+  # GET /products/:id/price_history
+  def price_history
+    product_id = params[:product_id].presence || params[:id].presence
+    product = Product.find_by(id: product_id)
+    return render_error("Product not found", status: :not_found) unless product
 
-    if %w[reserved sold].include?(@product.status.to_s.downcase)
-      render_error("product_unavailable", status: :unprocessable_entity)
-      return
-    end
+    points = [ (params[:points] || 10).to_i, 20 ].min
+    
+    if product.category_id.present?
+      category_histories = PriceHistory.joins(:product)
+                                       .where(products: { category_id: product.category_id })
+                                       .order(date: :desc)
+      if category_histories.any?
+        daily_averages = category_histories.group_by { |h| h.date.to_date }.map do |date, records|
+          { date: date, price: (records.sum(&:price).to_f / records.size).round(2) }
+        end.take(points)
 
-    ActiveRecord::Base.transaction do
-      # 1. 更新產品狀態
-      @product.update!(status: "reserved", buyer_id: current_user.id)
-
-      # 2. 建立或尋找聊天室
-      chat = Chat.find_by(item_id: @product.id, interested_id: current_user.id)
-
-      if chat.nil?
-        chat = Chat.create!(
-          item_id: @product.id,
-          seller_id: @product.seller_id,
-          interested_id: current_user.id
-        )
+        render json: {
+          type: "category",
+          product_id: product.id,
+          category_name: product.category&.category_name,
+          history: daily_averages,
+          prices: daily_averages.map { |e| e[:price] }
+        } and return
       end
-
-      # 3. 直接建立一條 Message 作為「通知」
-      # 這樣賣家進到聊天列表就能看到這條訊息
-      Message.create!(
-        chat_id: chat.id,
-        sender_id: current_user.id,
-        message: "I want to buy \"#{@product.name}\". System: Request sent."
-      )
-
-      render json: {
-        chat_id: chat.id,
-        product_name: @product.name,
-        message: "Purchase request sent via chat"
-      }, status: :ok
     end
-  rescue ActiveRecord::RecordInvalid => e
-    # This catches validation errors specifically and tells you WHICH one failed
-    render json: { error: "Validation failed: #{e.record.errors.full_messages.join(', ')}" }, status: :unprocessable_entity
-  rescue => e
-    # Logs the error to Heroku logs so you can see it
-    Rails.logger.error "Purchase Error: #{e.message}"
-    render json: { error: "Something went wrong. Please try again." }, status: :internal_server_error
+
+    history = product.price_histories.order(date: :desc).limit(points).map { |e| { date: e.date, price: e.price.to_f } }
+    render json: { type: "product", product_id: product.id, history: history, prices: history.map { |e| e[:price] } }
   end
 
   private
@@ -264,19 +272,23 @@ class ProductsController < ApplicationController
   end
 
   def authorize_product_seller!
-    render_unauthorized unless @product.seller_id == current_user.id
+  # 如果是取消聊天動作，只要是聊天室的參與者（買家或賣家）都放行
+  if params[:action_type] == 'cancel_chat'
+    chat = Chat.find_by(id: params[:chat_id])
+    return if chat && (chat.seller_id == current_user.id || chat.interested_id == current_user.id)
   end
+
+  # 否則，嚴格檢查是否為產品賣家
+  render_unauthorized unless @product.seller_id == current_user.id
+end
 
   def authorize_product_destroy!
     return if @product.seller_id == current_user.id || current_user_admin?
-
     render_unauthorized
   end
 
   def product_params
-    params.require(:product).permit(
-      %i[name description price seller_id category_id location
-      contact status condition buyer_id])
+    params.require(:product).permit(%i[name description price seller_id category_id location contact status condition buyer_id])
   end
 
   def format_product(product)
@@ -294,16 +306,10 @@ class ProductsController < ApplicationController
   def handle_community_promotion(product)
     if params[:promote_to_community] == "true" && params[:community_description].present?
       item = CommunityItem.find_or_initialize_by(product: product)
-      item.assign_attributes(
-        user: current_user,
-        description: params[:community_description],
-        college: current_user.college || "Unknown"
-      )
+      item.assign_attributes(user: current_user, description: params[:community_description], college: current_user.college || "Unknown")
       item.save!
     else
       CommunityItem.find_by(product: product)&.destroy
     end
-  rescue => e
-    logger.error "CommunityItem creation failed: #{e.message}"
   end
 end
