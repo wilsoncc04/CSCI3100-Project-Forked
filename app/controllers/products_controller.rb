@@ -184,6 +184,11 @@ class ProductsController < ApplicationController
       return
     end
 
+    if @product.status.to_s.downcase == 'reserved'
+      render_error("product_unavailable", status: :unprocessable_entity)
+      return
+    end
+
     ActiveRecord::Base.transaction do
       # 如果原本是 available，改為 reserved 但不鎖定 buyer_id
       if @product.status == 'available'
