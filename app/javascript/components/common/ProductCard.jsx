@@ -117,6 +117,7 @@ export default function ProductCard({ id, name, price, condition, status, images
               padding: "2px 8px",
               borderRadius: "4px",
               textTransform: "capitalize",
+              fontWeight: "600",
               ...statusStyle,
             }}
           >
