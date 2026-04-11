@@ -82,7 +82,7 @@ const SingleImageWrapper = styled.div`
   background-color: #fff;
   border-radius: 12px;
   overflow: hidden;
-  cursor: zoom-in;
+  cursor: pointer;
   border: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
@@ -94,6 +94,13 @@ const FullImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.02);
+    filter: brightness(1.05);
+  }
 `;
 
 const GridContainer = styled.div`
@@ -108,7 +115,7 @@ const MainGridBox = styled.div`
   background-color: #fff;
   border-radius: 12px;
   overflow: hidden;
-  cursor: ${(props) => (props.$hasImage ? "zoom-in" : "default")};
+  cursor: ${(props) => (props.$hasImage ? "pointer" : "default")};
   border: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
@@ -134,7 +141,7 @@ const SubGridBox = styled.div`
   background-color: #fff;
   border-radius: 8px;
   overflow: hidden;
-  cursor: ${(props) => (props.$hasImage ? "zoom-in" : "default")};
+  cursor: ${(props) => (props.$hasImage ? "pointer" : "default")};
   border: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
@@ -158,7 +165,7 @@ const SubGridImage = styled.img`
 
   ${SubGridBox}:hover & {
     transform: scale(1.1);
-    filter: brightness(1.1);
+    filter: brightness(1.05);
   }
 `;
 
@@ -198,12 +205,15 @@ const DetailsContainer = styled.div`
 const InfoSection = styled.div`
   flex: 1;
   padding-right: 2rem;
+  min-width: 0;
 `;
 
 const ProductName = styled.h1`
   margin: 0 0 0.5rem 0;
   color: #222;
   font-size: 2rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 `;
 
 const ProductPrice = styled.p`
@@ -255,6 +265,15 @@ const AvatarCircle = styled.div`
   justify-content: center;
   color: #aaa;
   font-size: 20px;
+
+  overflow: hidden;
+  border: 1px solid #eee;
+`;
+
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
 `;
 
 const SellerNameText = styled.p`
@@ -318,18 +337,37 @@ const ModalOverlay = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  cursor: zoom-out;
+  cursor: default;
+
+  transition: opacity 0.3s ease-in-out, visibility 0.3s linear;
+
+  opacity: ${props => (props.$isOpen ? 1 : 0)};
+  visibility: ${props => (props.$isOpen ? 'visible' : 'hidden')};
+
+  pointer-events: ${props => (props.$isOpen ? 'auto' : 'none')};
 `;
 
 const ModalCloseButton = styled.button`
   position: absolute;
   top: 20px;
-  right: 30px;
+  right: 50px;
   background: none;
   border: none;
   color: #f9f9f9;
-  font-size: 40px;
+  font-size: 32px;
   cursor: pointer;
+
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15); 
+  }
 `;
 
 const ModalNavButton = styled.button`
@@ -337,18 +375,42 @@ const ModalNavButton = styled.button`
   background: none;
   border: none;
   color: #f9f9f9;
-  font-size: 50px;
+  font-size: 40px;
   cursor: pointer;
   z-index: 10000;
-  padding: 20px;
+  padding: 0px;
   ${(props) => (props.$direction === "left" ? "left: 5%;" : "right: 5%;")}
+
+  
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15); 
+  }
+
+  svg {
+    transform: ${(props) => 
+      props.$direction === "left" 
+        ? "translateX(-2px)"
+        : "translateX(2px)" 
+    };
+  }
 `;
 
 const ModalDisplayImage = styled.img`
   max-width: 90%;
   max-height: 90%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
+
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: ${props => (props.$isOpen ? 'scale(1)' : 'scale(0.95)')};
 `;
 
 const LoadingErrorState = styled.div`
@@ -581,7 +643,7 @@ export default function ProductInfoPage() {
   const openModal = (index) => {
     setCurrentImageIndex(index);
     setIsModalOpen(true);
-    document.body.style.overflow = "hidden";
+    // document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
@@ -631,6 +693,7 @@ export default function ProductInfoPage() {
   if (!product) return <LoadingErrorState>Product not found</LoadingErrorState>;
 
   const images = product.images || [];
+  const avatarUrl = currentUser?.profile_picture_url || null;
 
   return (
     <PageContainer>
@@ -711,7 +774,7 @@ export default function ProductInfoPage() {
             <SectionTitle>Contact Information</SectionTitle>
             <SellerRow>
               <AvatarCircle>
-                <AiOutlineUser />
+                {avatarUrl ? ( <AvatarImage src={avatarUrl} alt="Seller Avatar" /> ) : ( <AiOutlineUser /> )}
               </AvatarCircle>
               <SellerNameText>{sellerName}</SellerNameText>
             </SellerRow>
@@ -745,27 +808,30 @@ export default function ProductInfoPage() {
           <PriceHistoryChart productId={product.id} />
         </GraphArea>
       </GraphWrapper>
-
-      {isModalOpen && (
-        <ModalOverlay onClick={closeModal}>
-          <ModalCloseButton onClick={closeModal}>
+      
+      <ModalOverlay $isOpen={isModalOpen} onClick={closeModal}>
+        <ModalCloseButton onClick={closeModal}>
             <AiOutlineClose />
-          </ModalCloseButton>
+        </ModalCloseButton>
 
-          {images.length > 1 && (
+        {images.length > 1 && (
             <>
-              <ModalNavButton $direction="left" onClick={prevImage}>
-                <AiOutlineLeft />
-              </ModalNavButton>
-              <ModalNavButton $direction="right" onClick={nextImage}>
-                <AiOutlineRight />
-              </ModalNavButton>
+                <ModalNavButton $direction="left" onClick={prevImage}>
+                    <AiOutlineLeft />
+                </ModalNavButton>
+                <ModalNavButton $direction="right" onClick={nextImage}>
+                    <AiOutlineRight />
+                </ModalNavButton>
             </>
-          )}
-
-          <ModalDisplayImage src={images[currentImageIndex]} alt="Full Screen product image" />
-        </ModalOverlay>
-      )}
+        )}
+        {isModalOpen && (
+            <ModalDisplayImage 
+                src={images[currentImageIndex]} 
+                alt="Full Screen product image" 
+                $isOpen={isModalOpen} 
+            />
+        )}
+      </ModalOverlay>
     </PageContainer>
   );
 }
