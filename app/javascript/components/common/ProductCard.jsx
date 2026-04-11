@@ -3,126 +3,137 @@ import { Link } from "react-router-dom";
 import { AiOutlinePicture } from "react-icons/ai";
 import getTimesAgo from "../../common/getTimesAgo";
 import styled from "styled-components";
-import { StatusBadge, ConditionTag } from "../../common/style";
+import { ConditionTag } from "../../common/style";
+
+const PageContainer = styled.div`
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0;
+  width: 200px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: inline-block;
+  margin: 10px;
+  position: relative;
+`;
+
+const TimeTag = styled.div`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(34, 34, 34, 0.44);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  z-index: 10;
+  pointer-events: none;
+`;
+
+const ImageWrapper = styled.div`
+  height: 180px;
+  background-color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+`;
+
+const StyledImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const NoImagePlaceholder = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #ccc;
+  span {
+    font-size: 0.7rem;
+    margin-top: 4px;
+  }
+`;
+
+const ContentBox = styled.div`
+  padding: 12px 12px 16px 12px;
+`;
+
+const Title = styled.h3`
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const Price = styled.p`
+  color: #e60000;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem 0;
+`;
+
+const TagGroup = styled.div`
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+`;
+
+const StatusLabel = styled.span`
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: capitalize;
+  font-weight: 600;
+  background-color: ${props => {
+    const s = props.$status?.toLowerCase();
+    if (s === "sold") return "#e9ecef";
+    if (s === "reserved") return "#fff3cd";
+    return "#d4edda";
+  }};
+  color: ${props => {
+    const s = props.$status?.toLowerCase();
+    if (s === "sold") return "#6c757d";
+    if (s === "reserved") return "#856404";
+    return "#155724";
+  }};
+`;
 
 export default function ProductCard({ id, name, price, condition, status, images, created_at }) {
   const [imgError, setImgError] = useState(false);
   const hasImage = images && images.length > 0;
 
-  const getStatusStyle = (status) => {
-    const s = status?.toLowerCase();
-    let bg = "#d4edda", color = "#155724";
-    if (s === "sold") { bg = "#e9ecef"; color = "#6c757d"; }
-    if (s === "reserved") { bg = "#fff3cd"; color = "#856404"; }
-    return { backgroundColor: bg, color: color };
-  };
-
-  const statusStyle = getStatusStyle(status);
-
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        padding: "0",
-        width: "200px",
-        overflow: "hidden",
-        backgroundColor: "#fff",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-        display: "inline-block",
-        margin: "10px",
-        position: "relative",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: "8px",
-          right: "8px",
-          backgroundColor: "rgba(34, 34, 34, 0.44)",
-          color: "#fff",
-          padding: "2px 6px",
-          borderRadius: "4px",
-          fontSize: "0.7rem",
-          zIndex: "10", 
-          pointerEvents: "none", 
-        }}
-      >
-        {getTimesAgo(created_at)}
-      </div>
+    <PageContainer>
+      <TimeTag>{getTimesAgo(created_at)}</TimeTag>
 
       <Link to={`/product/${id}`} style={{ textDecoration: "none" }}>
-        <div
-          style={{
-            height: "180px",
-            backgroundColor: "#f9f9f9",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-          }}
-        >
+        <ImageWrapper>
           {hasImage && !imgError ? (
-            <img
+            <StyledImage
               src={images[0]}
               alt={name}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
               onError={() => setImgError(true)}
             />
-            ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#ccc' }}>
+          ) : (
+            <NoImagePlaceholder>
               <AiOutlinePicture size={48} />
-              <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>No Image</span>
-            </div>
+              <span>No Image</span>
+            </NoImagePlaceholder>
           )}
-
-        </div>
+        </ImageWrapper>
       </Link>
 
-      <div style={{ padding: "12px 12px 16px 12px" }}>
-        <h3
-          style={{
-            fontSize: "1rem",
-            margin: "0 0 0.5rem 0",
-            color: "#333",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {name}
-        </h3>
+      <ContentBox>
+        <Title title={name}>{name}</Title>
+        <Price>${price} HKD</Price>
 
-        <p
-          style={{
-            color: "#e60000",
-            fontWeight: "bold",
-            fontSize: "1.2rem",
-            margin: "0 0 0.5rem 0",
-          }}
-        >
-          ${price} HKD
-        </p>
-
-        <div style={{ display: "flex", justifyContent: "space-around", width: "100%" }}>
-          <span
-            style={{
-              fontSize: "0.8rem",
-              color: "#666",
-              backgroundColor: "#f0f0f0",
-              padding: "2px 8px",
-              borderRadius: "4px",
-              textTransform: "capitalize",
-              fontWeight: "600",
-              ...statusStyle,
-            }}
-          >
-            {status}
-          </span>
+        <TagGroup>
+          <StatusLabel $status={status}>{status}</StatusLabel>
           {condition ? (
             <ConditionTag
               $condition={condition}
@@ -131,10 +142,10 @@ export default function ProductCard({ id, name, price, condition, status, images
               {condition}
             </ConditionTag>
           ) : (
-            <div style={{ height: "20px" }}></div>
+            <div style={{ height: "20px" }} />
           )}
-        </div>
-      </div>
-    </div>
+        </TagGroup>
+      </ContentBox>
+    </PageContainer>
   );
 }

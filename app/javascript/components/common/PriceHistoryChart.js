@@ -11,9 +11,23 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
+import styled from "styled-components";
+
+const PageContainer = styled.div`
+  width: 100%;
+  height: 300px; 
+  position: relative;
+`;
+
+const ChartTitle = styled.h4`
+  margin: "0 0 10px 0";
+  fontWeight: "bold";
+  fontSize: "0.9rem"; 
+  color: "#555";
+`;
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
+;
 export default function PriceHistoryChart({ productId }) {
   const [chartData, setChartData] = useState(null);
   const [chartTitle, setChartTitle] = useState("Price History");
@@ -77,11 +91,9 @@ export default function PriceHistoryChart({ productId }) {
   if (chartData.labels.length <= 1) return <p style={{color: "#888"}}>Not enough price history available yet.</p>;
 
   return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <p style={{ margin: "0 0 10px 0", fontWeight: "bold", fontSize: "0.9rem", color: "#555" }}>
-        {chartTitle}
-      </p>
+    <PageContainer>
+      <ChartTitle>{chartTitle}</ChartTitle>
       <Line data={chartData} options={{ responsive: true, maintainAspectRatio: false, plugins: {datalabels: {display: false } } }} />
-    </div>
+    </PageContainer>
   );
 }

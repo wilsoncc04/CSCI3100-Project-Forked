@@ -12,6 +12,41 @@ import {
 import { Bar, Doughnut } from "react-chartjs-2";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { goodsTypes } from "../../common/productConstants";
+import styled from "styled-components";
+
+const PageContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  align-items: center;
+`;
+
+const ChartSection = styled.div`
+  flex: 1;
+  min-width: 300px;
+  height: 400px;
+`;
+
+const ChartTitle = styled.h4`
+  margin: 0 0 12px 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4b5563;
+`;
+
+const VerticalDivider = styled.div`
+  width: 1px;
+  background-color: #ddd;
+  align-self: stretch;
+  display: ${props => (props.$isMobile ? "none" : "block")};
+`;
+
+const DoughnutContainer = styled(ChartSection)`
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 8px;
+`;
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 ChartJS.register(ChartDataLabels);
@@ -20,6 +55,7 @@ export default function MarketStatChart({ products }) {
     if (!products || products.length === 0) {
         return <p style={{ padding: "20px", color: "#888" }}>Gathering market data...</p>;
     }
+    const isMobile = window.innerWidth < 768;
     const { chartData } = useMemo(() => {
     const counts = new Array(goodsTypes.length).fill(0);
     const activeProducts = products.filter(p => 
@@ -130,35 +166,18 @@ export default function MarketStatChart({ products }) {
   };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "30px", alignItems: "center" }}>
-      <div style={{ flex: 1, minWidth: "300px", height: "400px" }}>
-        <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', color: '#333' }}>
-          Item Quantity
-        </h4>
+    <PageContainer>
+      <ChartSection>
+        <ChartTitle>Item Quantity</ChartTitle>
         <Bar data={chartData} options={barOptions} />
-      </div>
+      </ChartSection>
 
-      <div style={{ 
-        width: "1px", 
-        backgroundColor: "#ddd", 
-        alignSelf: "stretch", 
-        display: window.innerWidth < 768 ? "none" : "block" 
-      }}></div>
+      <VerticalDivider $isMobile={isMobile} />
 
-      <div style={{ 
-        flex: 1, 
-        minWidth: "300px", 
-        height: "400px", 
-        padding: "10px",
-        backgroundColor: "#fff",
-        borderRadius: "8px"
-      }}>
-        <h4 style={{ textAlign: 'center', marginBottom: '-5px', color: '#555' }}>
-          Category Share
-        </h4>
+      <DoughnutContainer>
+        <ChartTitle style={{ margin: '0 0 -15px 0' }}>Category Share</ChartTitle>
         <Doughnut data={chartData} options={doughnutOptions} plugins={[bentCalloutPlugin]} />
-      </div>
-      
-    </div>
+      </DoughnutContainer>
+    </PageContainer>
   );
 }

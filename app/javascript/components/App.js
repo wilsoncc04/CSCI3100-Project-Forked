@@ -92,8 +92,10 @@ export default function App() {
       try {
         const res = await axios.get("/sessions");
         setUser(res.data);
+        localStorage.setItem("currentUser", JSON.stringify(res.data));
       } catch (err) {
         setUser(null);
+        localStorage.removeItem("currentUser");
       }
     };
     checkAuth();

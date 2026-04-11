@@ -22,11 +22,25 @@ const ActionButton = styled.button`
   background: none;
   cursor: pointer;
   font-size: 24px;
-  padding: 8px;
+  padding: 12px;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  border-radius: 50%;
+  width: 85px;
+  height: 85px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #e8e8e8;
+  }
+
+  &:active:not(:disabled) {
+    background-color: #dadada;
+    transform: scale(0.96);
+  }
   
   /* 新增：處理禁用狀態的視覺反饋 */
   &:disabled {
@@ -36,9 +50,10 @@ const ActionButton = styled.button`
 `;
 
 const ActionButtonText = styled.span`
-  margin-top: 6px;
-  font-size: 0.9rem;
+  margin-top: 4px;
+  font-size: 0.85rem;
   color: #333;
+  font-weight: 500;
 `;
 
 const PageContainer = styled.div`

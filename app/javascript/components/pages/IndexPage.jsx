@@ -20,8 +20,11 @@ const ChartSection = styled.div`
 `;
 
 const ChartTitle = styled.h3`
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
 `;
 
 const SectionHeader = styled.div`

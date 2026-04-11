@@ -18,7 +18,7 @@ export const StatusBadge = styled.span`
 export const ConditionTag = styled.span`
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
 
   background-color: #f3f4f6;
