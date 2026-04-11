@@ -358,6 +358,7 @@ function extractApiErrorMessage(err, fallback) {
 
 function LikeButton({ productId, initialLiked }) {
   const [liked, setLiked] = useState(initialLiked);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLiked(initialLiked);
@@ -365,10 +366,20 @@ function LikeButton({ productId, initialLiked }) {
 
   const handleLike = async () => {
     try {
-      const res = await axios.post(`/products/${productId}/interest`);
+      const res = await axios.post(`/products/${productId}/interest`, {}, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
       setLiked(res.data.status === 'liked');
     } catch (err) {
-      alert("Please login first.");
+      if (err.response?.status === 401) {
+        alert("Please login first.");
+        navigate("/login"); 
+      } else {
+        console.error("Failed to toggle interest", err);
+      }
     }
   };
 
@@ -417,6 +428,11 @@ function BuyButton({ product }) {
       : `Confirm interest in buying "${product.name}"?`;
 
     if (!window.confirm(confirmMsg)) return;
+    if (!localUserId) {
+      alert("Please login first.");
+      navigate("/login");
+      return;
+    }
 
     setLoading(true);
     try {

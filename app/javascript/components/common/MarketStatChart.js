@@ -41,7 +41,7 @@ export default function MarketStatChart({ products }) {
           backgroundColor: colors,
           borderColor: "#ffffff",
           borderWidth: 2,
-          radius: '75%',
+          radius: '70%',
         }]
       }
     };
