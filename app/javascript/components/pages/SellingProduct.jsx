@@ -1,6 +1,125 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import axios from "axios";
+
+const PageContainer = styled.div`
+  padding: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+`;
+
+const Title = styled.h2`
+  color: #702082;
+  border-bottom: 2px solid #702082;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+  font-weight: 600;
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+`;
+
+const Th = styled.th`
+  padding: 15px;
+  border-bottom: 2px solid #eee;
+  color: #333;
+  text-align: left;
+  background-color: #f8f9fa;
+`;
+
+const Td = styled.td`
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+`;
+
+const ItemInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: bold;
+`;
+
+const Thumbnail = styled.img`
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+`;
+
+const StatusBadge = styled.span`
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background-color: ${props => {
+    switch (props.status?.toLowerCase()) {
+      case 'sold': return '#e9ecef';
+      case 'reserved': return '#fff3cd';
+      default: return '#d4edda';
+    }
+  }};
+  color: ${props => {
+    switch (props.status?.toLowerCase()) {
+      case 'sold': return '#6c757d';
+      case 'reserved': return '#856404';
+      default: return '#155724';
+    }
+  }};
+`;
+
+const ActionGroup = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const ActionButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const EditButton = styled(ActionButton)`
+  background-color: transparent;
+  color: #702082;
+  border: 1px solid #702082;
+`;
+
+const DeleteButton = styled(ActionButton)`
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+`;
+
+const LoadingText = styled.div`
+  padding: 40px;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #666;
+`;
+
+const EmptyMessage = styled.td`
+  padding: 40px;
+  text-align: center;
+  color: #888;
+  font-style: italic;
+`;
 
 export default function SellingProducts() {
   const [products, setProducts] = useState([]);
@@ -11,6 +130,7 @@ export default function SellingProducts() {
     fetchMyProducts();
   }, []);
 
+  // Fetch the list of products currently being sold by the user
   const fetchMyProducts = async () => {
     try {
       const response = await axios.get("/products/selling", {
@@ -24,6 +144,7 @@ export default function SellingProducts() {
     }
   };
 
+  // Handle product deletion with confirmation and CSRF token security
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
 
@@ -33,7 +154,8 @@ export default function SellingProducts() {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
         }
       });
-      // 從 UI 中移除
+      
+      // Update the local state to remove the deleted product from UI
       setProducts(products.filter(p => p.id !== id));
       alert("Product deleted.");
     } catch (error) {
@@ -42,113 +164,67 @@ export default function SellingProducts() {
     }
   };
 
-  if (loading) return <div style={{ padding: "20px" }}>Loading your items...</div>;
+  if (loading) return <LoadingText>Loading your items...</LoadingText>;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
-      <h2 style={{ color: "#702082", borderBottom: "2px solid #702082", paddingBottom: "10px" }}>
-        On-Selling Products
-      </h2>
+    <PageContainer>
+      <Title>On-Selling Products</Title>
       
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+      <Table>
         <thead>
-          <tr style={{ backgroundColor: "#f8f9fa", textAlign: "left" }}>
-            <th style={thStyle}>Item Name</th>
-            <th style={thStyle}>Price (HKD)</th>
-            <th style={thStyle}>Status</th>
-            <th style={thStyle}>Actions</th>
+          <tr>
+            <Th>Item Name</Th>
+            <Th>Price (HKD)</Th>
+            <Th>Status</Th>
+            <Th>Actions</Th>
           </tr>
         </thead>
         <tbody>
           {products.length === 0 ? (
             <tr>
-              <td colSpan="4" style={{ padding: "20px", textAlign: "center", color: "#888" }}>
+              <EmptyMessage colSpan="4">
                 You haven't listed any products yet.
-              </td>
+              </EmptyMessage>
             </tr>
           ) : (
             products.map((product) => (
-              <tr key={product.id} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={tdStyle}>
-                  <div style={{ fontWeight: "bold" }}>{product.name}</div>
-                  {product.images && product.images.length > 0 && (
-                    <img 
-                      src={product.images[0]} 
-                      alt="thumb" 
-                      style={{ width: "50px", height: "50px", objectFit: "cover", marginTop: "5px", borderRadius: "4px" }} 
-                    />
-                  )}
-                </td>
+              <tr key={product.id}>
+                <Td>
+                  <ItemInfo>
+                    {product.name}
+                    {product.images && product.images.length > 0 && (
+                      <Thumbnail 
+                        src={product.images[0]} 
+                        alt="Product Thumbnail" 
+                      />
+                    )}
+                  </ItemInfo>
+                </Td>
 
-                <td style={tdStyle}>${product.price}</td>
+                <Td>${product.price}</Td>
 
-                <td style={tdStyle}>
-                  <span style={statusBadge(product.status)}>{product.status}</span>
-                </td>
+                <Td>
+                  <StatusBadge status={product.status}>
+                    {product.status}
+                  </StatusBadge>
+                </Td>
 
-                <td style={tdStyle}>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {/* 隊友建議：直接跳轉到 SellPage 的編輯模式 */}
-                    <button 
-                      onClick={() => navigate(`/edit/${product.id}`)} 
-                      style={editButtonStyle}
-                    >
+                <Td>
+                  <ActionGroup>
+                    <EditButton onClick={() => navigate(`/edit/${product.id}`)}>
                       Edit
-                    </button>
+                    </EditButton>
                     
-                    <button 
-                      onClick={() => handleDelete(product.id)} 
-                      style={deleteButtonStyle}
-                    >
+                    <DeleteButton onClick={() => handleDelete(product.id)}>
                       Delete
-                    </button>
-                  </div>
-                </td>
+                    </DeleteButton>
+                  </ActionGroup>
+                </Td>
               </tr>
             ))
           )}
         </tbody>
-      </table>
-    </div>
+      </Table>
+    </PageContainer>
   );
 }
-
-const thStyle = { padding: "15px", borderBottom: "2px solid #ddd", color: "#555" };
-const tdStyle = { padding: "15px" };
-
-const editButtonStyle = {
-  padding: "6px 12px",
-  backgroundColor: "white",
-  color: "#702082",
-  border: "1px solid #702082",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontWeight: "bold"
-};
-
-const deleteButtonStyle = {
-  padding: "6px 12px",
-  backgroundColor: "#dc3545",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontWeight: "bold"
-};
-
-const statusBadge = (status) => {
-  const s = status?.toLowerCase();
-  let bg = "#d4edda", color = "#155724";
-  if (s === "sold") { bg = "#e9ecef"; color = "#6c757d"; }
-  if (s === "reserved") { bg = "#fff3cd"; color = "#856404"; }
-  
-  return {
-    padding: "4px 10px",
-    borderRadius: "12px",
-    fontSize: "0.85rem",
-    fontWeight: "bold",
-    backgroundColor: bg,
-    color: color,
-    textTransform: "capitalize"
-  };
-};

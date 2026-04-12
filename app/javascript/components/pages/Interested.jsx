@@ -1,6 +1,90 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+
+const Container = styled.div`
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+`;
+
+const Title = styled.h2`
+  color: #702082;
+  border-bottom: 2px solid #702082;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+  font-weight: 600;
+`;
+
+const ListGrid = styled.div`
+  display: grid;
+  gap: 20px;
+`;
+
+const ItemCard = styled.div`
+  display: flex;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-color: #702082;
+  }
+`;
+
+const ProductImage = styled.img`
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+`;
+
+const InfoSection = styled.div`
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+`;
+
+const ProductName = styled.h3`
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+`;
+
+const Price = styled.p`
+  color: #dc3545;
+  font-weight: bold;
+  margin: 0;
+  font-size: 1rem;
+`;
+
+const StatusText = styled.span`
+  font-size: 0.85rem;
+  color: #888;
+  text-transform: capitalize;
+`;
+
+const LoadingMessage = styled.div`
+  padding: 40px;
+  text-align: center;
+  color: #666;
+`;
+
+const EmptyState = styled.p`
+  text-align: center;
+  color: #999;
+  padding: 40px 0;
+  font-style: italic;
+`;
 
 export default function Interested() {
   const [interests, setInterests] = useState([]);
@@ -10,7 +94,7 @@ export default function Interested() {
   useEffect(() => {
     const fetchInterests = async () => {
       try {
-        // 發送請求到我們剛剛在 Rails 增加的路由
+        // Fetch the list of products that the current user is interested in
         const response = await axios.get("/users/interests");
         setInterests(response.data);
       } catch (err) {
@@ -22,47 +106,36 @@ export default function Interested() {
     fetchInterests();
   }, []);
 
-  if (loading) return <div style={{ padding: "20px" }}>Loading your list...</div>;
+  if (loading) return <LoadingMessage>Loading your list...</LoadingMessage>;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h2 style={{ color: "#702082" }}>Goods I'm Interested In</h2>
+    <Container>
+      <Title>Goods I'm Interested In</Title>
       
       {interests.length === 0 ? (
-        <p>You haven't marked any items as interested yet.</p>
+        <EmptyState>You haven't marked any items as interested yet.</EmptyState>
       ) : (
-        <div style={{ display: "grid", gap: "15px" }}>
+        <ListGrid>
           {interests.map((item) => (
-            <div 
+            <ItemCard 
               key={item.id} 
               onClick={() => navigate(`/product/${item.id}`)}
-              style={{ 
-                display: "flex", 
-                border: "1px solid #ddd", 
-                borderRadius: "8px", 
-                overflow: "hidden", 
-                cursor: "pointer",
-                alignItems: "center"
-              }}
             >
-              <img 
-                src={item.images[0] || "https://via.placeholder.com/100"} 
+              <ProductImage 
+                src={item.images[0] || "https://via.placeholder.com/120"} 
                 alt={item.name} 
-                style={{ width: "100px", height: "100px", objectFit: "cover" }} 
               />
-              <div style={{ padding: "15px" }}>
-                <h3 style={{ margin: "0 0 5px 0" }}>{item.name}</h3>
-                <p style={{ color: "#e60000", fontWeight: "bold", margin: 0 }}>
-                  ${item.price} HKD
-                </p>
-                <span style={{ fontSize: "0.8rem", color: "#888" }}>
+              <InfoSection>
+                <ProductName>{item.name}</ProductName>
+                <Price>${item.price} HKD</Price>
+                <StatusText>
                   Status: {item.status}
-                </span>
-              </div>
-            </div>
+                </StatusText>
+              </InfoSection>
+            </ItemCard>
           ))}
-        </div>
+        </ListGrid>
       )}
-    </div>
+    </Container>
   );
 }
