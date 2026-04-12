@@ -190,19 +190,18 @@ class ProductsController < ApplicationController
     end
 
     ActiveRecord::Base.transaction do
-      # 如果原本是 available，改為 reserved 但不鎖定 buyer_id
       if @product.status == 'available'
         @product.update!(status: "reserved")
       end
 
-      # 建立或尋找聊天室
+      # build or find existing chat between buyer and seller for this product
       chat = Chat.find_or_create_by!(
         item_id: @product.id,
         seller_id: @product.seller_id,
         interested_id: current_user.id
       )
 
-      # 建立系統訊息（若還未發送過）
+      # Send a system message if this is the first time the buyer is requesting to buy this product
       unless chat.messages.exists?(sender_id: current_user.id)
         Message.create!(
           chat_id: chat.id,

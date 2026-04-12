@@ -1,7 +1,149 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import axios from "axios";
 import { createConsumer } from "@rails/actioncable";
+
+
+const PageContainer = styled.div`
+  display: flex;
+  height: 85vh;
+  max-width: 1200px;
+  margin: 20px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 1px solid #eee;
+`;
+
+const Sidebar = styled.div`
+  width: 30%;
+  border-right: 1px solid #eee;
+  overflow-y: auto;
+  background-color: #fafafa;
+`;
+
+const ChatListItem = styled.div`
+  padding: 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+  background-color: ${props => props.active ? "#f3eaf5" : "transparent"};
+  
+  &:hover {
+    background-color: #f8f1f9;
+  }
+`;
+
+const ChatWindow = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+`;
+
+const ChatHeader = styled.div`
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const MessageList = styled.div`
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #fdfdfd;
+`;
+
+const MessageBubble = styled.div`
+  align-self: ${props => props.isMe ? "flex-end" : "flex-start"};
+  margin-bottom: 15px;
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 15px;
+  font-size: 0.95rem;
+  background-color: ${props => props.isMe ? "#702082" : "#e9e9eb"};
+  color: ${props => props.isMe ? "#fff" : "#000"};
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+`;
+
+const ControlPanel = styled.div`
+  padding: 15px;
+  border-top: 1px solid #eee;
+  background-color: #f9f9f9;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+`;
+
+const ActionButton = styled.button`
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  border: none;
+
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
+const ConfirmBtn = styled(ActionButton)`
+  background-color: #28a745;
+  color: #fff;
+`;
+
+const CancelBtn = styled(ActionButton)`
+  background-color: #fff;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+`;
+
+const InputForm = styled.form`
+  padding: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+`;
+
+const TextInput = styled.input`
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  outline: none;
+  &:focus {
+    border-color: #702082;
+  }
+`;
+
+const SendButton = styled.button`
+  padding: 10px 25px;
+  border-radius: 25px;
+  background-color: #702082;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+`;
+
+const Badge = styled.span`
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: bold;
+  background-color: ${props => props.type === 'reserved' ? "#fff3cd" : "#d1ecf1"};
+  color: ${props => props.type === 'reserved' ? "#856404" : "#0c5460"};
+`;
+
 
 const ChatPage = () => {
   const [searchParams] = useSearchParams();
@@ -14,18 +156,15 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true);
 
   const chatIdFromUrl = searchParams.get("chat_id");
-  const autoSend = searchParams.get("auto_send"); // 如果 URL 有 auto_send=true
-  const hasSentAutoMsg = useRef(false);
 
-  // --- 判斷邏輯 ---
   const isSeller = currentUser && activeChat && (
-  Number(currentUser.id) === Number(activeChat.product.seller_id) || 
-  Number(currentUser.id) === Number(activeChat.seller?.id)
-);
+    Number(currentUser.id) === Number(activeChat.product.seller_id) || 
+    Number(currentUser.id) === Number(activeChat.seller?.id)
+  );
   
-  // 修正：只有當 product.buyer_id 真的等於當前聊天的買家 ID 時，才算是 "Primary Buyer"
   const isPrimaryBuyer = activeChat && Number(activeChat.product.buyer_id) === Number(activeChat.buyer.id);
 
+  // Initialize data and handle authentication
   useEffect(() => {
     const initChat = async () => {
       try {
@@ -52,7 +191,7 @@ const ChatPage = () => {
     initChat();
   }, [chatIdFromUrl, navigate]);
 
-  // WebSocket 處理
+  // Handle WebSocket channel subscription and cleanup
   useEffect(() => {
     if (!activeChat || !currentUser) return;
     fetchMessages(activeChat.id);
@@ -98,157 +237,152 @@ const ChatPage = () => {
     if (messageContent === "" || !activeChat) return;
 
     try {
-      const res = await axios.post(`/chats/${activeChat.id}/messages`, {
+      await axios.post(`/chats/${activeChat.id}/messages`, {
         message: { message: messageContent }
       });
-      setChatHistory((prev) => [...prev, res.data]);
       if (!customText) setInputText("");
-      setTimeout(scrollToBottom, 50);
-    } catch (err) { console.error("Failed to send message", err); }
+    } catch (err) { 
+      console.error("Failed to send message", err); 
+    }
   };
 
-const handleFinalConfirm = async (targetBuyerId) => {
-  if (!window.confirm("Confirm selling to this buyer? Other chats for this item will be closed.")) return;
+  // Finalize the trade between seller and a specific buyer
+  const handleFinalConfirm = async (targetBuyerId) => {
+    if (!window.confirm("Confirm selling to this buyer? Other chats for this item will be closed.")) return;
+
+    try {
+      const res = await axios.patch(`/products/${activeChat.product.id}`, {
+        product: { status: 'sold', buyer_id: targetBuyerId }
+      });
+
+      if (res.status === 200) {
+        alert("Success! Item sold.");
+        const updatedProduct = { ...activeChat.product, status: 'sold', buyer_id: targetBuyerId };
+        setActiveChat(prev => ({ ...prev, product: updatedProduct }));
+        setChats(prev => prev.filter(c => c.product.id !== updatedProduct.id || Number(c.buyer.id) === Number(targetBuyerId)));
+        await handleSendMessage(null, "🎊 System: The seller has confirmed the trade. Item SOLD.");
+      }
+    } catch (err) {
+      alert("Error confirming trade");
+    }
+  };
+
+  // Close the current chat conversation for either seller or buyer
+  const handleCancelThisChat = async (chatId) => {
+  const partnerName = isSeller ? activeChat.buyer.name : activeChat.seller.name;
+  const myName = currentUser.name;
+  const productName = activeChat.product.name;
+
+  const confirmMsg = isSeller 
+    ? `Reject ${partnerName}? This will notify them and close the chat.` 
+    : "Cancel this trade? The seller will be notified.";
+  
+  if (!window.confirm(confirmMsg)) return;
 
   try {
-    const res = await axios.patch(`/products/${activeChat.product.id}`, {
-      product: { status: 'sold', buyer_id: targetBuyerId }
+    const notificationText = `⚠️ System: ${myName} has cancelled the trading of ${productName}`;
+    
+    await axios.post(`/chats/${chatId}/messages`, {
+      message: { message: notificationText }
     });
 
-    if (res.status === 200) {
-      alert("Success! Item sold.");
-      
-      const updatedProduct = { ...activeChat.product, status: 'sold', buyer_id: targetBuyerId };
-
-      // 更新當前聊天視窗
-      setActiveChat(prev => ({ ...prev, product: updatedProduct }));
-
-      // 同步更新左側列表，並過濾掉其他人的聊天（因為後端已經刪除其他人的 chat）
-      // 這裡建議直接重新 fetch /chats 最保險，或者手動 filter
-      setChats(prev => prev.filter(c => c.product.id !== updatedProduct.id || Number(c.buyer.id) === Number(targetBuyerId)));
-      
-      // 發送成交的系統訊息
-      await handleSendMessage(null, "🎊 System: The seller has confirmed the trade. Item SOLD.");
-    }
-  } catch (err) {
-    alert("Error confirming trade");
-  }
-};
-
-const handleCancelThisChat = async (chatId) => {
-  if (!window.confirm("Reject this buyer? This chat will disappear.")) return;
-
-  try {
-    // 呼叫我們剛才在後端寫的邏輯
     await axios.patch(`/products/${activeChat.product.id}`, {
       action_type: 'cancel_chat',
       chat_id: chatId
     });
-
-    // 從列表移除並導向
+    
     setChats(prev => prev.filter(c => c.id !== chatId));
     setActiveChat(null);
-    alert("Chat closed.");
+    alert("Chat closed successfully.");
   } catch (err) {
+    console.error("Error during cancellation:", err);
     alert("Error closing chat");
   }
 };
- 
 
   if (loading) return <div style={{ padding: "20px" }}>Loading...</div>;
   
   return (
-    <div style={{ display: "flex", height: "80vh", border: "1px solid #ddd", borderRadius: "12px", overflow: "hidden" }}>
-      {/* 左側列表 */}
-      <div style={{ width: "30%", borderRight: "1px solid #eee", overflowY: "auto", backgroundColor: "#fafafa" }}>
+    <PageContainer>
+      <Sidebar>
         {chats.map(chat => (
-          <div key={chat.id} onClick={() => setActiveChat(chat)}
-            style={{ 
-              padding: "15px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", 
-              backgroundColor: activeChat?.id === chat.id ? "#e6f0ff" : "transparent"
-            }}>
-            <div style={{ fontWeight: "bold" }}>
+          <ChatListItem 
+            key={chat.id} 
+            onClick={() => setActiveChat(chat)}
+            active={activeChat?.id === chat.id}
+          >
+            <div style={{ fontWeight: "bold", display: "flex", alignItems: "center" }}>
               {Number(currentUser.id) === Number(chat.seller.id) ? chat.buyer.name : chat.seller.name}
-              {/* 顯示預約標籤：商品處於預約狀態，且該買家就是預約的人 */}
               {chat.product.status === 'reserved' && Number(chat.product.buyer_id) === Number(chat.buyer.id) && 
-                <span style={{ fontSize: "0.7rem", backgroundColor: "#fff3cd", color: "#856404", padding: "2px 6px", borderRadius: "4px", marginLeft: "5px" }}>預約中</span>
+                <Badge type="reserved">Reserved</Badge>
               }
             </div>
-            <div style={{ fontSize: "0.8rem", color: "#888", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: "0.85rem", color: "#666", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", marginTop: "4px" }}>
               {chat.product.name}
             </div>
-          </div>
+          </ChatListItem>
         ))}
-      </div>
+      </Sidebar>
 
-      {/* 右側視窗 */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <ChatWindow>
         {activeChat ? (
           <>
-            <div style={{ padding: "15px", borderBottom: "1px solid #eee", backgroundColor: "#fff" }}>
-              Chatting about: <strong>{activeChat.product.name}</strong> 
-              <span style={{ marginLeft: "10px", color: "#888" }}>({activeChat.product.status})</span>
-              
-              {!isSeller && activeChat.product.status === 'reserved' && (
-                <span style={{ marginLeft: "10px", fontWeight: "bold", color: isPrimaryBuyer ? "#28a745" : "#fd7e14" }}>
-                  {isPrimaryBuyer ? " (You are the primary buyer)" : " (You are in the waitlist)"}
-                </span>
-              )}
-            </div>
+            <ChatHeader>
+              <div>
+                Chatting about: <strong>{activeChat.product.name}</strong> 
+                <Badge>{activeChat.product.status}</Badge>
+                
+                {!isSeller && activeChat.product.status === 'reserved' && (
+                  <span style={{ marginLeft: "10px", fontSize: "0.9rem", color: isPrimaryBuyer ? "#28a745" : "#fd7e14" }}>
+                    {isPrimaryBuyer ? " (Primary Buyer)" : " (Waitlist)"}
+                  </span>
+                )}
+              </div>
+            </ChatHeader>
 
-            <div id="chat-container" style={{ flex: 1, padding: "20px", overflowY: "auto", display: "flex", flexDirection: "column", backgroundColor: "#fdfdfd" }}>
+            <MessageList id="chat-container">
               {chatHistory.map((msg) => {
                 const isMe = currentUser && Number(msg.sender.id) === Number(currentUser.id);
                 return (
-                  <div key={msg.id} style={{ alignSelf: isMe ? "flex-end" : "flex-start", marginBottom: "15px", maxWidth: "70%" }}>
-                    <div style={{ padding: "10px 15px", borderRadius: "15px", backgroundColor: isMe ? "#0066cc" : "#e9e9eb", color: isMe ? "#fff" : "#000" }}>
-                      {msg.message}
-                    </div>
-                  </div>
+                  <MessageBubble key={msg.id} isMe={isMe}>
+                    {msg.message}
+                  </MessageBubble>
                 );
               })}
-            </div>
+            </MessageList>
 
-            {/* 交易控制按鈕 */}
-            {activeChat.product.status !== 'sold' && isSeller && (
-  <div style={{ padding: "10px 15px", borderTop: "1px solid #eee", backgroundColor: "#f9f9f9", display: "flex", gap: "10px", justifyContent: "center" }}>
-    
-    {/* 直接顯示成交按鈕 */}
-    <button 
-      onClick={() => handleFinalConfirm(activeChat.buyer.id)} 
-      style={styles.confirmTradeBtn}
-    >
-      Confirm Trade (Sell to this User)
-    </button>
+            {/* Trade Controls: Sellers see Confirm/Reject, Buyers see Cancel Trade */}
+            {activeChat.product.status !== 'sold' && (
+              <ControlPanel>
+                {isSeller && (
+                  <ConfirmBtn onClick={() => handleFinalConfirm(activeChat.buyer.id)}>
+                    Confirm Trade
+                  </ConfirmBtn>
+                )}
+                <CancelBtn onClick={() => handleCancelThisChat(activeChat.id)}>
+                  {isSeller ? "Reject Buyer" : "Cancel Trade"}
+                </CancelBtn>
+              </ControlPanel>
+            )}
 
-    {/* 拒絕或取消這段對話 */}
-    <button 
-      onClick={() => handleCancelThisChat(activeChat.id)} 
-      style={styles.cancelTradeBtn}
-    >
-      Cancel / Reject Buyer
-    </button>
-    
-  </div>
-)}
-
-            <form onSubmit={handleSendMessage} style={{ padding: "15px", borderTop: "1px solid #eee", display: "flex", gap: "10px", backgroundColor: "#fff" }}>
-              <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Type a message..." style={{ flex: 1, padding: "10px 15px", borderRadius: "25px", border: "1px solid #ddd" }} />
-              <button type="submit" style={{ padding: "8px 20px", borderRadius: "25px", backgroundColor: "#0066cc", color: "#fff", border: "none", cursor: "pointer" }}>Send</button>
-            </form>
+            <InputForm onSubmit={handleSendMessage}>
+              <TextInput 
+                type="text" 
+                value={inputText} 
+                onChange={(e) => setInputText(e.target.value)} 
+                placeholder="Type a message..." 
+              />
+              <SendButton type="submit">Send</SendButton>
+            </InputForm>
           </>
         ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#999" }}>Select a conversation</div>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#999" }}>
+            Select a conversation to start chatting
+          </div>
         )}
-      </div>
-    </div>
+      </ChatWindow>
+    </PageContainer>
   );
-};
-
-const styles = {
-  cancelTradeBtn: { padding: "8px 16px", borderRadius: "6px", backgroundColor: "#fff", color: "#dc3545", border: "1px solid #dc3545", fontWeight: "bold", cursor: "pointer" },
-  confirmTradeBtn: { padding: "8px 16px", borderRadius: "6px", backgroundColor: "#28a745", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" },
-  switchBuyerBtn: { padding: "8px 16px", borderRadius: "6px", backgroundColor: "#fd7e14", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }
 };
 
 export default ChatPage;

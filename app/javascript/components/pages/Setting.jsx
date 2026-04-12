@@ -38,7 +38,7 @@ const PasswordInput = styled.input`
 const UpdateButton = styled.button`
   width: 100%;
   padding: 12px;
-  background-color: #702082; /* 使用你專案的紫色調 */
+  background-color: #702082;
   color: #fff;
   border: none;
   border-radius: 8px;

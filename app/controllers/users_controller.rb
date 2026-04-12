@@ -84,12 +84,11 @@ class UsersController < ApplicationController
     end
 
     if user.verify_otp!(otp)
-    # 關鍵：驗證成功後自動登入，這樣跳轉到 Account 頁面才拿得到資料
     session[:user_id] = user.id
 
     render json: {
       message: "verified",
-      user: format_user(user) # 把 user 資料傳回去，方便前端立刻 setUser
+      user: format_user(user)
     }, status: :ok
     else
     render_error("verification_failed_or_expired", status: :unprocessable_content)
@@ -178,15 +177,15 @@ end
 
  # PATCH/PUT /users/:id
  def update
-  # 1. 處理圖片上傳 (你原本的邏輯)
+  # handle profile picture update separately because it's a file upload and may not be included in user_params
   if params[:profile_picture].present?
     @user.profile_picture.purge if @user.profile_picture.attached?
     @user.profile_picture.attach(params[:profile_picture])
   end
 
-  # 2. 更新其他欄位 (College, Hostel 等)
+  # only update other attributes if user params are provided (to allow profile picture update without affecting other fields)
   if params[:user].present?
-    # user_params 已經包含了 :college 和 :hostel
+    # user_params
     unless @user.update(user_params)
       render_error(@user.errors, status: :unprocessable_content)
       return
@@ -217,12 +216,12 @@ end
 
   # GET /users/interests
   def interests
-  # 這裡不需要 set_user，因為我們直接用 current_user
+  # fetch all products that the current user has expressed interest in, including their images and status
   @interests = current_user.interests.includes(:product)
 
   render json: @interests.map { |interest|
     product = interest.product
-    next if product.nil? # 防呆：萬一產品被刪了
+    next if product.nil? 
     {
       id: product.id,
       name: product.name,
@@ -243,7 +242,7 @@ end
 
   def format_user(user)
   user.as_json(except: [ :password_digest, :verification_otp ]).merge(
-    # 增加圖片網址回傳
+    # include profile picture URL if attached, otherwise nil
     profile_picture_url: user.profile_picture.attached? ? url_for(user.profile_picture) : nil
   )
   end
