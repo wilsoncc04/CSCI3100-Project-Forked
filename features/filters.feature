@@ -6,7 +6,7 @@ Feature: Marketplace Hover Navigation Menu
   @javascript
   Scenario: View available College filtering links
     Given I am on the marketplace index page
-    When I hover over the "Browse Categories" menu
+    When I hover over the "College" menu
     Then I should see the following category links:
       | Chung Chi College |
       | New Asia College  |
@@ -21,7 +21,7 @@ Feature: Marketplace Hover Navigation Menu
   @javascript
   Scenario: View available Goods Type filtering links
     Given I am on the marketplace index page
-    When I hover over the "Browse Categories" menu
+    When I hover over the "Goods Type" menu
     Then I should see the following category links:
       | Textbooks & Notes      |
       | Electronics & Gadgets  |

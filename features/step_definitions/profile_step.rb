@@ -5,6 +5,11 @@ require 'cgi'
 #  visit '/profile'
 #end
 
+When(/I hover over settings/) do
+  setting_link = find('a', text: 'Setting', visible: true)
+  setting_link.hover
+end
+
 When(/^(?:|I )click on the "(.*)" sidebar link$/) do |link_text|
     setting_link = find('a', text: 'Setting', visible: true)
     setting_link.hover

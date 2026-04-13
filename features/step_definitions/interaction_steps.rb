@@ -2,14 +2,18 @@ require 'uri'
 require 'cgi'
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "support", "paths"))
 
-Given(/^(?:|I )am on (.+)$/) do |page_name|
+Given(/^(?:|I )am on the (.+) page$/) do |page_name|
   case page_name
-  when "the marketplace index page"
+  when "home"
+    visit "/"
+  when "marketplace index"
     visit '/'
-  when "the profile page"
+  when "profile"
     visit '/Account'
-  when "the sell page"
+  when "sell"
     visit '/sell'
+  when "community"
+    visit '/community'
   else
     visit path_to(page_name)
   end
@@ -17,6 +21,12 @@ end
 
 When(/^I click the "([^"]*)" (?:button|link)$/) do |text|
   click_link_or_button(text, match: :first)
+
+  sleep 0.3
+end
+
+When(/^I (?:check|click) the "([^"]*)" checkbox$/) do |label_text|
+  check(label_text, match: :first)   # Capybara's built-in check helper
 end
 
 When(/^I hover over the "(.*)" menu$/) do |menu_text|
@@ -57,7 +67,7 @@ end
 Then(/^I should see the following category links:$/) do |table|
   expected_links = table.raw.flatten
   expected_links.each do |link_text|
-    expect(page).to have_link(link_text)
+    expect(page).to have_content(link_text)
   end
 end
 
