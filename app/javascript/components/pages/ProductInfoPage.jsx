@@ -579,8 +579,6 @@ export default function ProductInfoPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  const [sellerName, setSellerName] = useState("Anonymous User");
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0); 
 
@@ -615,28 +613,12 @@ export default function ProductInfoPage() {
       setProduct(null); 
       setIsLoading(true);
       setError(null);
-      setSellerName("Anonymous User");
 
       try {
         const response = await axios.get(`/products/${id}`, { signal: controller.signal });
         const data = response.data;
         if (isMounted) {
           setProduct(data);
-        }
-        
-        const sellerId = data.seller_id;
-        if (sellerId) {
-          try {
-            const userResponse = await axios.get(`/users/${sellerId}`, { signal: controller.signal });
-            if (isMounted) {
-              setSellerName(userResponse.data.name);
-            }
-          } catch (userErr) {
-            if (userErr?.code === "ERR_CANCELED") {
-              return;
-            }
-            console.error("Failed to fetch seller name", userErr);
-          }
         }
       } catch (err) {
         if (err?.code === "ERR_CANCELED") {
@@ -717,7 +699,8 @@ export default function ProductInfoPage() {
   if (!product) return <LoadingErrorState>Product not found</LoadingErrorState>;
 
   const images = product.images || [];
-  const avatarUrl = currentUser?.profile_picture_url || null;
+  const sellerName = product.seller_name || "Anonymous User";
+  const sellerAvatarUrl = product.seller_profile_picture_url || null;
 
   return (
     <PageContainer>
@@ -798,7 +781,7 @@ export default function ProductInfoPage() {
             <SectionTitle>Contact Information</SectionTitle>
             <SellerRow onClick={() => navigate(`/profile/${product.seller_id}`)}>
               <AvatarCircle>
-                {avatarUrl ? ( <AvatarImage src={avatarUrl} alt="Seller Avatar" /> ) : ( <AiOutlineUser /> )}
+                {sellerAvatarUrl ? ( <AvatarImage src={sellerAvatarUrl} alt="Seller Avatar" /> ) : ( <AiOutlineUser /> )}
               </AvatarCircle>
               <SellerNameText>{sellerName}</SellerNameText>
             </SellerRow>

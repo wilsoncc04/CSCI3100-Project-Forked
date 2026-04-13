@@ -307,7 +307,9 @@ class ProductsController < ApplicationController
 
   def format_product(product)
     product.as_json(only: PRODUCT_JSON_ONLY).merge(
-      "images" => product.images.map { |img| rails_blob_path(img, only_path: true) }
+      "images" => product.images.map { |img| rails_blob_path(img, only_path: true) },
+      "seller_name" => product.seller&.name,
+      "seller_profile_picture_url" => product.seller&.profile_picture&.attached? ? rails_blob_path(product.seller.profile_picture, only_path: true) : nil
     )
   end
 
