@@ -58,15 +58,14 @@ const PaginationButton = styled.button`
   cursor: ${props => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s ease;
   font-size: 0.9rem;
+  border: none;
 
   ${props => props.$isPrimary 
     ? `
-      border: 1px solid ${props.disabled ? "#ebd9ed" : "#702082"};
-      background-color: ${props.disabled ? "#ebd9ed" : "#702082"};
-      color: ${props.disabled ? "#a689a9" : "#fff"};
+      background-color: ${props.disabled ? "#b896bd" : "#702082"};
+      color: ${props.disabled ? "#eee0f0" : "#fff"};
     `
     : `
-      border: 1px solid ${props.disabled ? "#ccc" : "#e6e6e6"};
       background-color: ${props.disabled ? "#ccc" : "#e6e6e6"};
       color: ${props.disabled ? "#999" : "#333"};
     `
@@ -74,16 +73,15 @@ const PaginationButton = styled.button`
 
   &:hover {
     ${props => !props.disabled && `
-      transform: translateY(-3px);
+      transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      
-      background-color: ${props.$isPrimary ? "#8e2da5" : "#e9ecef"};
+      background-color: ${props.$isPrimary ? "#8e2da5" : "#d1d5db"};
     `}
   }
 
   &:active {
     ${props => !props.disabled && `
       transform: translateY(0);
-      background-color: ${props.$isPrimary ? "#5a1a69" : "#d1d5db"};
+      background-color: ${props.$isPrimary ? "#5a1a69" : "#9ca3af"};
     `}
 `;
