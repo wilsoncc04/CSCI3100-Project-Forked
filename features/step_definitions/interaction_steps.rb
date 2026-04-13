@@ -22,7 +22,7 @@ end
 When(/^I click the "([^"]*)" (?:button|link)$/) do |text|
   click_link_or_button(text, match: :first)
 
-  sleep 0.3
+  sleep 0.5
 end
 
 When(/^I (?:check|click) the "([^"]*)" checkbox$/) do |label_text|

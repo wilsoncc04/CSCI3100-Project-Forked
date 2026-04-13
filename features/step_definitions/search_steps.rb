@@ -5,27 +5,16 @@ Given(/^the following categories exist:$/) do |table|
 end
 
 Given(/^all categories exist/) do
+
   categories = [
-    "Textbooks & Notes",
-    "Electronics & Gadgets",
-    "Furniture & Home",
-    "Clothing & Accessories",
-    "Stationery & Supplies",
-    "Snacks & Food",
-    "Others"
+    "Textbooks & Notes", "Electronics & Gadgets", "Furniture & Home",
+    "Clothing & Accessories", "Stationery & Supplies", "Snacks & Food", "Others"
   ]
-
-  # Ensure data is committed and visible to other connections
-  ActiveRecord::Base.connection.execute("SET CONSTRAINTS ALL DEFERRED") if defined?(PG)
-
-  Category.transaction do
-    categories.each do |name|
-      Category.find_or_create_by!(category_name: name)
-    end
+  
+  categories.each do |name|
+    Category.find_or_create_by!(category_name: name)
   end
-
-  # Optional: force a commit
-  ActiveRecord::Base.connection.commit_db_transaction if ActiveRecord::Base.connection.open_transactions > 0
+  
 end
 
 Given(/^the following users exist:$/) do |table|
