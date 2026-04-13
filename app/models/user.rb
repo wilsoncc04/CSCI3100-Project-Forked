@@ -28,6 +28,14 @@ class User < ApplicationRecord
     # Scopes
     scope :admins, -> { where(is_admin: true) }
 
+    def profile_picture_url
+        if profile_picture.attached?
+            Rails.application.routes.url_helpers.rails_blob_path(profile_picture, only_path: true)
+        else
+            nil
+        end
+    end
+
     def generate_verification_otp!
         # 6-digit numeric OTP (zero-padded)
         self.verification_otp = rand(0..999999).to_s.rjust(6, "0")

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { 
   FaUserCircle, FaEnvelope, FaPenNib, FaRegEdit, 
-  FaSave, FaTimes, FaUniversity, FaBuilding, FaCamera 
+  FaSave, FaTimes, FaUniversity, FaBuilding, FaCamera, FaTrashAlt 
 } from "react-icons/fa";
 import { MdOutlineDateRange } from "react-icons/md";
 import { colleges } from "../../common/collegeConstants";
@@ -47,7 +47,6 @@ const AvatarWrapper = styled.div`
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  overflow: hidden;
   border: 3px solid #702082;
   display: flex;
   justify-content: center;
@@ -58,7 +57,31 @@ const AvatarWrapper = styled.div`
 const AvatarImage = styled.img`
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
+`;
+
+const DeleteIconBadge = styled.div`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #dc3545;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  border: 2px solid #fff;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #a71d2a;
+    transform: scale(1.1);
+  }
 `;
 
 const UploadOverlay = styled.label`
@@ -72,6 +95,8 @@ const UploadOverlay = styled.label`
   align-items: center;
   cursor: pointer;
   transition: background-color 0.2s;
+  border-bottom-left-radius: 50px;
+  border-bottom-right-radius: 50px;
 `;
 
 const FieldRow = styled.div`
@@ -106,9 +131,7 @@ const StyledInput = styled.input`
   border-radius: 6px;
   border: 1px solid ${props => props.error ? "#dc3545" : "#ddd"};
   outline: none;
-  &:focus {
-    border-color: #702082;
-  }
+  &:focus { border-color: #702082; }
 `;
 
 const StyledSelect = styled.select`
@@ -128,29 +151,14 @@ const ActionButton = styled.button`
   align-items: center;
   border: none;
   transition: opacity 0.2s;
-  
   &:hover { opacity: 0.9; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
-
   svg { margin-right: 7px; }
 `;
 
-const SaveBtn = styled(ActionButton)`
-  background-color: #28a745;
-  color: white;
-`;
-
-const EditBtn = styled(ActionButton)`
-  background-color: white;
-  color: #702082;
-  border: 1px solid #702082;
-`;
-
-const CancelBtn = styled(ActionButton)`
-  background-color: #6c757d;
-  color: white;
-`;
-
+const SaveBtn = styled(ActionButton)` background-color: #28a745; color: white; `;
+const EditBtn = styled(ActionButton)` background-color: white; color: #702082; border: 1px solid #702082; `;
+const CancelBtn = styled(ActionButton)` background-color: #6c757d; color: white; `;
 
 export default function AccountInfo({ user, setUser }) {
   if (!user) {
@@ -161,6 +169,7 @@ export default function AccountInfo({ user, setUser }) {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   
   const [profile, setProfile] = useState({
     username: user?.name || "",
@@ -177,7 +186,7 @@ export default function AccountInfo({ user, setUser }) {
   const [tempProfile, setTempProfile] = useState({ ...profile });
   const availableHalls = colleges.find(c => c.name === tempProfile.college)?.halls || [];
 
-  // Sync state with user prop changes and force edit mode if college is missing
+  // Sync state with user prop changes
   useEffect(() => {
     if (user) {
       const newProfile = {
@@ -193,6 +202,7 @@ export default function AccountInfo({ user, setUser }) {
       };
       setProfile(newProfile);
       setTempProfile(newProfile);
+      // Auto-enable edit mode if essential data is missing
       if (!user.college) setIsEditing(true);
     }
   }, [user]);
@@ -211,10 +221,16 @@ export default function AccountInfo({ user, setUser }) {
     if (file) {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
+      setRemoveAvatar(false); // New file selection cancels removal request
     }
   };
 
-  // Validate required fields and send multi-part form data to backend
+  const handleDeleteAvatar = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setRemoveAvatar(true); // Flag to tell backend to delete existing image
+  };
+
   const handleSave = async () => {
     if (!tempProfile.college) {
       notify.error("Please select your College before saving.");
@@ -227,7 +243,15 @@ export default function AccountInfo({ user, setUser }) {
     formData.append("user[bio]", tempProfile.bio);
     formData.append("user[college]", tempProfile.college);
     formData.append("user[hostel]", tempProfile.hostel);
-    if (selectedFile) formData.append("profile_picture", selectedFile);
+    
+    // Priority 1: Request removal
+    if (removeAvatar) {
+      formData.append("remove_avatar", "true");
+    } 
+    // Priority 2: Upload new file
+    else if (selectedFile) {
+      formData.append("profile_picture", selectedFile);
+    }
     
     try {
       const response = await apiClient.patch(`/users/${user.id}`, formData, {
@@ -235,10 +259,18 @@ export default function AccountInfo({ user, setUser }) {
       });
 
       if (response.status === 200) {
-        setProfile({ ...tempProfile, avatarUrl: response.data.profile_picture_url || tempProfile.avatarUrl });
+        // Sync new state from backend response
+        const updatedAvatar = response.data.profile_picture_url || null;
+        const savedData = { ...tempProfile, avatarUrl: updatedAvatar };
+        
+        setProfile(savedData);
         if (setUser) setUser(response.data);
+        
+        // Reset flags
         setIsEditing(false);
         setPreviewUrl(null);
+        setSelectedFile(null);
+        setRemoveAvatar(false);
         
         notify.success("Profile updated successfully!");
       }
@@ -264,6 +296,8 @@ export default function AccountInfo({ user, setUser }) {
                 setIsEditing(false);
                 setTempProfile({...profile});
                 setPreviewUrl(null);
+                setSelectedFile(null);
+                setRemoveAvatar(false);
               }}>
                 <FaTimes /> Cancel
               </CancelBtn>
@@ -279,16 +313,27 @@ export default function AccountInfo({ user, setUser }) {
       <InfoContainer>
         <AvatarRow>
           <AvatarWrapper>
-            {previewUrl || profile.avatarUrl ? (
+            {/* Display Logic: Preview > Profile > Default Icon */}
+            {(previewUrl || (profile.avatarUrl && !removeAvatar)) ? (
               <AvatarImage src={previewUrl || profile.avatarUrl} alt="Avatar" />
             ) : (
               <FaUserCircle style={{ fontSize: "80px", color: "#ccc" }} />
             )}
+
             {isEditing && (
-              <UploadOverlay>
-                <FaCamera style={{ color: "#fff", fontSize: "20px" }} />
-                <input type="file" hidden onChange={handleFileChange} accept="image/*" />
-              </UploadOverlay>
+              <>
+                {/* Delete button only appears if an image currently exists */}
+                {(previewUrl || (profile.avatarUrl && !removeAvatar)) && (
+                  <DeleteIconBadge onClick={handleDeleteAvatar}>
+                    <FaTrashAlt size={14} />
+                  </DeleteIconBadge>
+                )}
+                
+                <UploadOverlay>
+                  <FaCamera style={{ color: "#fff", fontSize: "20px" }} />
+                  <input type="file" hidden onChange={handleFileChange} accept="image/*" />
+                </UploadOverlay>
+              </>
             )}
           </AvatarWrapper>
           <div>

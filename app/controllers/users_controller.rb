@@ -182,6 +182,8 @@ end
   if params[:profile_picture].present?
     @user.profile_picture.purge if @user.profile_picture.attached?
     @user.profile_picture.attach(params[:profile_picture])
+  elsif params[:remove_avatar] == "true"
+    @user.profile_picture.purge if @user.profile_picture.attached?
   end
 
   # only update other attributes if user params are provided (to allow profile picture update without affecting other fields)

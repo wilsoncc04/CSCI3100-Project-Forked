@@ -16,7 +16,8 @@ class Message < ApplicationRecord
       created_at: self.created_at,
       sender: {
         id: self.sender.id,
-        name: self.sender.name
+        name: self.sender.name,
+        profile_picture_url: self.sender.profile_picture_url
       }
     })
   end
