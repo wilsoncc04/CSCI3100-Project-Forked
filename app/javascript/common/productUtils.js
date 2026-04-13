@@ -5,7 +5,7 @@ export const getProducts = async (params) => {
     return response.data;
 };
 
-export const getMySellingProducts = async () => {
-  const response = await apiClient.get("/products/selling");
+export const getMySellingProducts = async (params) => {
+  const response = await apiClient.get("/products/selling", { params });
   return response.data;
 };

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { HiChevronRight } from "react-icons/hi";
 import apiClient from "../../common/apiClient";
 import { notify } from "../../common/notify";
 import { getMySellingProducts } from "../../common/productUtils";
+import SortDropdown from "../common/SortDropDown";
 
 const PageContainer = styled.div`
   padding: 40px;
@@ -15,11 +16,18 @@ const PageContainer = styled.div`
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 `;
 
-const Title = styled.h2`
-  color: #702082;
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-bottom: 2px solid #702082;
   padding-bottom: 15px;
   margin-bottom: 30px;
+`;
+
+const Title = styled.h2`
+  color: #702082;
+  margin: 0; 
   font-weight: 600;
 `;
 
@@ -36,11 +44,13 @@ const Table = styled.table`
   color: #333;
   text-align: left;
   background-color: #f8f9fa;
-  // &:first-child {
-  //   width: 40%; 
-  // }
+  &:first-child {
+    border-top-left-radius: 9px;
+  }
+  &:last-child {
+    border-top-right-radius: 9px;
+  }
   &:not(:first-child) {
-    // width: 1%;
     white-space: nowrap;
   }
 `;
@@ -173,15 +183,18 @@ export default function SellingProducts() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const sortOption = searchParams.get("sort_by") || "default";
+
   useEffect(() => {
     fetchMyProducts();
-  }, []);
+  }, [sortOption]);
 
   // Fetch the list of products currently being sold by the user
   const fetchMyProducts = async () => {
     try {
-      setLoading(true);
-      const data = await getMySellingProducts();
+      // setLoading(true);
+      const data = await getMySellingProducts({ sort_by: sortOption });
       setProducts(data);
     } catch (error) {
       console.error("Error fetching my products:", error);
@@ -199,7 +212,7 @@ export default function SellingProducts() {
       await apiClient.delete(`/products/${id}`);
       
       setProducts(products.filter(p => p.id !== id));
-      notify.success("Product deleted successfully!"); // 使用美觀的通知
+      notify.success("Product deleted successfully!");
     } catch (error) {
         console.error("Error deleting product:", error);
         notify.error("Error deleting product: " + (error.response?.data?.error || error.message));
@@ -210,10 +223,13 @@ export default function SellingProducts() {
 
   return (
     <PageContainer>
-      <Title>My Products</Title>
+      <Header>
+        <Title>My Products</Title>
+        <SortDropdown />
+      </Header>
       
       <Table>
-        <thead>
+        <thead style={{ borderRadius: "12px" }}>
           <tr>
             <Th>Item Name</Th>
             <Th>Price (HKD)</Th>

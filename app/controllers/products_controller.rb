@@ -170,6 +170,16 @@ class ProductsController < ApplicationController
   # GET /products/selling
   def selling
     products = Product.with_attached_images.where(seller_id: current_user.id)
+    case params[:sort_by]
+    when "price_asc"
+      products = products.reorder(price: :asc)
+    when "price_desc"
+      products = products.reorder(price: :desc)
+    when "date_asc"
+      products = products.reorder(created_at: :asc)
+    when "date_desc"
+      products = products.reorder(created_at: :desc)
+    end
     render json: products.map { |p| format_product(p) }, status: :ok
   end
 

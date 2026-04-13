@@ -4,8 +4,8 @@ import styled from "styled-components";
 import axios from "axios";
 import AccountInfo from "./AccountInfo";
 import Interested from "./Interested";
-import SellingProduct from "./SellingProduct";
-import Setting from "./Setting";
+import MyProduct from "./MyProduct";
+import ResetPassword from "./ResetPassword";
 import { logoutUser } from "../../common/loginauth";
 import { notify } from "../../common/notify";
 
@@ -151,15 +151,15 @@ export default function AccountPage({ setUser }) {
     );
   }
 
-  const menuItems = ["Account info", "Interested", "My Products", "Setting", "Log out"];
+  const menuItems = ["Account Info", "Interested", "My Products", "Reset Password", "Log out"];
 
   // Determine which sub-component to display based on activeTab
   const renderContent = () => {
     switch (activeTab) {
-      case "Account info": return <AccountInfo user={userData} />;
+      case "Account Info": return <AccountInfo user={userData} />;
       case "Interested": return <Interested />;
-      case "My Products": return <SellingProduct />;
-      case "Setting": return <Setting user={userData} />;
+      case "My Products": return <MyProduct />;
+      case "Reset Password": return <ResetPassword user={userData} />;
       default: return <AccountInfo user={userData} />;
     }
   };

@@ -24,9 +24,8 @@ const Header = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: 24px;
-  margin: 0;
-  color: #333;
+  color: #702082;
+  margin: 0; 
   font-weight: 600;
 `;
 

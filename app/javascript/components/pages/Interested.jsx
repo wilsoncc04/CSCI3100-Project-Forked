@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { AiOutlinePicture } from "react-icons/ai";
 import { StatusBadge } from "../../common/style";
+import SortDropdown from "../common/SortDropDown";
+import { getProducts } from "../../common/productUtils";
 
 const Container = styled.div`
   padding: 40px;
@@ -14,11 +16,18 @@ const Container = styled.div`
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 `;
 
-const Title = styled.h2`
-  color: #702082;
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-bottom: 2px solid #702082;
   padding-bottom: 15px;
   margin-bottom: 30px;
+`;
+
+const Title = styled.h2`
+  color: #702082;
+  margin: 0; 
   font-weight: 600;
 `;
 
@@ -97,12 +106,17 @@ export default function Interested() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const sortOption = searchParams.get("sort_by") || "default";
+
   useEffect(() => {
     const fetchInterests = async () => {
       try {
         // Fetch the list of products that the current user is interested in
-        const response = await axios.get("/users/interests");
-        setInterests(response.data);
+        const productsRes = await getProducts({
+          sort_by: sortOption
+        });
+        setInterests(productsRes.data || []);
       } catch (err) {
         console.error("Fetch interests failed:", err);
       } finally {
@@ -110,13 +124,17 @@ export default function Interested() {
       }
     };
     fetchInterests();
-  }, []);
+  }, [sortOption]);
 
   if (loading) return <LoadingMessage>Loading your list...</LoadingMessage>;
 
   return (
     <Container>
-      <Title>Goods I'm Interested In</Title>
+      <Header>
+        <Title>Goods I'm Interested In</Title>
+        <SortDropdown />
+      </Header>
+        
       
       {interests.length === 0 ? (
         <EmptyState>You haven't marked any items as interested yet.</EmptyState>

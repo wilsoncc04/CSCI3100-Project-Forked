@@ -30,8 +30,8 @@ User.find_or_create_by!(email: '1155000000@link.cuhk.edu.hk') do |user|
   user.is_admin = true
 end
 
-5.times do |i|
-  student_id = "115500000#{i+1}"
+1.times do |i|
+  student_id = "115500000#{i+5}"
   User.find_or_create_by!(cuhk_id: student_id) do |user|
     user.name = "Student #{i}"
     user.email = "#{student_id}@link.cuhk.edu.hk"
