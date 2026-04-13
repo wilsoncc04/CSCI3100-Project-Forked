@@ -7,6 +7,7 @@ import Interested from "./Interested";
 import SellingProduct from "./SellingProduct";
 import Setting from "./Setting";
 import { logoutUser } from "../../common/loginauth";
+import { notify } from "../../common/notify";
 
 
 const Container = styled.div`
@@ -116,18 +117,22 @@ export default function AccountPage({ setUser }) {
 
   // Handle user logout, clear local storage and redirect to login
   const handleLogout = async () => {
-    if (window.confirm("Are you sure you want to log out?")) {
-      try {
-        await logoutUser();
-        if (setUser) setUser(null);
-        localStorage.removeItem("currentUser");
-                navigate("/login");
+    const isConfirmed = await notify.confirm(
+          "Log Out",
+          "Are you sure you want to log out?"
+        );
+        
+    if (!isConfirmed) return;
+    try {
+      await logoutUser();
+      if (setUser) setUser(null);
+      localStorage.removeItem("currentUser");
+      navigate("/login");
 
-      } catch (error) {
-        console.error("Logout failed", error);
-        localStorage.removeItem("currentUser");
-        navigate("/login");
-      }
+    } catch (error) {
+      console.error("Logout failed", error);
+      localStorage.removeItem("currentUser");
+      navigate("/login");
     }
   };
 

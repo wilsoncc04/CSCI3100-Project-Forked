@@ -336,10 +336,11 @@ const GraphWrapper = styled.div`
   }
 `;
 const GraphArea = styled.div`
-  height: 250px;
+  height: auto;
+  min-height: 300px;
   position: relative;
   border: none;
-  padding: 10px 20px 30px 20px;
+  padding: 10px 20px 45px 20px;
 `;
 
 const GraphPlaceholder = styled.p`
@@ -529,8 +530,6 @@ function BuyButton({ product }) {
 
     const isConfirmed = await notify.confirm("Confirm Purchase", confirmMsg);
     if (!isConfirmed) return;
-
-    if (!window.confirm(confirmMsg)) return;
 
     setLoading(true);
     try {

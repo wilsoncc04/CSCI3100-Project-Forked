@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { AiOutlinePicture } from "react-icons/ai";
+import { StatusBadge } from "../../common/style";
 
 const Container = styled.div`
   padding: 40px;
@@ -31,7 +33,7 @@ const ItemCard = styled.div`
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  align-items: center;
+  align-items: stretch;
   transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
@@ -43,8 +45,9 @@ const ItemCard = styled.div`
 
 const ProductImage = styled.img`
   width: 120px;
-  height: 120px;
+  height: 100%;
   object-fit: cover;
+  min-height: 120px;
 `;
 
 const InfoSection = styled.div`
@@ -67,12 +70,6 @@ const Price = styled.p`
   font-size: 1rem;
 `;
 
-const StatusText = styled.span`
-  font-size: 0.85rem;
-  color: #888;
-  text-transform: capitalize;
-`;
-
 const LoadingMessage = styled.div`
   padding: 40px;
   text-align: center;
@@ -84,6 +81,16 @@ const EmptyState = styled.p`
   color: #999;
   padding: 40px 0;
   font-style: italic;
+`;
+
+const ImagePlaceholder = styled.div`
+  width: 120px;
+  height: 100%;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
 `;
 
 export default function Interested() {
@@ -121,16 +128,17 @@ export default function Interested() {
               key={item.id} 
               onClick={() => navigate(`/product/${item.id}`)}
             >
-              <ProductImage 
-                src={item.images[0] || "https://via.placeholder.com/120"} 
-                alt={item.name} 
-              />
+              {item.images && item.images[0] ? (
+                <ProductImage src={item.images[0]} alt={item.name} />
+              ) : (
+                <ImagePlaceholder>
+                  <AiOutlinePicture size={60} />
+                </ImagePlaceholder>
+              )}
               <InfoSection>
                 <ProductName>{item.name}</ProductName>
                 <Price>${item.price} HKD</Price>
-                <StatusText>
-                  Status: {item.status}
-                </StatusText>
+                <StatusBadge style={{ alignSelf: "flex-start", marginTop: "5px" }} $status={item.status}>{item.status}</StatusBadge>
               </InfoSection>
             </ItemCard>
           ))}

@@ -112,21 +112,21 @@ export default function App() {
     );
     
     if (!isConfirmed) return;
-      try {
-        await logoutUser();
-        setUser(null); 
-        setShowProfile(false); 
-        localStorage.removeItem("currentUser");
-        notify.success("Logged out successfully.");
-        setTimeout(() => {
-          window.location.href = "/"; 
-        }, 400);
-      } catch (err) {
-        console.error("Logout failed", err);
-        setUser(null);
-        localStorage.removeItem("currentUser");
-        window.location.href = "/";
-      }
+    try {
+      await logoutUser();
+      setUser(null); 
+      setShowProfile(false); 
+      localStorage.removeItem("currentUser");
+      notify.success("Logged out successfully.");
+      setTimeout(() => {
+        window.location.href = "/"; 
+      }, 400);
+    } catch (err) {
+      console.error("Logout failed", err);
+      setUser(null);
+      localStorage.removeItem("currentUser");
+      window.location.href = "/";
+    }
   };
   
   return (

@@ -80,34 +80,37 @@ export default function IndexPage() {
   const sortOption = searchParams.get("sort_by") || "default";
 
   useEffect(() => {
-  const fetchChart = async () => {
-    const res = await getProducts({ fetch_all: "true" });
-    if (res.data) setChartProducts(res.data);
-  };
-  fetchChart();
-}, []);
+    const fetchChart = async () => {
+      const res = await getProducts({ fetch_all: "true" });
+      if (res.data) setChartProducts(res.data);
+    };
+    fetchChart();
+  }, []);
 
   useEffect(() => {
-  const fetchList = async () => {
-    setIsLoading(true);
-    try {
-      const res = await getProducts({ 
-        page: currentPage, 
-        sort_by: sortOption,
-        limit: 15
-      });
-      
-      const available = (res.data || []).filter(p => p.status?.toLowerCase() !== 'sold');
-      setProducts(available);
-      if (res.pagination) setTotalPages(res.pagination.total_pages);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  fetchList();
-}, [currentPage, sortOption]);
+    const fetchList = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getProducts({ 
+          page: currentPage, 
+          sort_by: sortOption,
+          limit: 15
+        });
+        
+        const available = (res.data || []).filter(p => p.status?.toLowerCase() !== 'sold');
+        setProducts(available);
+        if (res.pagination) {
+          const pages = parseInt(res.pagination.total_pages);
+          setTotalPages(!isNaN(pages) ? pages : 1);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchList();
+  }, [currentPage, sortOption]);
 
   return (
     <PageContainer>

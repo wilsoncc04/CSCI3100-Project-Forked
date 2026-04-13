@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { goodsTypes } from "../../common/productConstants";
 import { useNavigate, useParams } from "react-router-dom";
 import { AiOutlineClose } from "react-icons/ai";
+import { FaUndo } from "react-icons/fa";
 import { MdAddPhotoAlternate } from "react-icons/md";
 import styled from "styled-components";
 import { notify } from "../../common/notify";
+import { ResetButton } from "../../common/style";
 
 const PageContainer = styled.div`
   max-width: 500px;
@@ -22,8 +24,8 @@ const StyledForm = styled.form`
 `;
 
 const UploadDropzone = styled.div`
-  border: ${(props) => (props.$isDragging ? "2px dashed #0066cc" : "2px dashed #ccc")};
-  background-color: ${(props) => (props.$isDragging ? "#e6f2ff" : "transparent")};
+  border: ${(props) => (props.$isDragging ? "2px dashed #702082" : "2px dashed #ccc")};
+  background-color: ${(props) => (props.$isDragging ? "#f3e8f5" : "transparent")};
   padding: 2rem;
   text-align: center;
   cursor: pointer;
@@ -39,7 +41,7 @@ const UploadLabel = styled.label`
 `;
 
 const UploadText = styled.span`
-  color: ${(props) => (props.$isDragging ? "#0066cc" : "#444")};
+  color: ${(props) => (props.$isDragging ? "#702082" : "#444")};
   font-weight: ${(props) => (props.$isDragging ? "bold" : "normal")};
   width: 100%;
   display: flex;
@@ -117,7 +119,7 @@ const FormInput = styled.input`
   border-radius: 6px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-  outline-color: #0066cc;
+  outline-color: #702082;
 `;
 
 const FormTextarea = styled.textarea`
@@ -126,7 +128,7 @@ const FormTextarea = styled.textarea`
   border-radius: 6px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-  outline-color: #0066cc;
+  outline-color: #702082;
   resize: vertical;
   min-height: ${(props) => props.$minHeight || "auto"};
 `;
@@ -149,6 +151,7 @@ const DropdownToggle = styled.button`
 `;
 
 const DropdownSelectedText = styled.span`
+  flex: 1;
   color: ${(props) => (props.$hasSelection ? "#333" : "#888")};
 `;
 
@@ -175,11 +178,11 @@ const DropdownOption = styled.button`
   cursor: pointer;
   font-size: 0.95rem;
   transition: background 0.2s;
-  background-color: ${(props) => (props.$isActive ? "#e6f2ff" : "transparent")};
-  color: ${(props) => (props.$isActive ? "#0066cc" : "#333")};
+  background-color: ${(props) => (props.$isActive ? "#f3e8f5" : "transparent")};
+  color: ${(props) => (props.$isActive ? "#702082" : "#333")};
 
   &:hover {
-    background-color: ${(props) => (props.$isActive ? "#e6f2ff" : "#f5f5f5")};
+    background-color: ${(props) => (props.$isActive ? "#f3e8f5" : "#f5f5f5")};
   }
 `;
 
@@ -198,9 +201,9 @@ const ConditionOption = styled.button`
   transition: all 0.2s ease;
   box-sizing: border-box;
   text-align: center;
-  border: ${(props) => (props.$isActive ? "2px solid #0066cc" : "2px solid #e0e0e0")};
-  background-color: ${(props) => (props.$isActive ? "#e6f2ff" : "#fff")};
-  color: ${(props) => (props.$isActive ? "#0066cc" : "#555")};
+  border: ${(props) => (props.$isActive ? "2px solid #702082" : "2px solid #e0e0e0")};
+  background-color: ${(props) => (props.$isActive ? "#f3e8f5" : "#fff")};
+  color: ${(props) => (props.$isActive ? "#702082" : "#555")};
 `;
 
 const PromoSection = styled.div`
@@ -249,19 +252,21 @@ const CancelButton = styled.button`
 const ConfirmButton = styled.button`
   flex: 1;
   padding: 1rem;
-  background-color: #0066cc;
+  background-color: #702082;
   color: white;
   border: none;
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
-  box-shadow: 0 4px 6px rgba(0, 102, 204, 0.2);
+  box-shadow: 0 4px 6px rgba(112, 32, 130, 0.2);
 
   &:hover {
-    background-color: #0052a3;
+    background-color: #5a1a69;
   }
 `;
+
+
 
 export default function SellPage() {
   const { id } = useParams();
@@ -528,6 +533,18 @@ export default function SellPage() {
               <DropdownSelectedText $hasSelection={!!formData.category_id}>
                 {formData.category_id || "Select a category"}
               </DropdownSelectedText>
+              {formData.category_id && (
+                <ResetButton
+                  type="button"
+                  title="Clear Category"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFormData({ ...formData, category_id: "" });
+                  }}
+                >
+                  <FaUndo size={12} />
+                </ResetButton>
+              )}
               <span>{isCategoryOpen ? "▴" : "▾"}</span>
             </DropdownToggle>
 

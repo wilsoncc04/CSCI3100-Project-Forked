@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { FaSearch, FaTimes, FaUndo } from "react-icons/fa";
 import { goodsTypes } from "../../common/productConstants";
 import { colleges } from "../../common/collegeConstants";
+import { ResetButton } from "../../common/style";
 
 const SearchBarContainer = styled.div`
   display: flex;
@@ -87,24 +88,6 @@ const OptionButton = styled.button`
   }
 `;
 
-const ResetButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.2s, color 0.2s;
-
-  &:hover {
-    background-color: #ffe6e6;
-    color: #e60000;
-  }
-`;
-
 const SearchInputWrapper = styled.div`
   position: relative;
   flex: 1;
@@ -138,6 +121,7 @@ const ClearButton = styled.button`
 
   &:hover {
     color: #555;
+    background-color: #f3e8f5;
   }
 `;
 

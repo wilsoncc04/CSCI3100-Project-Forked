@@ -41,3 +41,27 @@ export const TimeTag = styled.div`
   z-index: 10;
   pointer-events: none;
 `;
+
+export const ResetButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  margin-right: 4px;
+
+  &:hover {
+    background-color: #f3e8f5;
+    color: #702082;
+    transform: rotate(-30deg);
+  }
+
+  &:active {
+    background-color: #e8d5eb;
+  }
+`;

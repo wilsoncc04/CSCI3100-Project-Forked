@@ -37,7 +37,7 @@ class ProductsController < ApplicationController
     if params[:fetch_all] == "true"
       paginated_products = products
       page = 1
-      limit = total_count
+      limit = total_count > 0 ? total_count : 1
     else
       limit = (params[:limit] || 15).to_i
       limit = 15 if limit <= 0
@@ -55,7 +55,7 @@ class ProductsController < ApplicationController
         current_page: page,
         limit: limit,
         total_count: total_count,
-        total_pages: (total_count.to_f / limit).ceil
+        total_pages: limit > 0 ? (total_count.to_f / limit).ceil : 1
       }
     }
   rescue StandardError => e

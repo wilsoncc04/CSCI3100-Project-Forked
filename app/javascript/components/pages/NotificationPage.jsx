@@ -141,9 +141,7 @@ const NotificationPage = () => {
                 {isCancelled && <StatusBadge>Cancelled</StatusBadge>}
               </PartnerName>
               
-              <LastMessage isError={isCancelled}>
-                {chat.last_message || `New request for "${chat.product.name}"`}
-              </LastMessage>
+              <LastMessage isError={isCancelled}  dangerouslySetInnerHTML={{ __html: chat.last_message || `New request for "${chat.product.name}"`  }} />
               
               <Timestamp>
                 {new Date(chat.updated_at).toLocaleString('en-US', {
