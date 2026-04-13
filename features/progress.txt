@@ -1,0 +1,12 @@
+Progress to debug each cucumber feature
+X - accountinfo.feature (no content inside)
+X - community.feature (in progress)
+X - filters.feature
+X - logout.feature (have bug in line 12)
+X - password_reset.feature
+O - product_info.feature
+X - purchase_history.feature
+O - react_works.feature
+X - search_and_filter.feature
+O - sell.feature
+X - setting.feature (no content inside)

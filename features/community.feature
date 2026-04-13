@@ -4,11 +4,13 @@ Feature: Community Unit
   So that my college mates can see them
 
   Background:
-    Given I am a registered user with name "Wilson" and email "1155123456@link.cuhk.edu.hk" and college "Chung Chi College"
-    And I am logged in
+    Given the following users exist:
+    | email                       | password | name   | college           |
+    | 1155123456@link.cuhk.edu.hk | password | Wilson | Chung Chi College |
+    And I am logged in as "1155123456@link.cuhk.edu.hk" with password "password"
 
   Scenario: Promoting a product to the community during listing
-    When I go to the sell page
+    When I am on the sell page
     And I fill in "Product Name" with "Textbook"
     And I fill in "Price" with "50"
     And I fill in "Contact Info" with "WhatsApp 12345678"

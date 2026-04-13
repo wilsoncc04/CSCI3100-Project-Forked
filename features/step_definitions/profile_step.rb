@@ -1,15 +1,17 @@
 require 'uri'
 require 'cgi'
 
-Given(/^(?:|I )am on the profile page$/) do
-  visit '/profile'
-end
+#Given(/^(?:|I )am on the profile page$/) do
+#  visit '/profile'
+#end
 
 When(/^(?:|I )click on the "(.*)" sidebar link$/) do |link_text|
-  within("nav") do
-    click_link_text = find('div', text: link_text)
-    click_link_text.click
-  end
+    setting_link = find('a', text: 'Setting', visible: true)
+    setting_link.hover
+
+    sleep 0.3
+
+    find('button, a', text: link_text, visible: true).click
 end
 
 When(/^(?:|I )press the "(.*)" button$/) do |button_text|

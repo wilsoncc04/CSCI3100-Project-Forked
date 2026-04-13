@@ -6,6 +6,10 @@ Given(/^(?:|I )am on (.+)$/) do |page_name|
   case page_name
   when "the marketplace index page"
     visit '/'
+  when "the profile page"
+    visit '/Account'
+  when "the sell page"
+    visit '/sell'
   else
     visit path_to(page_name)
   end

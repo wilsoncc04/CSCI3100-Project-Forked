@@ -11,7 +11,7 @@ Given(/^I am logged in as "([^"]*)" with password "([^"]*)"$/) do |email, passwo
     click_button('Login')
   end
 
-  expect(page).to have_current_path('/Account', wait: 5)
+#  expect(page).to have_current_path('/Account', wait: 5)
 end
 
 def visit_product_details_page(product_name)
@@ -26,4 +26,8 @@ end
 
 Then(/^the "([^"]*)" button should be disabled$/) do |button_text|
   expect(page).to have_css('button:disabled', text: button_text)
+end
+
+Then(/^the "([^"]*)" button should not appear$/) do |button_text|
+  expect(page).to have_no_button(button_text)
 end

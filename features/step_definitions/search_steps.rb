@@ -40,7 +40,7 @@ Given(/^the following products exist:$/) do |table|
       price: row['price'],
       category: category,
       seller: seller,
-      status: "Available",
+      status: "available",
       condition: "New"
     )
   end

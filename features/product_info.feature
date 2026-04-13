@@ -26,4 +26,4 @@ Feature: Product Details Information
   Scenario: Seller cannot buy own product
     Given I am logged in as "1155000001@link.cuhk.edu.hk" with password "password123"
     When I open the product details page for "Calculus Textbook"
-    Then the "Buy" button should be disabled
+    Then the "Buy" button should not appear
