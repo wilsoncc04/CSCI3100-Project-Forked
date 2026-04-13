@@ -14,6 +14,8 @@ const Container = styled.div`
   display: flex;
   height: 100vh;
   background-color: #f8f9fa;
+
+  border-radius: 15px;
 `;
 
 const Sidebar = styled.div`
@@ -24,6 +26,9 @@ const Sidebar = styled.div`
   display: flex;
   flex-direction: column;
   z-index: 10;
+
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
 `;
 
 const SidebarHeader = styled.div`
@@ -49,7 +54,9 @@ const NavList = styled.nav`
 `;
 
 const MenuItem = styled.div`
-  padding: 16px 30px;
+  padding: 12px 20px;
+  margin: 4px 15px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   font-size: 1rem;
