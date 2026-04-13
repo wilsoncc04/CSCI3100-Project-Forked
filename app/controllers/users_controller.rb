@@ -1,7 +1,8 @@
 class UsersController < ApplicationController
   skip_before_action :verify_authenticity_token  # API endpoints don't need CSRF protection
+  before_action :authenticate_user!, only: [ :index, :admins, :show, :update, :destroy, :change_password, :interests ]
+  before_action :require_admin!, only: [ :index, :admins, :show ]
   before_action :set_user, only: [ :show, :update, :destroy ]
-  before_action :authenticate_user!, only: [ :update, :destroy, :change_password, :interests ]
   before_action :authorize_user_owner!, only: [ :update, :destroy ]
 
   # GET /users

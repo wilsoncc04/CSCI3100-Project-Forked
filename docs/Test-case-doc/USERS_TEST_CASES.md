@@ -1,23 +1,36 @@
 # Users API - Test Cases
 
 ## GET /users
-- when listing all users
+- when requester is admin
   - returns all users
   - returns users with correct attributes
 - when no users exist
   - returns an empty array
+- when requester is authenticated but not admin
+  - returns forbidden
+- when requester is unauthenticated
+  - returns unauthorized
 
 ## GET /users/admins
-- returns only admin users
-- validates admin response schema when data exists
+- when requester is admin
+  - returns only admin users
+  - validates admin response schema
+- when requester is authenticated but not admin
+  - returns forbidden
+- when requester is unauthenticated
+  - returns unauthorized
 
 ## GET /users/:id
-- when user exists
+- when requester is admin and user exists
   - returns the user details
   - returns user with all public attributes
   - does not expose sensitive information
-- when user does not exist
+- when requester is admin and user does not exist
   - returns 404 error
+- when requester is authenticated but not admin
+  - returns forbidden
+- when requester is unauthenticated
+  - returns unauthorized
 
 ## POST /users (create/register)
 - with valid parameters
@@ -127,8 +140,9 @@
 - allows unauthenticated access to verify action
 - allows unauthenticated access to forgot_password action
 - allows unauthenticated access to reset_password action
-- allows unauthenticated access to index action
-- allows unauthenticated access to show action
+- requires authentication for index action
+- requires authentication for admins action
+- requires authentication for show action
 - requires authentication for interests action
 - requires authentication for update action
 - requires authentication for destroy action

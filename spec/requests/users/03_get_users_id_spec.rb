@@ -18,9 +18,16 @@ RSpec.describe 'Users API', type: :request do
   let(:json_headers) { { 'ACCEPT' => 'application/json' } }
 
   describe 'GET /users/:id' do
-    context 'when user exists' do
+    let(:admin_user) { create(:user, is_admin: true, verified_at: Time.current) }
+
+    context 'when requester is admin and user exists' do
+      before do
+        allow_any_instance_of(UsersController).to receive(:current_user).and_return(admin_user)
+      end
+
       it 'returns the user details' do
-        get user_path(user.cuhk_id)
+        get user_path(user.cuhk_id), headers: json_headers
+
         expect(response).to have_http_status(:ok)
         user_data = JSON.parse(response.body)
         expect(user_data['email']).to eq(user.email)
@@ -28,7 +35,8 @@ RSpec.describe 'Users API', type: :request do
       end
 
       it 'returns user with all public attributes' do
-        get user_path(user.cuhk_id)
+        get user_path(user.cuhk_id), headers: json_headers
+
         user_data = JSON.parse(response.body)
         expect(user_data).to include(
           'id', 'email', 'name', 'cuhk_id', 'hostel', 'is_admin', 'college'
@@ -36,17 +44,45 @@ RSpec.describe 'Users API', type: :request do
       end
 
       it 'does not expose sensitive information' do
-        get user_path(user.cuhk_id)
+        get user_path(user.cuhk_id), headers: json_headers
+
         user_data = JSON.parse(response.body)
         expect(user_data).not_to include('password_digest', 'verification_otp')
       end
     end
 
-    context 'when user does not exist' do
+    context 'when requester is admin and user does not exist' do
+      before do
+        allow_any_instance_of(UsersController).to receive(:current_user).and_return(admin_user)
+      end
+
       it 'returns 404 error' do
-        get user_path('9999999999')
+        get user_path('9999999999'), headers: json_headers
+
         expect(response).to have_http_status(:not_found)
         expect(JSON.parse(response.body)).to include('error')
+      end
+    end
+
+    context 'when requester is authenticated but not admin' do
+      before do
+        allow_any_instance_of(UsersController).to receive(:current_user).and_return(user)
+      end
+
+      it 'returns forbidden' do
+        get user_path(another_user.cuhk_id), headers: json_headers
+
+        expect(response).to have_http_status(:forbidden)
+        expect(JSON.parse(response.body)).to include('error' => 'unauthorized')
+      end
+    end
+
+    context 'when requester is unauthenticated' do
+      it 'returns unauthorized' do
+        get user_path(user.cuhk_id), headers: json_headers
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)).to include('error' => 'unauthenticated')
       end
     end
   end

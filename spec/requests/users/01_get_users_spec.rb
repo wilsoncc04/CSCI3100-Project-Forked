@@ -18,18 +18,26 @@ RSpec.describe 'Users API', type: :request do
   let(:json_headers) { { 'ACCEPT' => 'application/json' } }
 
   describe 'GET /users' do
-    context 'when listing all users' do
-      before { create_list(:user, 3, verified_at: Time.current) }
+    let(:admin_user) { create(:user, is_admin: true, verified_at: Time.current) }
+
+    context 'when requester is admin' do
+      before do
+        allow_any_instance_of(UsersController).to receive(:current_user).and_return(admin_user)
+      end
 
       it 'returns all users' do
-        get users_path
+        create_list(:user, 3, verified_at: Time.current)
+
+        get users_path, headers: json_headers
+
         expect(response).to have_http_status(:ok)
         expect(JSON.parse(response.body)).to be_an(Array)
-        expect(JSON.parse(response.body).length).to eq(3)
+        expect(JSON.parse(response.body).length).to eq(4)
       end
 
       it 'returns users with correct attributes' do
-        get users_path
+        get users_path, headers: json_headers
+
         users_data = JSON.parse(response.body)
         expect(users_data.first).to include(
           'id', 'email', 'name', 'cuhk_id', 'hostel', 'is_admin'
@@ -38,10 +46,38 @@ RSpec.describe 'Users API', type: :request do
     end
 
     context 'when no users exist' do
+      before do
+        admin_stub = build(:user, is_admin: true)
+        allow_any_instance_of(UsersController).to receive(:current_user).and_return(admin_stub)
+      end
+
       it 'returns an empty array' do
-        get users_path
+        get users_path, headers: json_headers
+
         expect(response).to have_http_status(:ok)
         expect(JSON.parse(response.body)).to eq([])
+      end
+    end
+
+    context 'when requester is authenticated but not admin' do
+      before do
+        allow_any_instance_of(UsersController).to receive(:current_user).and_return(user)
+      end
+
+      it 'returns forbidden' do
+        get users_path, headers: json_headers
+
+        expect(response).to have_http_status(:forbidden)
+        expect(JSON.parse(response.body)).to include('error' => 'unauthorized')
+      end
+    end
+
+    context 'when requester is unauthenticated' do
+      it 'returns unauthorized' do
+        get users_path, headers: json_headers
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)).to include('error' => 'unauthenticated')
       end
     end
   end

@@ -135,9 +135,35 @@ const resetPassword = (email, otp, newPassword) => {
 
 ## 2. User Profile
 
-### Get Profile (Public or Own)
+### List All Users (Admin Dashboard)
+**Endpoint:** `GET /users`
+
+**Authorization:** Authenticated admin only.
+
+**Example:**
+```javascript
+const getAllUsers = () => {
+  return api.get('/users');
+};
+```
+
+### List Admin Accounts (Admin Dashboard)
+**Endpoint:** `GET /users/admins`
+
+**Authorization:** Authenticated admin only.
+
+**Example:**
+```javascript
+const getAdmins = () => {
+  return api.get('/users/admins');
+};
+```
+
+### Get User Profile (Admin Dashboard)
 **Endpoint:** `GET /users/:cuhk_id`  
 **Note:** Use the 10-digit CUHK Student ID as the ID.
+
+**Authorization:** Authenticated admin only.
 
 **Example:**
 ```javascript
@@ -170,17 +196,6 @@ const updateProfile = (cuhkId, userData) => {
 ```javascript
 const changePassword = (data) => {
   return api.post('/users/change_password', data);
-};
-```
-
-### List All Sellers (Search Sellers)
-**Endpoint:** `GET /users/sellers`  
-Returns a list of all verified sellers in the system.
-
-**Example:**
-```javascript
-const getSellers = () => {
-  return api.get('/users/sellers');
 };
 ```
 

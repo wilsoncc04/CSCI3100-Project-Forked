@@ -62,14 +62,19 @@ RSpec.describe 'Users API', type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it 'allows unauthenticated access to index action' do
-      get users_path
-      expect(response).to have_http_status(:ok)
+    it 'requires authentication for index action' do
+      get users_path, headers: json_headers
+      expect(response).to have_http_status(:unauthorized)
     end
 
-    it 'allows unauthenticated access to show action' do
-      get user_path(user.cuhk_id)
-      expect(response).to have_http_status(:ok)
+    it 'requires authentication for admins action' do
+      get admins_users_path, headers: json_headers
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'requires authentication for show action' do
+      get user_path(user.cuhk_id), headers: json_headers
+      expect(response).to have_http_status(:unauthorized)
     end
 
     it 'requires authentication for update action' do

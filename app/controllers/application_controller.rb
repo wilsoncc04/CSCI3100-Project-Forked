@@ -44,8 +44,14 @@ class ApplicationController < ActionController::Base
   end
 
   def require_admin!
-    # Placeholder for admin authorization logic
-    # For now, we'll just allow all requests to pass through
+    unless current_user
+      authenticate_user!
+      return
+    end
+
+    return if current_user_admin?
+
+    render_unauthorized
   end
 
   def render_error(error, status: :bad_request)
