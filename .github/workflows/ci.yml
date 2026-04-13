@@ -73,8 +73,8 @@ jobs:
         if: failure()
         with:
           name: cucumber-screenshots
-          path: ${{ github.workspace }}/tmp/screenshots
-          if-no-files-found: ignore
+          path: ${{ github.workspace }}/tmp/capybara
+          if-no-files-found: warn
 
       - name: Upload Cucumber reports (if you generate HTML reports)
         uses: actions/upload-artifact@v4
