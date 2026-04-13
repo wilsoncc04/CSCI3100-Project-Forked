@@ -22,5 +22,5 @@ Feature: Password Reset From Login
     When I open the login page
     And I open the forgot password panel
     And I submit a new password "newSecure456!" with otp "123456" for "1155000456@link.cuhk.edu.hk"
-    Then I should see "Password reset successful. Please log in with your new password."
+    Then I should see "Password changed successfully!"
     And the account "1155000456@link.cuhk.edu.hk" should authenticate with "newSecure456!"

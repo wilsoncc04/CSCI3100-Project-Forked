@@ -110,7 +110,7 @@ end
       # TODO: throttle resends (e.g., rack-attack) to prevent abuse => AI suggestion
       user.generate_verification_otp!
       user.save
-      UserMailer.verification_email(user).deliver_later
+      UserMailer.verification_email(user).deliver_now
     end
 
     # Generic response to avoid account enumeration
@@ -127,7 +127,7 @@ end
       if user&.verified_at.present?
         user.generate_verification_otp!
         user.save
-        UserMailer.password_reset_otp_email(user).deliver_later
+        UserMailer.password_reset_otp_email(user).deliver_now
       end
     end
 

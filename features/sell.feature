@@ -16,5 +16,5 @@ Feature: Sell an Item
     And I select "Textbooks & Notes" from the category dropdown
     And I fill in "Description" with "Almost new, no highlights."
     And I fill in "Contact Info (Phone / IG / Email)" with "student@link.cuhk.edu.hk"
-    And I accept the prompt after clicking "Confirm"
-    Then I should see a success alert with "Product listed successfully!"
+    And I click "Confirm Listing"
+    Then I should see the text "My Old Calculus Book"

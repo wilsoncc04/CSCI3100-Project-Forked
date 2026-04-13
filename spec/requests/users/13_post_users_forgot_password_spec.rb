@@ -15,7 +15,7 @@ RSpec.describe 'Users API', type: :request do
       it 'sends password reset OTP email' do
         expect {
           post forgot_password_users_path, params: { email: verified_user.email }
-        }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
+        }.to change(ActionMailer::Base.deliveries, :count).by(1)
       end
 
       it 'generates a new OTP' do

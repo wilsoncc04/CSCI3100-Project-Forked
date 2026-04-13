@@ -24,7 +24,7 @@ RSpec.describe 'Users API', type: :request do
       it 'resends verification email' do
         expect {
           post resend_verification_users_path, params: { email: unverified_user.email }
-        }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
+        }.to change(ActionMailer::Base.deliveries, :count).by(1)
       end
 
       it 'generates new OTP' do

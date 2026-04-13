@@ -20,8 +20,7 @@ Feature: Community Unit
     And I fill in "Contact Info" with "WhatsApp 12345678"
     And I click the "Promote to College Community Board" checkbox
     And I fill in "Advertisement Description" with "Great for CC students taking CSCI3100"
-    And I accept the prompt after clicking "Confirm Listing"
-    Then I should see a success alert with "Product listed successfully!"
+    And I click "Confirm Listing"
     When I am on the community page
     And I click the "Chung Chi College" button
     Then I should see "Great for CC students taking CSCI3100"
