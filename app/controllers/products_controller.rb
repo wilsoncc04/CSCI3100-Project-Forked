@@ -108,14 +108,12 @@ class ProductsController < ApplicationController
 
       if chat && (chat.seller_id == current_user.id || chat.interested_id == current_user.id)
         product_id = chat.item_id
-        chat.destroy
-
-        # If no one is queued, return product to available state.
-        unless Chat.exists?(item_id: product_id)
-          Product.find(product_id).update(status: 'available', buyer_id: nil)
+        target_product = Product.find(product_id)
+        if target_product.status == 'reserved'
+          target_product.update(status: 'available', buyer_id: nil)
         end
 
-        render json: { message: 'Chat closed successfully' }, status: :ok and return
+        render json: { message: 'Trade cancelled and archived successfully' }, status: :ok and return
       else
         render json: { error: 'Unauthorized or Chat not found' }, status: :unauthorized and return
       end
@@ -128,8 +126,10 @@ class ProductsController < ApplicationController
     # handling status update to sold
     if params[:product] && params[:product][:status] == 'sold'
       ActiveRecord::Base.transaction do
-        @product.update!(status: 'sold', buyer_id: params[:product][:buyer_id])
-        Chat.where(item_id: @product.id).where.not(interested_id: params[:product][:buyer_id]).destroy_all
+        @product.update!(
+          status: 'sold', 
+          buyer_id: params[:product][:buyer_id] || current_user.id 
+        )
       end
       render json: format_product(@product), status: :ok and return
     end
