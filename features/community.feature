@@ -14,10 +14,10 @@ Feature: Community Unit
     Given I am logged in as "1155123456@link.cuhk.edu.hk" with password "password"
     When I am on the sell page
     And I fill in "Product Name" with "Textbook"
-    And I fill in "Price" with "50"
+    And I fill in "Price (HKD) $" with "50"
     And I select "Textbooks & Notes" from the category dropdown
     And I fill in "Description" with "CSCI3100 Textbook"
-    And I fill in "Contact Info" with "WhatsApp 12345678"
+    And I fill in "Contact Info (Phone / IG / Email)" with "WhatsApp 12345678"
     And I click the "Promote to College Community Board" checkbox
     And I fill in "Advertisement Description" with "Great for CC students taking CSCI3100"
     And I click "Confirm Listing"
