@@ -34,11 +34,12 @@ const LoginPage = ({ setUser }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log("trying login", { email, password });
     setLoading(true);
 
     try {
       const data = await loginUser(email, password);
-      
+      console.log("backend data:", data);
       if (data.message === 'logged_in') {
         notify.success("Login Success!");
         
@@ -64,8 +65,6 @@ const LoginPage = ({ setUser }) => {
 
   const toggleResetPanel = () => {
     setShowResetPanel((prev) => !prev);
-    setResetMessage("");
-    setResetError("");
     if (!showResetPanel && email) {
       setResetEmail(email);
     }
@@ -79,8 +78,6 @@ const LoginPage = ({ setUser }) => {
     }
 
     setSendingOtp(true);
-    setResetError("");
-    setResetMessage("");
 
     try {
       await requestPasswordResetOtp(resetEmail);
@@ -95,8 +92,6 @@ const LoginPage = ({ setUser }) => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    setResetError("");
-    setResetMessage("");
 
     if (!resetEmail.trim() || !resetOtp.trim()) {
       notify.error("Please enter both email and OTP.");
