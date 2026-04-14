@@ -30,8 +30,8 @@ User.find_or_create_by!(email: '1155000000@link.cuhk.edu.hk') do |user|
   user.is_admin = true
 end
 
-1.times do |i|
-  student_id = "115500000#{i+5}"
+5.times do |i|
+  student_id = "115500000#{i+1}"
   User.find_or_create_by!(cuhk_id: student_id) do |user|
     user.name = "Student #{i}"
     user.email = "#{student_id}@link.cuhk.edu.hk"
@@ -62,7 +62,6 @@ puts "--- Step 3: Seeding Products ---"
       location: "CUHK Campus"
     )
 
-    # 動機：建立歷史價格點
     [ 1, 3, 5 ].sample(rand(2..3)).each do |days_ago|
       product.price_histories.create!(
         price: base_price + rand(-50..50),
@@ -70,7 +69,6 @@ puts "--- Step 3: Seeding Products ---"
       )
     end
   rescue ActiveRecord::RecordInvalid => e
-    # 動機：如果產品建立失敗，把真實的錯誤印出來，而不是默默忽略
     puts "  [Error] Failed to create product #{i}: #{e.message}"
   end
 end

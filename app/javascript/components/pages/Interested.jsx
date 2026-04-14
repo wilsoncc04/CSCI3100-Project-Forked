@@ -114,7 +114,8 @@ export default function Interested() {
       try {
         const productsRes = await getProducts({
           sort_by: sortOption,
-          interested_only: 'true'
+          interested_only: 'true',
+          fetch_all: "true"
         });
         setInterests(productsRes.data || []);
       } catch (err) {

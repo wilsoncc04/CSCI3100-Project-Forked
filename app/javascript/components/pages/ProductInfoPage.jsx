@@ -44,7 +44,6 @@ const ActionButton = styled.button`
     transform: scale(0.96);
   }
   
-  /* 新增：處理禁用狀態的視覺反饋 */
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
