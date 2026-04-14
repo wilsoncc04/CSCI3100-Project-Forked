@@ -10,10 +10,6 @@ When(/^I fill in the following registration details:$/) do |table|
   fill_in('Confirm Password', with: data['confirm_password'])
 end
 
-When(/^I click "([^"]*)"$/) do |button_text|
-  click_button(button_text)
-end
-
 Then(/^I should see the OTP verification popup$/) do
   expect(page).to have_selector('h3', text: 'Verify OTP')
 end
