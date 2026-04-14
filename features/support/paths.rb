@@ -13,6 +13,12 @@ module NavigationHelpers
       '/login'
     when /^(the )?notifications( page)?$/
       '/notifications'
+    when /^(the )?interested items( page)?$/i
+      '/Account'
+    when /^(the )?profile page$/i
+      '/Account'
+    when /^(the )?my products page$/i
+      '/Account'
     else
       begin
         page_name =~ /^the (.*) page$/

@@ -21,6 +21,12 @@ class ProductsController < ApplicationController
       products = products.where(users: { hostel: params[:hall] }) if params[:hall].present?
     end
 
+    if params[:interested_only] == 'true' && current_user
+      products = products.joins("INNER JOIN interests ON interests.item_id = products.id").where(interests: { interested_id: current_user.id })
+    end
+
+    products = products.search_by_name(params[:keywords]) if params[:keywords].present?
+    
     case params[:sort_by]
     when "price_asc"
       products = products.reorder(price: :asc)

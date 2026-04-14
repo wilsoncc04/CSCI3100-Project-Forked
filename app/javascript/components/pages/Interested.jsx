@@ -112,9 +112,9 @@ export default function Interested() {
   useEffect(() => {
     const fetchInterests = async () => {
       try {
-        // Fetch the list of products that the current user is interested in
         const productsRes = await getProducts({
-          sort_by: sortOption
+          sort_by: sortOption,
+          interested_only: 'true'
         });
         setInterests(productsRes.data || []);
       } catch (err) {
