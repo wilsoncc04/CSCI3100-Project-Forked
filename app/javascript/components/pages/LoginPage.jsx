@@ -30,8 +30,6 @@ const LoginPage = ({ setUser }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [sendingOtp, setSendingOtp] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
-  const [resetMessage, setResetMessage] = useState(""); 
-  const [resetError, setResetError] = useState(""); 
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -67,8 +65,6 @@ const LoginPage = ({ setUser }) => {
 
   const toggleResetPanel = () => {
     setShowResetPanel((prev) => !prev);
-    setResetMessage("");
-    setResetError("");
     if (!showResetPanel && email) {
       setResetEmail(email);
     }
@@ -82,8 +78,6 @@ const LoginPage = ({ setUser }) => {
     }
 
     setSendingOtp(true);
-    setResetError("");
-    setResetMessage("");
 
     try {
       await requestPasswordResetOtp(resetEmail);
@@ -98,8 +92,6 @@ const LoginPage = ({ setUser }) => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    setResetError("");
-    setResetMessage("");
 
     if (!resetEmail.trim() || !resetOtp.trim()) {
       notify.error("Please enter both email and OTP.");
