@@ -92,10 +92,6 @@ When(/^I accept the prompt$/) do
   expect(page).to have_no_css('.swal2-container', wait: 5)
 end
 
-Then(/^I should be redirected to the home page$/) do
-  expect(page).to have_current_path('/', wait: 5)
-end
-
 When(/^I dismiss the prompt$/) do
   within('.swal2-container', wait: 5) do
     click_button('Cancel')

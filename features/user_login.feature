@@ -8,7 +8,6 @@ Feature: User Authentication
       | email                       | password    | name   |
       | 1155000123@link.cuhk.edu.hk | mySecret123 | Harvey |
       | 1155999888@link.cuhk.edu.hk | unverified1 | UnverifiedUser |
-    # 動機：覆蓋 search_steps.rb 自動將所有人設為 Time.current 的行為
     And the user "1155999888@link.cuhk.edu.hk" is unverified
 
   @javascript

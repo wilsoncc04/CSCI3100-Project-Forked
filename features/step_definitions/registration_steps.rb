@@ -31,6 +31,15 @@ Then(/^I should be redirected to the marketplace account page$/) do
   expect(page).to have_current_path("/Account", wait: 20)
 end
 
+Given(/^a user with email "([^"]*)" already exists$/) do |email|
+  User.find_or_create_by!(email: email) do |u|
+    u.password = "password123"
+    u.name = "Existing User"
+    u.college = "Shaw"
+    u.verified_at = Time.current
+  end
+end
+
 Then(/^the registration OTP popup should not appear$/) do
   expect(page).not_to have_content('Verify OTP')
 end

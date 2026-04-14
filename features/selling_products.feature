@@ -26,7 +26,6 @@ Feature: Selling Products Management
   Scenario: Navigating to the product edit page
     When I navigate to my selling products page
     And I click the "Edit" button for "Vintage Camera"
-    # 動機：使用產品名稱來對應動態生成的 ID
     Then I should be redirected to the edit page for "Vintage Camera"
 
   @javascript
@@ -39,7 +38,6 @@ Feature: Selling Products Management
   Scenario: Deleting a product with confirmation
     When I navigate to my selling products page
     And I click the "Delete" button for "Vintage Camera"
-    # 動機：處理 JavaScript 的 confirm() 彈窗
     And I confirm the deletion dialog
     Then I should see the text "Product deleted successfully!"
     And the product "Vintage Camera" should no longer be in the list
