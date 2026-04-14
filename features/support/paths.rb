@@ -5,11 +5,11 @@ module NavigationHelpers
       '/'
     when /the (.*)index\s?page/
       '/index'
-    when /^the chat page$/i, /chat/i
+    when /^(the )?chat( page)?$/i, /chat/i
       '/chat'
     when /^the account page$/i, /account/i
       '/Account'
-    when /^the login page$/i, /login/i
+    when /^(the )?login page$/i
       '/login'
     when /^(the )?notifications( page)?$/
       '/notifications'
@@ -19,6 +19,8 @@ module NavigationHelpers
       '/Account'
     when /^(the )?my products page$/i
       '/Account'
+    when /^(the )?registration page$/i, /registration/i
+      '/register'
     else
       begin
         page_name =~ /^the (.*) page$/

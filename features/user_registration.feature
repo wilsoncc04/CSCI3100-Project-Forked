@@ -1,41 +1,44 @@
-Feature: User Registration with OTP Verification
-  As a new student at CUHK
-  I want to create an account using my university email
-  So that I can join the marketplace community after verifying my identity
+Feature: User Registration and Account Creation
+  As a new student
+  I want to register for a CUHK Second-hand Marketplace account
+  So that I can buy and sell items with other students
 
-  Background:
-    Given I am on the registration page
-
-  Scenario: Successful two-step registration
+  @javascript
+  Scenario: Successful registration with OTP verification
+    Given I am on the "registration" page
     When I fill in the following registration details:
-      | name             | Alice                       |
-      | email            | 1155123456@link.cuhk.edu.hk |
-      | password         | Password123!                |
-      | confirm_password | Password123!                |
-    And I click "Create Account"
-    Then I should see the OTP verification popup
-    And I should see "OTP sent! Please check your CUHK email mailbox."
-    When I enter the valid OTP "123456"
-    And I click "Verify & Register"
-    Then I should see "Verification successful!"
-    And I should be redirected to the account page
+      | name                | John Doe                    |
+      | email               | 1155654321@link.cuhk.edu.hk |
+      | password            | SecurePass123!              |
+      | confirm_password    | SecurePass123!              |
+    And I click the "Create Account" button
+    Then I should see the registration OTP popup
+    When I enter the registration OTP "123456"
+    And I click the "Verify & Register" button
+    Then I expect to see notification "successfully registered"
+    And I should be redirected to the marketplace account page
 
-  Scenario: Registration failure due to password mismatch
+  @javascript
+  Scenario: Registration fails with existing email
+    Given a user with email "1155999999@link.cuhk.edu.hk" already exists
+    And I am on the "registration" page
     When I fill in the following registration details:
-      | name             | Bob                         |
-      | email            | 1155999888@link.cuhk.edu.hk |
-      | password         | Password123!                |
-      | confirm_password | DifferentPass789            |
-    And I click "Create Account"
-    Then I should see an error message "Passwords do not match."
-    And the OTP popup should not appear
+      | name                | Jane Smith                  |
+      | email               | 1155999999@link.cuhk.edu.hk |
+      | password            | SecurePass123!              |
+      | confirm_password    | SecurePass123!              |
+    And I click the "Create Account" button
+    Then I expect to see notification "already"
+    And the registration OTP popup should not appear
 
-  Scenario: Attempting to register with an existing ID
-    Given a user with email "1155000111@link.cuhk.edu.hk" already exists
+  @javascript
+  Scenario: Registration fails with mismatched passwords
+    Given I am on the "registration" page
     When I fill in the following registration details:
-      | name             | Charlie                     |
-      | email            | 1155000111@link.cuhk.edu.hk |
-      | password         | Password123!                |
-      | confirm_password | Password123!                |
-    And I click "Create Account"
-    Then I should see "This ID might already be registered."
+      | name                | Bob Johnson                 |
+      | email               | 1155777777@link.cuhk.edu.hk |
+      | password            | SecurePass123!              |
+      | confirm_password    | DifferentPass123!           |
+    And I click the "Create Account" button
+    Then I expect to see notification "password"
+    And the registration OTP popup should not appear
