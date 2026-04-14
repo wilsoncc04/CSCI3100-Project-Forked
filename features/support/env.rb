@@ -7,6 +7,14 @@
 require 'cucumber/rails'
 require 'capybara/cucumber'
 require 'selenium-webdriver'
+require 'simplecov'
+
+SimpleCov.start 'rails' do
+  add_filter '/bin/'
+  add_filter '/db/'
+  add_filter '/spec/'
+  add_filter '/features/'
+end
 
 # Increase wait time – very important for React (components mount asynchronously)
 Capybara.default_max_wait_time = 10
