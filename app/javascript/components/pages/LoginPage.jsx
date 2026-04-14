@@ -30,15 +30,18 @@ const LoginPage = ({ setUser }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [sendingOtp, setSendingOtp] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [resetMessage, setResetMessage] = useState(""); 
+  const [resetError, setResetError] = useState(""); 
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log("trying login", { email, password });
     setLoading(true);
 
     try {
       const data = await loginUser(email, password);
-      
+      console.log("backend data:", data);
       if (data.message === 'logged_in') {
         notify.success("Login Success!");
         
